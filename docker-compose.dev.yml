@@ -1,0 +1,28 @@
+version: '3.9'
+
+services:
+  #  appbot itself
+  appbot:
+    build: .
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    networks:
+      - appbot_net
+    command:
+      - npm run start:dev
+
+  # postgres database
+  postgres:
+    image: postgres:15
+    env_file:
+      - .postgres.env
+    ports:
+      - '5432:5432'
+    networks:
+      - appbot_net
+
+# internal network
+networks:
+  appbot_net:
