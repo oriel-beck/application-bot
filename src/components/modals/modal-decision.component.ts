@@ -33,20 +33,22 @@ export class ModalDecisionComponent {
     const data = interaction.components[0].components[0] as TextInputModalData;
     const userid = interaction.customId.split('-').at(-1);
 
-    return interaction.reply(
-      await decideApplication(
-        this.appService,
-        BigInt(userid),
-        interaction.client,
-        ApplicationState.Denied,
-        data.value,
-        this.configService.get<string>('channels.pending'),
-        this.configService.get<string>('channels.denied'),
-        this.configService.get<string>('roles.staff'),
-        this.configService.get<string>('channels.staff'),
-        this.configService.get<number>('applications.max_questions_per_page'),
-      ),
-    );
+    return interaction
+      .reply(
+        await decideApplication(
+          this.appService,
+          BigInt(userid),
+          interaction.client,
+          ApplicationState.Denied,
+          data.value,
+          this.configService.get<string>('channels.pending'),
+          this.configService.get<string>('channels.denied'),
+          this.configService.get<string>('roles.staff'),
+          this.configService.get<string>('channels.staff'),
+          this.configService.get<number>('applications.max_questions_per_page'),
+        ),
+      )
+      .catch(() => null);
   }
 
   @UseGuards(ApplicationManagerGuard)
@@ -59,20 +61,22 @@ export class ModalDecisionComponent {
     const data = interaction.components[0].components[0] as TextInputModalData;
     const userid = interaction.customId.split('-').at(-1);
 
-    return interaction.reply(
-      await decideApplication(
-        this.appService,
-        BigInt(userid),
-        interaction.client,
-        ApplicationState.Accepted,
-        data.value,
-        this.configService.get<string>('channels.pending'),
-        this.configService.get<string>('channels.accepted'),
-        this.configService.get<string>('roles.staff'),
-        this.configService.get<string>('channels.staff'),
-        this.configService.get<number>('applications.max_questions_per_page'),
-        interaction.guild,
-      ),
-    );
+    return interaction
+      .reply(
+        await decideApplication(
+          this.appService,
+          BigInt(userid),
+          interaction.client,
+          ApplicationState.Accepted,
+          data.value,
+          this.configService.get<string>('channels.pending'),
+          this.configService.get<string>('channels.accepted'),
+          this.configService.get<string>('roles.staff'),
+          this.configService.get<string>('channels.staff'),
+          this.configService.get<number>('applications.max_questions_per_page'),
+          interaction.guild,
+        ),
+      )
+      .catch(() => null);
   }
 }

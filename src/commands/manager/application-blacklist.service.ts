@@ -53,12 +53,14 @@ export class ApplicationBlacklistService {
       BigInt(interaction.user.id),
     );
     if (!blacklisted)
-      return interaction.reply(
-        ApplicationBlacklistCommandResponses.FailedBlacklist,
-      );
-    return interaction.reply(
-      ApplicationBlacklistCommandFunctionResponses.blacklisted(user, reason),
-    );
+      return interaction
+        .reply(ApplicationBlacklistCommandResponses.FailedBlacklist)
+        .catch(() => null);
+    return interaction
+      .reply(
+        ApplicationBlacklistCommandFunctionResponses.blacklisted(user, reason),
+      )
+      .catch(() => null);
   }
 
   @Subcommand({
@@ -73,12 +75,12 @@ export class ApplicationBlacklistService {
       BigInt(user.id),
     );
     if (!deleted || !deleted.affected)
-      return interaction.reply(
-        ApplicationBlacklistCommandResponses.FailedDelete,
-      );
-    return interaction.reply(
-      ApplicationBlacklistCommandFunctionResponses.unblacklisted(user),
-    );
+      return interaction
+        .reply(ApplicationBlacklistCommandResponses.FailedDelete)
+        .catch(() => null);
+    return interaction
+      .reply(ApplicationBlacklistCommandFunctionResponses.unblacklisted(user))
+      .catch(() => null);
   }
 
   @Subcommand({
@@ -95,12 +97,14 @@ export class ApplicationBlacklistService {
       BigInt(interaction.user.id),
     );
     if (!reasoned || !reasoned.affected)
-      return interaction.reply(
-        ApplicationBlacklistCommandResponses.FailedRereason,
-      );
-    return interaction.reply(
-      ApplicationBlacklistCommandFunctionResponses.rereasoned(user, reason),
-    );
+      return interaction
+        .reply(ApplicationBlacklistCommandResponses.FailedRereason)
+        .catch(() => null);
+    return interaction
+      .reply(
+        ApplicationBlacklistCommandFunctionResponses.rereasoned(user, reason),
+      )
+      .catch(() => null);
   }
 
   @Subcommand({
@@ -112,18 +116,23 @@ export class ApplicationBlacklistService {
     @Options() { user }: ApplicationBlacklistShowOptionsDto,
   ) {
     const blacklist = await this.blacklistService.getBlacklist(BigInt(user.id));
-    if (!blacklist) return interaction.reply("This user isn't blacklisted.");
-    return interaction.reply({
-      embeds: [
-        {
-          description:
-            ApplicationBlacklistCommandFunctionResponses.showBlacklist(
-              blacklist.mod,
-              blacklist.reason,
-            ),
-          color: Colors.DarkPurple,
-        },
-      ],
-    });
+    if (!blacklist)
+      return interaction
+        .reply("This user isn't blacklisted.")
+        .catch(() => null);
+    return interaction
+      .reply({
+        embeds: [
+          {
+            description:
+              ApplicationBlacklistCommandFunctionResponses.showBlacklist(
+                blacklist.mod,
+                blacklist.reason,
+              ),
+            color: Colors.DarkPurple,
+          },
+        ],
+      })
+      .catch(() => null);
   }
 }

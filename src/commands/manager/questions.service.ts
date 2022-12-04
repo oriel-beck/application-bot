@@ -51,10 +51,12 @@ export class QuestionsService {
     @Options() { question }: QuestionAddOptionsDto,
   ) {
     await this.questionService.addQuestion(question);
-    return interaction.reply({
-      content: 'Added the question to the database.',
-      ephemeral: true,
-    });
+    return interaction
+      .reply({
+        content: 'Added the question to the database.',
+        ephemeral: true,
+      })
+      .catch(() => null);
   }
 
   @Subcommand({
@@ -68,15 +70,19 @@ export class QuestionsService {
     const removed = await this.questionService.deleteQuestion(id);
 
     if (!removed.affected)
-      return interaction.reply({
-        content: 'Could not find any question with the provided ID.',
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: 'Could not find any question with the provided ID.',
+          ephemeral: true,
+        })
+        .catch(() => null);
 
-    return interaction.reply({
-      content: `Deleted question ${id}`,
-      ephemeral: true,
-    });
+    return interaction
+      .reply({
+        content: `Deleted question ${id}`,
+        ephemeral: true,
+      })
+      .catch(() => null);
   }
 
   @Subcommand({
@@ -86,15 +92,19 @@ export class QuestionsService {
   async listQuestions(@Context() [interaction]: SlashCommandContext) {
     const questions = await this.questionService.getAllQuestions();
     if (!questions.length)
-      return interaction.reply({
-        content: 'There are no questions to list.',
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: 'There are no questions to list.',
+          ephemeral: true,
+        })
+        .catch(() => null);
 
-    return interaction.reply({
-      embeds: generateQuestionListEmbed(questions),
-      components: generateQuestionListComponents(questions),
-    });
+    return interaction
+      .reply({
+        embeds: generateQuestionListEmbed(questions),
+        components: generateQuestionListComponents(questions),
+      })
+      .catch(() => null);
   }
 
   @Subcommand({
@@ -108,14 +118,18 @@ export class QuestionsService {
     const edited = await this.questionService.editQuestions(id, question);
 
     if (!edited.affected)
-      return interaction.reply({
-        content: 'Could not find any question with the provided ID.',
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: 'Could not find any question with the provided ID.',
+          ephemeral: true,
+        })
+        .catch(() => null);
 
-    return interaction.reply({
-      content: `Edited question ${id}`,
-      ephemeral: true,
-    });
+    return interaction
+      .reply({
+        content: `Edited question ${id}`,
+        ephemeral: true,
+      })
+      .catch(() => null);
   }
 }

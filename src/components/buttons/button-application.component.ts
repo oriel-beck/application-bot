@@ -70,16 +70,20 @@ export class ButtonApplicationComponent {
       .catch(() => null);
 
     if (!msg)
-      return interaction.reply({
-        content: ApplicationDoneButtonResponses.Failed,
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: ApplicationDoneButtonResponses.Failed,
+          ephemeral: true,
+        })
+        .catch(() => null);
 
-    return interaction.update({
-      content: ApplicationDoneButtonResponses.Success,
-      embeds: [],
-      components: [],
-    });
+    return interaction
+      .update({
+        content: ApplicationDoneButtonResponses.Success,
+        embeds: [],
+        components: [],
+      })
+      .catch(() => null);
   }
 
   @Button('answer-:id')

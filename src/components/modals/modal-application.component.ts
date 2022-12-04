@@ -30,10 +30,12 @@ export class ModalApplicationComponent {
     const app = await this.appService.getApp(BigInt(interaction.user.id));
 
     if (!app)
-      return interaction.reply({
-        content: ApplicationErrors.NotExistStartNew,
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: ApplicationErrors.NotExistStartNew,
+          ephemeral: true,
+        })
+        .catch(() => null);
 
     // If the answer doesn't exist and the amount of questions is not the same as the amount of questions skips to the next question
     const showNextQuestion =

@@ -72,24 +72,25 @@ export class ApplicationService {
     @Context() [interaction]: SlashCommandContext,
     @Options() { user }: ApplicationShowOptionsDto,
   ) {
-    console.log(this.colors);
     const app = await this.appService.getAppOrThrow(BigInt(user.id));
 
-    return interaction.reply({
-      embeds: await generateApplicationResponseEmbed(
-        app,
-        interaction.client,
-        this.colors,
-        this.configService.get<number>('applications.max_questions_per_page'),
-      ),
-      components: generateApplicationResponseComponents(
-        app.userid.toString(),
-        this.configService.get<number>('applications.max_questions_per_page'),
-        this.configService.get<number>('applications.max_questions'),
-        0,
-        app.state === ApplicationState.Pending,
-      ),
-    });
+    return interaction
+      .reply({
+        embeds: await generateApplicationResponseEmbed(
+          app,
+          interaction.client,
+          this.colors,
+          this.configService.get<number>('applications.max_questions_per_page'),
+        ),
+        components: generateApplicationResponseComponents(
+          app.userid.toString(),
+          this.configService.get<number>('applications.max_questions_per_page'),
+          this.configService.get<number>('applications.max_questions'),
+          0,
+          app.state === ApplicationState.Pending,
+        ),
+      })
+      .catch(() => null);
   }
 
   @Subcommand({
@@ -104,15 +105,19 @@ export class ApplicationService {
       await this.appService.getAllApplicationsByState(state);
 
     if (!allApplications)
-      return interaction.reply({
-        content: ApplicationCommandResponses.NoApplicationsExist,
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: ApplicationCommandResponses.NoApplicationsExist,
+          ephemeral: true,
+        })
+        .catch(() => null);
 
-    return interaction.reply({
-      embeds: generateApplicationListEmbed(count, state),
-      components: generateApplicationListComponents(allApplications, count),
-    });
+    return interaction
+      .reply({
+        embeds: generateApplicationListEmbed(count, state),
+        components: generateApplicationListComponents(allApplications, count),
+      })
+      .catch(() => null);
   }
 
   @Subcommand({
@@ -123,20 +128,22 @@ export class ApplicationService {
     @Context() [interaction]: SlashCommandContext,
     @Options() { user, reason = '' }: ApplicationDenyOptionsDto,
   ) {
-    return interaction.reply(
-      await decideApplication(
-        this.appService,
-        BigInt(user.id),
-        interaction.client,
-        ApplicationState.Denied,
-        reason,
-        this.configService.get<string>('channels.pending'),
-        this.configService.get<string>('channels.denied'),
-        this.configService.get<string>('roles.staff'),
-        this.configService.get<string>('channels.staff'),
-        this.configService.get<number>('applications.max_questions_per_page'),
-      ),
-    );
+    return interaction
+      .reply(
+        await decideApplication(
+          this.appService,
+          BigInt(user.id),
+          interaction.client,
+          ApplicationState.Denied,
+          reason,
+          this.configService.get<string>('channels.pending'),
+          this.configService.get<string>('channels.denied'),
+          this.configService.get<string>('roles.staff'),
+          this.configService.get<string>('channels.staff'),
+          this.configService.get<number>('applications.max_questions_per_page'),
+        ),
+      )
+      .catch(() => null);
   }
 
   @Subcommand({
@@ -147,21 +154,23 @@ export class ApplicationService {
     @Context() [interaction]: SlashCommandContext,
     @Options() { user, reason = '' }: ApplicationAcceptOptionsDto,
   ) {
-    return interaction.reply(
-      await decideApplication(
-        this.appService,
-        BigInt(user.id),
-        interaction.client,
-        ApplicationState.Accepted,
-        reason,
-        this.configService.get('channels.pending'),
-        this.configService.get('channels.accepted'),
-        this.configService.get('roles.staff'),
-        this.configService.get('channels.staff'),
-        this.configService.get<number>('applications.max_questions_per_page'),
-        interaction.guild,
-      ),
-    );
+    return interaction
+      .reply(
+        await decideApplication(
+          this.appService,
+          BigInt(user.id),
+          interaction.client,
+          ApplicationState.Accepted,
+          reason,
+          this.configService.get('channels.pending'),
+          this.configService.get('channels.accepted'),
+          this.configService.get('roles.staff'),
+          this.configService.get('channels.staff'),
+          this.configService.get<number>('applications.max_questions_per_page'),
+          interaction.guild,
+        ),
+      )
+      .catch(() => null);
   }
 
   @Subcommand({
@@ -171,9 +180,11 @@ export class ApplicationService {
   async resetApplication(@Context() [interaction]: SlashCommandContext) {
     // reset all applications, return count
     const apps = await this.appService.resetApplications();
-    return interaction.reply(
-      ApplicationCommandFunctionResponses.resetApplications(apps.affected),
-    );
+    return interaction
+      .reply(
+        ApplicationCommandFunctionResponses.resetApplications(apps.affected),
+      )
+      .catch(() => null);
   }
 
   @Subcommand({
@@ -191,15 +202,19 @@ export class ApplicationService {
 
     // if nothing was updated send an error
     if (!state.affected)
-      return interaction.reply(ApplicationCommandResponses.MissingServer);
+      return interaction
+        .reply(ApplicationCommandResponses.MissingServer)
+        .catch(() => null);
 
-    return interaction.reply(
-      `${
-        currentState.enabled
-          ? ApplicationStateResponses.Enabled
-          : ApplicationStateResponses.Disabled
-      } applications!`,
-    );
+    return interaction
+      .reply(
+        `${
+          currentState.enabled
+            ? ApplicationStateResponses.Enabled
+            : ApplicationStateResponses.Disabled
+        } applications!`,
+      )
+      .catch(() => null);
   }
 
   @Subcommand({
@@ -215,10 +230,12 @@ export class ApplicationService {
 
     // if deleted nothing, return an error
     if (!deleted)
-      return interaction.reply(ApplicationCommandResponses.ApplicationNotFound);
+      return interaction
+        .reply(ApplicationCommandResponses.ApplicationNotFound)
+        .catch(() => null);
 
-    return interaction.reply(
-      ApplicationCommandFunctionResponses.deletedApplication(user),
-    );
+    return interaction
+      .reply(ApplicationCommandFunctionResponses.deletedApplication(user))
+      .catch(() => null);
   }
 }

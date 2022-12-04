@@ -23,11 +23,15 @@ export class ApplicationManagerNotFoundExceptionFilter
       ],
     };
     if (interaction.deferred) {
-      await interaction.editReply(message);
+      await interaction.editReply(message).catch(() => null);
     } else if (interaction.replied) {
-      await interaction.followUp({ ...message, ephemeral: true });
+      await interaction
+        .followUp({ ...message, ephemeral: true })
+        .catch(() => null);
     } else {
-      await interaction.reply({ ...message, ephemeral: true });
+      await interaction
+        .reply({ ...message, ephemeral: true })
+        .catch(() => null);
     }
   }
 }

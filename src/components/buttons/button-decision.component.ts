@@ -32,12 +32,14 @@ export class ButtonDecisionComponent {
     if (!appState) throw new ApplicationNotFoundException();
 
     if (appState.state !== ApplicationState.Pending)
-      return interaction.reply({
-        content: ApplicationErrors.NotPending,
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: ApplicationErrors.NotPending,
+          ephemeral: true,
+        })
+        .catch(() => null);
 
-    return interaction.showModal(generateDenyModal(userid));
+    return interaction.showModal(generateDenyModal(userid)).catch(() => null);
   }
 
   @UseGuards(ApplicationManagerGuard)
@@ -54,11 +56,13 @@ export class ButtonDecisionComponent {
     if (!appState) throw new ApplicationNotFoundException();
 
     if (appState.state !== ApplicationState.Pending)
-      return interaction.reply({
-        content: ApplicationErrors.NotPending,
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: ApplicationErrors.NotPending,
+          ephemeral: true,
+        })
+        .catch(() => null);
 
-    return interaction.showModal(generateAcceptModal(userid));
+    return interaction.showModal(generateAcceptModal(userid)).catch(() => null);
   }
 }

@@ -36,10 +36,12 @@ export class MembersCommandsService {
       BigInt(interaction.guildId),
     );
     if (!applicationsEnabled.enabled)
-      return interaction.reply({
-        content: ApplyCommandResponses.Disabled,
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: ApplyCommandResponses.Disabled,
+          ephemeral: true,
+        })
+        .catch(() => null);
 
     // save the user ID as bigint
     const userid = BigInt(interaction.user.id);
@@ -47,30 +49,36 @@ export class MembersCommandsService {
     // check if the user is blacklisted
     const blacklisted = await this.blacklistService.getBlacklist(userid);
     if (blacklisted)
-      return interaction.reply({
-        content: ApplyCommandFunctionResponses.blacklistedMessage(
-          blacklisted.reason,
-        ),
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: ApplyCommandFunctionResponses.blacklistedMessage(
+            blacklisted.reason,
+          ),
+          ephemeral: true,
+        })
+        .catch(() => null);
 
     // check if there is any application is progress or made
     const hasApplication = await this.appService.getApp(userid);
     if (hasApplication)
-      return interaction.reply({
-        content: ApplyCommandResponses.InProgress,
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: ApplyCommandResponses.InProgress,
+          ephemeral: true,
+        })
+        .catch(() => null);
 
     // check if you can DM the user
     const initMessage = await interaction.user
       .send(ApplyCommandResponses.Starting)
       .catch(() => null);
     if (!initMessage)
-      return interaction.reply({
-        content: ApplyCommandResponses.OpenDMs,
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: ApplyCommandResponses.OpenDMs,
+          ephemeral: true,
+        })
+        .catch(() => null);
 
     // check if you can start the application
     const applicationStart = await this.appService
@@ -82,10 +90,12 @@ export class MembersCommandsService {
           content: ApplyCommandResponses.FailedStart,
         })
         .catch(() => null);
-      return interaction.reply({
-        content: ApplyCommandResponses.FailedStart,
-        ephemeral: true,
-      });
+      return interaction
+        .reply({
+          content: ApplyCommandResponses.FailedStart,
+          ephemeral: true,
+        })
+        .catch(() => null);
     }
 
     // edit the initial message into the application embed
@@ -107,9 +117,11 @@ export class MembersCommandsService {
     await this.appService.updateAppMessageID(userid, BigInt(initMessage.id));
 
     // notify the user the embed is ready
-    return interaction.reply({
-      content: ApplyCommandResponses.Started,
-      ephemeral: true,
-    });
+    return interaction
+      .reply({
+        content: ApplyCommandResponses.Started,
+        ephemeral: true,
+      })
+      .catch(() => null);
   }
 }

@@ -13,7 +13,6 @@ import {
   ApplicationFunctionResponses,
   ApplicationState,
 } from './constants';
-import * as process from 'process';
 import { generateApplicationResponseEmbed } from './application-review.utils';
 import { BDFDApplication } from '../entities';
 import { Colors } from '../providers';
