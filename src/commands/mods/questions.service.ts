@@ -22,6 +22,8 @@ import {
   ApplicationManagerGuard,
   ApplicationManagerNotFoundExceptionFilter,
 } from '../../guards';
+
+// utils
 import {
   generateQuestionListComponents,
   generateQuestionListEmbed,
@@ -83,7 +85,7 @@ export class QuestionsService {
   })
   async listQuestions(@Context() [interaction]: SlashCommandContext) {
     const questions = await this.questionService.getAllQuestions();
-    if (!questions)
+    if (!questions.length)
       return interaction.reply({
         content: 'There are no questions to list.',
         ephemeral: true,
