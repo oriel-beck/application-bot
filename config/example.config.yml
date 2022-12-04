@@ -1,0 +1,40 @@
+# Channels config
+channels:
+  # The channel to send the initial application to
+  pending: ''
+  # The channel to send denied applications to
+  denied: ''
+  # The channel to send accepted applications to
+  accepted: ''
+  # The channel to send the "welcome to staff" message
+  staff: ''
+  # The channel to send user reports to
+  reports: ''
+
+# Roles config
+roles:
+  # Can run all commands in commands/manager
+  application_manager: ''
+  # The role the user will get once accepted
+  # TODO: make this an array?
+  staff: ''
+
+# Question limiters (careful, embeds have a 6000 characters limit)
+applications:
+  # max 100 (otherwise the code breaks)
+  max_questions: 0
+  # recommended 10 or slightly above
+  max_questions_per_page: 0
+  # recommended 200-400, adjust according to max_questions_per_page
+  max_answer_length: 0
+
+# Colors config (hex without #)
+colors:
+  # The color for the embed of pending applications
+  pending: ''
+  # The color for the embed of denied applications
+  denied: ''
+  # The color for the embed of accepted applications
+  accepted: ''
+  # The color for all embeds in all commands (excluding the above)
+  primary: ''

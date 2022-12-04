@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 // config env
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { default as config } from './config';
 
 // main modules
 import { EventsModule } from './events';
@@ -22,7 +23,10 @@ import {
 @Module({
   imports: [
     // enable env
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [config],
+    }),
     // enabled postgres
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
