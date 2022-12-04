@@ -210,8 +210,8 @@ export class ApplicationService {
       .reply(
         `${
           currentState.enabled
-            ? ApplicationStateResponses.Enabled
-            : ApplicationStateResponses.Disabled
+            ? ApplicationStateResponses.Disabled
+            : ApplicationStateResponses.Enabled
         } applications!`,
       )
       .catch(() => null);

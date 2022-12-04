@@ -27,6 +27,8 @@ applications:
   max_questions_per_page: 0
   # recommended 200-400, adjust according to max_questions_per_page
   max_answer_length: 0
+  # How long can an application last (in minutes, 0 for infinite)
+  timeout: 0
 
 # Colors config (hex without #)
 colors:
@@ -38,3 +40,6 @@ colors:
   accepted: ''
   # The color for all embeds in all commands (excluding the above)
   primary: ''
+
+# This enabled/disables the loop that notifies applications of remaining time, do not use this in a big scale bot (default 'false')
+edit_loop: 'true/false'

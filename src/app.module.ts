@@ -31,6 +31,7 @@ import {
     // enabled postgres
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         username: configService.get('DB_USERNAME'),
@@ -40,11 +41,22 @@ import {
         entities: [BDFDApplication, BDFDQuestion, BDFDSetting, BDFDBlacklist],
         synchronize: true,
       }),
+    }),
+    // enable redis
+    RedisModule.forRootAsync({
+      imports: [ConfigModule],
       inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        config: {
+          host: 'redis',
+          password: configService.get<string>('REDIS_PASSWORD'),
+        },
+      }),
     }),
     // enable bot
     NecordModule.forRootAsync({
       imports: [ConfigModule],
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         token: configService.get('BOT_TOKEN'),
         intents: [
@@ -53,17 +65,6 @@ import {
           GatewayIntentBits.MessageContent,
         ],
         partials: [Partials.Channel, Partials.Message, Partials.User],
-      }),
-      inject: [ConfigService],
-    }),
-    RedisModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        config: {
-          host: 'redis-db',
-          password: configService.get<string>('REDIS_PASSWORD'),
-        },
       }),
     }),
     // enable events
