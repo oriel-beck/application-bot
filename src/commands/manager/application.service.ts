@@ -62,7 +62,7 @@ export class ApplicationService {
 
   @Subcommand({
     name: 'show',
-    description: 'Show a specific mods',
+    description: 'Show a specific application',
   })
   async showApplication(
     @Context() [interaction]: SlashCommandContext,
@@ -105,7 +105,7 @@ export class ApplicationService {
 
   @Subcommand({
     name: 'deny',
-    description: 'Deny an mods by ID',
+    description: 'Deny an application by ID',
   })
   async denyApplication(
     @Context() [interaction]: SlashCommandContext,
@@ -124,7 +124,7 @@ export class ApplicationService {
 
   @Subcommand({
     name: 'accept',
-    description: 'Accept an mods by ID',
+    description: 'Accept an application by ID',
   })
   async acceptApplication(
     @Context() [interaction]: SlashCommandContext,
@@ -182,7 +182,7 @@ export class ApplicationService {
 
   @Subcommand({
     name: 'delete',
-    description: 'Delete an application by user ID',
+    description: 'Delete an application',
   })
   async deleteApplication(
     @Context() [interaction]: SlashCommandContext,

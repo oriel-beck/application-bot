@@ -34,7 +34,7 @@ import {
 @Injectable()
 @ApplicationCommandGroupDecorator({
   name: 'blacklist',
-  description: 'Manages the mods blacklist system',
+  description: 'Manages the application blacklist system',
 })
 export class ApplicationBlacklistService {
   constructor(private blacklistService: DBApplicationBlacklistService) {}

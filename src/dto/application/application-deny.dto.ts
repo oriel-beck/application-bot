@@ -11,7 +11,7 @@ export class ApplicationDenyOptionsDto {
 
   @StringOption({
     name: 'reason',
-    description: 'The reason to deny the mods',
+    description: 'The reason to deny the application',
     required: false,
   })
   reason?: string = '';

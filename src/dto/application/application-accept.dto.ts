@@ -11,7 +11,7 @@ export class ApplicationAcceptOptionsDto {
 
   @StringOption({
     name: 'reason',
-    description: 'The reason to accept the mods',
+    description: 'The reason to accept the application',
     required: false,
   })
   reason?: string = '';
