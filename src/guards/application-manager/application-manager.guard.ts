@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ApplicationManagerGuard implements CanActivate {
-  constructor(private config: ConfigService) {}
+  constructor(private configService: ConfigService) {}
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
@@ -19,11 +19,11 @@ export class ApplicationManagerGuard implements CanActivate {
 
     if (Array.isArray(interaction.member.roles)) {
       isMod = interaction.member.roles.includes(
-        this.config.get<string>('roles.application_manager'),
+        this.configService.get<string>('roles.application_manager'),
       );
     } else {
       isMod = interaction.member.roles.cache.has(
-        this.config.get<string>('roles.application_manager'),
+        this.configService.get<string>('roles.application_manager'),
       );
     }
 

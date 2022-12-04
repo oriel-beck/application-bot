@@ -16,7 +16,7 @@ export class DBApplicationQuestionsService {
   baseQuestions: string[] = [];
   constructor(
     @InjectRepository(BDFDQuestion) private questions: Repository<BDFDQuestion>,
-    private config: ConfigService,
+    private configService: ConfigService,
   ) {
     if (existsSync('/app/base-questions.json')) {
       this.baseQuestions = JSON.parse(
@@ -77,7 +77,9 @@ export class DBApplicationQuestionsService {
       .createQueryBuilder()
       .select()
       .orderBy('RANDOM()')
-      .limit(Number(this.config.get<string>('applications.max_questions')))
+      .limit(
+        Number(this.configService.get<string>('applications.max_questions')),
+      )
       .execute()
       .then(utilGenerateQuestions(this.baseQuestions))
       .catch(() => []);

@@ -14,6 +14,7 @@ import {
 } from 'necord';
 import { Message, User } from 'discord.js';
 import { ReportDto } from '../../dto/members';
+import { generateReportModal } from '../../utils';
 
 @Injectable()
 export class ReportService {
@@ -27,7 +28,7 @@ export class ReportService {
     @Context() [interaction]: SlashCommandContext,
     @Options() { user }: ReportDto,
   ) {
-    return;
+    return interaction.showModal(generateReportModal(user)).catch(() => null);
   }
 
   @UserCommand({
@@ -37,7 +38,7 @@ export class ReportService {
     @Context() [interaction]: UserCommandContext,
     @TargetUser() user: User,
   ) {
-    return;
+    return interaction.showModal(generateReportModal(user)).catch(() => null);
   }
 
   @MessageCommand({
@@ -47,6 +48,8 @@ export class ReportService {
     @Context() [interaction]: MessageCommandContext,
     @TargetMessage() message: Message,
   ) {
-    return;
+    return interaction
+      .showModal(generateReportModal(message.author, message))
+      .catch(() => null);
   }
 }

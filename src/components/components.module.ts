@@ -10,7 +10,11 @@ import {
   SelectEditAnswerComponent,
   SelectViewApplicationComponent,
 } from './selects';
-import { ModalApplicationComponent, ModalDecisionComponent } from './modals';
+import {
+  ModalApplicationComponent,
+  ModalDecisionComponent,
+  ModalReportComponent,
+} from './modals';
 
 // db services
 import { ServicesModule } from '../services/services.module';
@@ -24,13 +28,14 @@ import { ColorProvider } from '../providers';
 @Module({
   providers: [
     // component handlers
-    ButtonApplicationComponent,
     SelectEditAnswerComponent,
-    ModalApplicationComponent,
+    SelectViewApplicationComponent,
     ButtonPaginationComponent,
     ButtonDecisionComponent,
+    ButtonApplicationComponent,
+    ModalApplicationComponent,
     ModalDecisionComponent,
-    SelectViewApplicationComponent,
+    ModalReportComponent,
 
     // guards
     ApplicationManagerGuard,

@@ -1,5 +1,11 @@
-import { Message, User } from 'discord.js';
-import { EmbedBuilder } from '@discordjs/builders';
+import {
+  Message,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  User,
+} from 'discord.js';
+import { ActionRowBuilder, EmbedBuilder } from '@discordjs/builders';
 import { Colors } from '../providers';
 
 export function generateReportEmbed(
@@ -19,4 +25,23 @@ export function generateReportEmbed(
       )
       .setColor(colors['primary']),
   ];
+}
+
+export function generateReportModal(
+  targetUser: User,
+  targetMessage?: Message,
+): ModalBuilder {
+  return new ModalBuilder()
+    .addComponents([
+      new ActionRowBuilder<TextInputBuilder>().addComponents(
+        new TextInputBuilder()
+          .setCustomId('message')
+          .setLabel('Report reason')
+          .setRequired(true)
+          .setStyle(TextInputStyle.Paragraph)
+          .setMaxLength(1000),
+      ),
+    ])
+    .setCustomId(`report-modal-${targetUser.id}-${targetMessage.id}`)
+    .setTitle('New Report');
 }
