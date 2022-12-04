@@ -1,4 +1,4 @@
-import { Injectable, UseFilters, UseGuards } from '@nestjs/common';
+import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import { DBApplicationApplicationsService } from '../../services';
 import { Button, ButtonContext, Context } from 'necord';
 import {
@@ -11,10 +11,16 @@ import {
   ApplicationManagerNotFoundExceptionFilter,
   ApplicationNotFoundExceptionFilter,
 } from '../../guards';
+import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ButtonPaginationComponent {
-  constructor(private appsService: DBApplicationApplicationsService) {}
+  constructor(
+    private appsService: DBApplicationApplicationsService,
+    private configService: ConfigService,
+    @Inject(COLOR_PROVIDER_TOKEN) private colors: Colors,
+  ) {}
 
   @UseGuards(ApplicationManagerGuard)
   @UseFilters(
@@ -34,9 +40,15 @@ export class ButtonPaginationComponent {
       embeds: await generateApplicationResponseEmbed(
         await this.appsService.getApp(BigInt(userid)),
         interaction.client,
+        this.colors,
+        this.configService.get<number>('applications.max_questions_per_page'),
         num,
       ),
-      components: generateApplicationResponseComponents(userid),
+      components: generateApplicationResponseComponents(
+        userid,
+        this.configService.get<number>('applications.max_questions_per_page'),
+        this.configService.get<number>('applications.max_questions'),
+      ),
     });
   }
 
@@ -58,9 +70,16 @@ export class ButtonPaginationComponent {
       embeds: await generateApplicationResponseEmbed(
         await this.appsService.getApp(BigInt(userid)),
         interaction.client,
+        this.colors,
+        this.configService.get<number>('applications.max_questions_per_page'),
         num,
       ),
-      components: generateApplicationResponseComponents(userid, 1),
+      components: generateApplicationResponseComponents(
+        userid,
+        this.configService.get<number>('applications.max_questions_per_page'),
+        this.configService.get<number>('applications.max_questions'),
+        1,
+      ),
     });
   }
 }

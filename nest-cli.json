@@ -6,7 +6,7 @@
     "assets": [
       {
         "include": "../config/*.yml",
-        "outDir": "../dist/config"
+        "outDir": "./dist/config"
       }
     ]
   }

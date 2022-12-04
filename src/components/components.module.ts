@@ -6,7 +6,10 @@ import {
   ButtonDecisionComponent,
   ButtonPaginationComponent,
 } from './buttons';
-import { SelectEditAnswerComponent } from './selects';
+import {
+  SelectEditAnswerComponent,
+  SelectViewApplicationComponent,
+} from './selects';
 import { ModalApplicationComponent, ModalDecisionComponent } from './modals';
 
 // db services
@@ -14,7 +17,9 @@ import { ServicesModule } from '../services/services.module';
 
 // guards
 import { ApplicationExistsGuard, ApplicationManagerGuard } from '../guards';
-import { SelectViewApplicationComponent } from './selects/select-view-application.component';
+
+// providers
+import { ColorProvider } from '../providers';
 
 @Module({
   providers: [
@@ -30,6 +35,9 @@ import { SelectViewApplicationComponent } from './selects/select-view-applicatio
     // guards
     ApplicationManagerGuard,
     ApplicationExistsGuard,
+
+    // providers
+    ColorProvider,
   ],
   imports: [ServicesModule],
 })

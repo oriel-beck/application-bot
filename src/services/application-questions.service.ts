@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, InsertResult, Repository, UpdateResult } from 'typeorm';
 import { readFileSync, existsSync } from 'fs';
+import { ConfigService } from '@nestjs/config';
 
 // typeorm entities
 import { BDFDQuestion } from '../entities';
@@ -15,6 +16,7 @@ export class DBApplicationQuestionsService {
   baseQuestions: string[] = [];
   constructor(
     @InjectRepository(BDFDQuestion) private questions: Repository<BDFDQuestion>,
+    private config: ConfigService,
   ) {
     if (existsSync('/app/base-questions.json')) {
       this.baseQuestions = JSON.parse(
@@ -75,7 +77,7 @@ export class DBApplicationQuestionsService {
       .createQueryBuilder()
       .select()
       .orderBy('RANDOM()')
-      .limit(Number(process.env.MAX_QUESTIONS_PER_PAGE))
+      .limit(Number(this.config.get<string>('applications.max_questions')))
       .execute()
       .then(utilGenerateQuestions(this.baseQuestions))
       .catch(() => []);

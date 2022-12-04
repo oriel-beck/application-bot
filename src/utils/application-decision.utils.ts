@@ -16,6 +16,7 @@ import {
 import * as process from 'process';
 import { generateApplicationResponseEmbed } from './application-review.utils';
 import { BDFDApplication } from '../entities';
+import { Colors } from '../providers';
 
 export const getModalData = (actionRow: ActionRowModalData) =>
   actionRow[0].components[0] as TextInputModalData;
@@ -43,29 +44,33 @@ export async function sendApplication(
   app: BDFDApplication,
   type: ApplicationState.Accepted | ApplicationState.Denied,
   client: Client,
+  targetChannel: string,
+  colors: Colors,
+  maxQuestionsPerPage: number,
 ): Promise<Message | null> {
-  const channel = await client.channels
-    .fetch(
-      process.env[
-        type === ApplicationState.Accepted
-          ? 'ACCEPTED_CHANNEL'
-          : 'DENIED_CHANNEL'
-      ],
-    )
-    .catch(() => null);
+  const channel = await client.channels.fetch(targetChannel).catch(() => null);
 
   if (!channel) return null;
 
   return await channel
     ?.send({
-      embeds: await generateApplicationResponseEmbed(app, client),
+      embeds: await generateApplicationResponseEmbed(
+        app,
+        client,
+        colors,
+        maxQuestionsPerPage,
+      ),
     })
     .catch(() => null);
 }
 
-export function deletePendingApplication(msgid: string, client: Client): void {
+export function deletePendingApplication(
+  msgid: string,
+  client: Client,
+  pendingChannel: string,
+): void {
   client.channels
-    .fetch(process.env.PENDING_CHANNEL)
+    .fetch(pendingChannel)
     .then((channel: GuildTextBasedChannel) =>
       channel.messages
         .fetch(msgid)
@@ -78,18 +83,21 @@ export function deletePendingApplication(msgid: string, client: Client): void {
 export async function addStaffRoleToUser(
   userid: string,
   guild: Guild,
+  staffRole: string,
 ): Promise<boolean> {
   const member = await guild.members.fetch(userid).catch(() => null);
   if (!member) return false;
 
-  const addRole = await member.roles
-    .add(process.env.STAFF_ROLE)
-    .catch(() => null);
+  const addRole = await member.roles.add(staffRole).catch(() => null);
   return !!addRole;
 }
 
-export async function sendWelcome(userid: string, client: Client) {
-  const channel = await client.channels.fetch(process.env.STAFF_CHANNEL);
+export async function sendWelcome(
+  userid: string,
+  client: Client,
+  staffChannel: string,
+) {
+  const channel = await client.channels.fetch(staffChannel);
   if (!channel || !channel.isTextBased()) return false;
 
   const msg = await channel
@@ -107,6 +115,11 @@ export async function decideApplication(
   client: Client,
   type: ApplicationState.Accepted | ApplicationState.Denied,
   reason = '',
+  pendingChannel: string,
+  targetChannel: string,
+  staffRole: string,
+  staffChannel: string,
+  maxQuestionsPerPage: number,
   guild?: Guild,
 ): Promise<InteractionReplyOptions> {
   const app = await appService.getAppOrThrow(userid);
@@ -114,7 +127,14 @@ export async function decideApplication(
 
   await appService.updateApplicationState(userid, type);
 
-  const sendDecidedApplication = await sendApplication(app, type, client);
+  const sendDecidedApplication = await sendApplication(
+    app,
+    type,
+    client,
+    targetChannel,
+    this.colors,
+    maxQuestionsPerPage,
+  );
 
   const sendDM = await sendMessageToUser(
     userid.toString(),
@@ -123,7 +143,7 @@ export async function decideApplication(
     reason,
   );
 
-  deletePendingApplication(app.messageid.toString(), client);
+  deletePendingApplication(app.messageid.toString(), client, pendingChannel);
 
   if (type === ApplicationState.Denied) {
     return {
@@ -135,9 +155,9 @@ export async function decideApplication(
     };
   }
 
-  const addRole = await addStaffRoleToUser(userid.toString(), guild);
+  const addRole = await addStaffRoleToUser(userid.toString(), guild, staffRole);
 
-  const welcomeMsg = await sendWelcome(userid.toString(), client);
+  const welcomeMsg = await sendWelcome(userid.toString(), client, staffChannel);
 
   return {
     content: ApplicationDecisionModalFunctionResponses.accepted(

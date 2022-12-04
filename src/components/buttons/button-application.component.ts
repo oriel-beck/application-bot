@@ -1,4 +1,4 @@
-import { Injectable, UseFilters, UseGuards } from '@nestjs/common';
+import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import { Button, ButtonContext } from 'necord';
 import { DBApplicationApplicationsService } from '../../services';
 import {
@@ -15,6 +15,7 @@ import {
   ApplicationNotFoundExceptionFilter,
 } from '../../guards';
 import { ApplicationNotFoundException } from '../../exceptions';
+import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
 
 @UseGuards(ApplicationExistsGuard)
 @UseFilters(ApplicationNotFoundExceptionFilter)
@@ -23,6 +24,7 @@ export class ButtonApplicationComponent {
   constructor(
     private configService: ConfigService,
     private appService: DBApplicationApplicationsService,
+    @Inject(COLOR_PROVIDER_TOKEN) private colors: Colors,
   ) {}
 
   @Button('cancel')
@@ -48,7 +50,7 @@ export class ButtonApplicationComponent {
     if (!finalApp) throw new ApplicationNotFoundException();
 
     const channel: GuildTextBasedChannel = await interaction.client.channels
-      .fetch(this.configService.get('PENDING_CHANNEL'))
+      .fetch(this.configService.get('channels.pending'))
       .catch(() => null);
 
     const msg = await channel
@@ -56,9 +58,13 @@ export class ButtonApplicationComponent {
         embeds: await generateApplicationResponseEmbed(
           finalApp,
           interaction.client,
+          this.colors,
+          this.configService.get<number>('applications.max_questions_per_page'),
         ),
         components: generateApplicationResponseComponents(
           finalApp.userid.toString(),
+          this.configService.get<number>('applications.max_questions_per_page'),
+          this.configService.get<number>('applications.max_questions'),
         ),
       })
       .catch(() => null);
@@ -87,6 +93,7 @@ export class ButtonApplicationComponent {
       generateApplicationDashboardModal(
         num,
         app.questions[num],
+        this.configService.get<number>('applications.max_answer_length'),
         app.answers[num],
       ),
     );

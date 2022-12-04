@@ -10,15 +10,17 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from 'discord.js';
-import { ApplicationColors } from '.';
 import type { Client } from 'discord.js';
+import { Colors } from '../providers';
 
 export async function generateApplicationResponseEmbed(
   app: BDFDApplication,
   client: Client,
+  colors: Colors,
+  maxQuestionsPerPage: number,
   page = 0,
 ): Promise<[EmbedBuilder]> {
-  const maxperpage = Number(process.env.MAX_QUESTIONS_PER_PAGE);
+  const maxperpage = Number(maxQuestionsPerPage);
   // copy the answers so the application won't change
   const answers = [...app.answers].splice(page * maxperpage, maxperpage);
   // copy the questions so the application won't change
@@ -36,23 +38,20 @@ export async function generateApplicationResponseEmbed(
       .setFooter({
         text: app.userid.toString(),
       })
-      .setColor(ApplicationColors[app.state]),
+      .setColor(colors[app.state]),
   ];
 }
 
 export function generateApplicationResponseComponents(
   userid: string,
+  maxQuestionsPerPage: number,
+  maxQuestions: number,
   page = 0,
   pending = true,
 ): [ActionRowBuilder<ButtonBuilder>] {
   const actionRow = new ActionRowBuilder<ButtonBuilder>();
-  const paginationNeeded =
-    Number(process.env.MAX_QUESTIONS_PER_PAGE) >
-    Number(process.env.MAX_QUESTIONS);
-  const lastPage = Math.ceil(
-    Number(process.env.MAX_QUESTIONS) /
-      Number(process.env.MAX_QUESTIONS_PER_PAGE),
-  );
+  const paginationNeeded = maxQuestionsPerPage > maxQuestions;
+  const lastPage = Math.ceil(maxQuestions / maxQuestionsPerPage);
 
   if (paginationNeeded) {
     actionRow.addComponents(

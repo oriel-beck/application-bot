@@ -50,6 +50,10 @@ export function generateApplicationDashboardComponents(
   questions: string[],
   answers: string[],
 ): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {
+  if (answers.length !== questions.length) {
+    answers.push('N/A');
+  }
+
   const selectAmount = Math.ceil(questions.length / 25);
   if (selectAmount > 4)
     throw new Error('Cannot generate more than 4 select menus');
@@ -78,15 +82,14 @@ export function generateApplicationDashboardComponents(
     ] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[]
   ).concat(
     Array.from({ length: selectAmount }, (_, selectNum) => {
+      const options = answers.splice(0, 25).map((answer, i) => ({
+        label: `Question ${i + 1 + selectNum * 25}`,
+        value: String(i + selectNum * 25),
+        description: `Click to view question ${i + 1 + selectNum * 25}`,
+      }));
       return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
         new StringSelectMenuBuilder()
-          .addOptions(
-            answers.splice(0, 25).map((answer, i) => ({
-              label: `Question ${i + 1 + selectNum * 25}`,
-              value: String(i + selectNum * 25),
-              description: `Click to view question ${i + 1 + selectNum * 25}`,
-            })),
-          )
+          .addOptions(options)
           .setCustomId(`view-${selectNum}`)
           .setPlaceholder('Choose a question to view'),
       ]);
@@ -97,6 +100,7 @@ export function generateApplicationDashboardComponents(
 export function generateApplicationDashboardModal(
   num: number,
   question: string,
+  maxAnswerLength: number,
   answer?: string,
 ): ModalBuilder {
   return new ModalBuilder()
@@ -107,7 +111,7 @@ export function generateApplicationDashboardModal(
         new TextInputBuilder()
           .setCustomId(`answer-${num}`)
           .setStyle(TextInputStyle.Paragraph)
-          .setMaxLength(Number(process.env.MAX_ANSWER_LENGTH))
+          .setMaxLength(maxAnswerLength)
           .setRequired(true)
           .setLabel(
             question.length > 45 ? question.substring(0, 42) + '...' : question,

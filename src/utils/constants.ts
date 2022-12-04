@@ -1,12 +1,5 @@
 import { User } from 'discord.js';
 
-export enum ApplicationColors {
-  pending = parseInt(process.env.PENDING_COLOR, 16),
-  denied = parseInt(process.env.DENIED_COLOR, 16),
-  accepted = parseInt(process.env.ACCEPTED_COLOR, 16),
-  primary = parseInt(process.env.PRIMARY_COLOR, 16),
-}
-
 export const ApplicationFunctionResponses = Object.freeze({
   dmAccept: (reason?: string) =>
     `Your application was **ACCEPTED**, welcome to BDFD's staff team!${

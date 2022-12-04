@@ -2,12 +2,16 @@ import { Module } from '@nestjs/common';
 
 // commands
 import { ApplicationBlacklistService, ApplicationService } from './manager';
-import { MembersCommandsService } from './members';
+import { MembersCommandsService, ReportService } from './members';
 
 // db services
 import { ServicesModule } from '../services/services.module';
+
+// guards
 import { ApplicationManagerGuard } from '../guards';
-import { ReportService } from './members/report.service';
+
+// colors
+import { ColorProvider } from '../providers';
 
 @Module({
   providers: [
@@ -15,11 +19,13 @@ import { ReportService } from './members/report.service';
     ApplicationService,
     ApplicationBlacklistService,
     MembersCommandsService,
+    ReportService,
 
     // guards
     ApplicationManagerGuard,
 
-    ReportService,
+    // providers
+    ColorProvider,
   ],
   imports: [ServicesModule],
 })

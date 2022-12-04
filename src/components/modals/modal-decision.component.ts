@@ -40,6 +40,11 @@ export class ModalDecisionComponent {
         interaction.client,
         ApplicationState.Denied,
         data.value,
+        this.configService.get<string>('channels.pending'),
+        this.configService.get<string>('channels.denied'),
+        this.configService.get<string>('roles.staff'),
+        this.configService.get<string>('channels.staff'),
+        this.configService.get<number>('applications.max_questions_per_page'),
       ),
     );
   }
@@ -61,6 +66,11 @@ export class ModalDecisionComponent {
         interaction.client,
         ApplicationState.Accepted,
         data.value,
+        this.configService.get<string>('channels.pending'),
+        this.configService.get<string>('channels.accepted'),
+        this.configService.get<string>('roles.staff'),
+        this.configService.get<string>('channels.staff'),
+        this.configService.get<number>('applications.max_questions_per_page'),
         interaction.guild,
       ),
     );

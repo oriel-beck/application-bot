@@ -1,4 +1,4 @@
-import { Injectable, UseFilters, UseGuards } from '@nestjs/common';
+import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import {
   Context,
   createCommandGroupDecorator,
@@ -41,6 +41,8 @@ import {
   generateApplicationResponseComponents,
   generateApplicationResponseEmbed,
 } from '../../utils';
+import { ConfigService } from '@nestjs/config';
+import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
 
 export const ApplicationCommandGroupDecorator = createCommandGroupDecorator({
   name: 'application',
@@ -58,6 +60,8 @@ export class ApplicationService {
   constructor(
     private appService: DBApplicationApplicationsService,
     private settingService: DBApplicationSettingsService,
+    private configService: ConfigService,
+    @Inject(COLOR_PROVIDER_TOKEN) private colors: Colors,
   ) {}
 
   @Subcommand({
@@ -68,12 +72,20 @@ export class ApplicationService {
     @Context() [interaction]: SlashCommandContext,
     @Options() { user }: ApplicationShowOptionsDto,
   ) {
+    console.log(this.colors);
     const app = await this.appService.getAppOrThrow(BigInt(user.id));
 
     return interaction.reply({
-      embeds: await generateApplicationResponseEmbed(app, interaction.client),
+      embeds: await generateApplicationResponseEmbed(
+        app,
+        interaction.client,
+        this.colors,
+        this.configService.get<number>('applications.max_questions_per_page'),
+      ),
       components: generateApplicationResponseComponents(
         app.userid.toString(),
+        this.configService.get<number>('applications.max_questions_per_page'),
+        this.configService.get<number>('applications.max_questions'),
         0,
         app.state === ApplicationState.Pending,
       ),
@@ -118,6 +130,11 @@ export class ApplicationService {
         interaction.client,
         ApplicationState.Denied,
         reason,
+        this.configService.get<string>('channels.pending'),
+        this.configService.get<string>('channels.denied'),
+        this.configService.get<string>('roles.staff'),
+        this.configService.get<string>('channels.staff'),
+        this.configService.get<number>('applications.max_questions_per_page'),
       ),
     );
   }
@@ -137,6 +154,11 @@ export class ApplicationService {
         interaction.client,
         ApplicationState.Accepted,
         reason,
+        this.configService.get('channels.pending'),
+        this.configService.get('channels.accepted'),
+        this.configService.get('roles.staff'),
+        this.configService.get('channels.staff'),
+        this.configService.get<number>('applications.max_questions_per_page'),
         interaction.guild,
       ),
     );
