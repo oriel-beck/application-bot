@@ -64,8 +64,9 @@ export class DBApplicationApplicationsService {
       .createQueryBuilder()
       .update()
       .set({
-        answers: () => `array_append(answers, '${answer}')`,
+        answers: () => `array_append(answers, :answer)`,
       })
+      .setParameter('answer', answer)
       .where('userid = :userid', { userid })
       .returning('*')
       .execute();
