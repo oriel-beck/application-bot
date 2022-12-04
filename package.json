@@ -30,6 +30,7 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "dependencies": {
+    "@nestjs-modules/ioredis": "^1.0.1",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^9.0.0",
@@ -37,6 +38,7 @@
     "@nestjs/typeorm": "^9.0.1",
     "bl": "^6.0.0",
     "discord.js": "^14.7.0",
+    "ioredis": "^4.28.5",
     "js-yaml": "^4.1.0",
     "necord": "^5.4.0",
     "pg": "^8.8.0",
