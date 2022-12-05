@@ -7,7 +7,7 @@ import { BDFDApplication } from '../../entities';
 
 // db services
 import { DBApplicationQuestionsService } from './application-questions.service';
-import { ApplicationState } from '../../utils';
+import { ApplicationState } from '../../constants';
 import { ApplicationNotFoundException } from '../../exceptions';
 
 @Injectable()

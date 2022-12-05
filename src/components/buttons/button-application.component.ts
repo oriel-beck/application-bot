@@ -2,8 +2,6 @@ import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import { Button, ButtonContext } from 'necord';
 import { DBApplicationApplicationsService } from '../../services';
 import {
-  ApplicationDoneButtonResponses,
-  ApplicationState,
   generateApplicationDashboardModal,
   generateApplicationResponseComponents,
   generateApplicationResponseEmbed,
@@ -16,6 +14,10 @@ import {
 } from '../../guards';
 import { ApplicationNotFoundException } from '../../exceptions';
 import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
+import {
+  ApplicationDoneButtonResponses,
+  ApplicationState,
+} from '../../constants';
 
 @UseGuards(ApplicationExistsGuard)
 @UseFilters(ApplicationNotFoundExceptionFilter)

@@ -12,7 +12,7 @@ import {
   ApplicationDecisionModalFunctionResponses,
   ApplicationFunctionResponses,
   ApplicationState,
-} from './constants';
+} from '../constants';
 import { generateApplicationResponseEmbed } from './application-review.utils';
 import { BDFDApplication } from '../entities';
 import { Colors } from '../providers';

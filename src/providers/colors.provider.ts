@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { Provider } from '@nestjs/common';
-import { ApplicationState } from '../utils';
+import { ApplicationState } from '../constants';
 
 export type Colors = Record<ApplicationState & 'primary', number>;
 export const COLOR_PROVIDER_TOKEN = 'COLORS';

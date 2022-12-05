@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryColumn } from 'typeorm';
-import { ApplicationState } from '../utils';
+import { ApplicationState } from '../constants';
 
 @Entity()
 export class BDFDApplication {

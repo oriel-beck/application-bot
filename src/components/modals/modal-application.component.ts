@@ -3,7 +3,6 @@ import { Modal, ModalContext } from 'necord';
 import { DBApplicationApplicationsService } from '../../services';
 import { TextInputModalData } from 'discord.js';
 import {
-  ApplicationErrors,
   generateApplicationDashboardComponents,
   generateApplicationDashboardEmbed,
 } from '../../utils';
@@ -11,6 +10,7 @@ import {
   ApplicationExistsGuard,
   ApplicationNotFoundExceptionFilter,
 } from '../../guards';
+import { ApplicationErrors } from '../../constants';
 
 @Injectable()
 export class ModalApplicationComponent {

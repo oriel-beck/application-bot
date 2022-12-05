@@ -2,7 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
 import { Colors } from 'discord.js';
 import { SlashCommandContext } from 'necord';
 import { ApplicationManagerNotFoundException } from '../../exceptions';
-import { ApplicationInterceptorsResponses } from '../../utils';
+import { ApplicationInterceptorsResponses } from '../../constants';
 import { EmbedBuilder } from '@discordjs/builders';
 
 @Catch(ApplicationManagerNotFoundException)

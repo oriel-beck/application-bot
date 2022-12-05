@@ -1,11 +1,6 @@
 import { Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import { Button, ButtonContext, Context } from 'necord';
-import {
-  ApplicationErrors,
-  ApplicationState,
-  generateAcceptModal,
-  generateDenyModal,
-} from '../../utils';
+import { generateAcceptModal, generateDenyModal } from '../../utils';
 import {
   ApplicationManagerGuard,
   ApplicationManagerNotFoundExceptionFilter,
@@ -13,6 +8,7 @@ import {
 } from '../../guards';
 import { DBApplicationApplicationsService } from '../../services';
 import { ApplicationNotFoundException } from '../../exceptions';
+import { ApplicationErrors, ApplicationState } from '../../constants';
 
 @Injectable()
 export class ButtonDecisionComponent {

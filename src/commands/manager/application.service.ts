@@ -31,10 +31,6 @@ import {
 
 // utils
 import {
-  ApplicationCommandFunctionResponses,
-  ApplicationCommandResponses,
-  ApplicationState,
-  ApplicationStateResponses,
   decideApplication,
   generateApplicationListComponents,
   generateApplicationListEmbed,
@@ -43,6 +39,12 @@ import {
 } from '../../utils';
 import { ConfigService } from '@nestjs/config';
 import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
+import {
+  ApplicationCommandFunctionResponses,
+  ApplicationCommandResponses,
+  ApplicationState,
+  ApplicationStateResponses,
+} from '../../constants';
 
 export const ApplicationCommandGroupDecorator = createCommandGroupDecorator({
   name: 'application',

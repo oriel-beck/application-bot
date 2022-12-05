@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { DBApplicationApplicationsService } from '../../services';
 import { SlashCommandContext } from 'necord';
 import { ApplicationNotActiveException } from '../../exceptions';
-import { ApplicationState } from '../../utils';
+import { ApplicationState } from '../../constants';
 
 @Injectable()
 export class AppActiveGuard implements CanActivate {

@@ -19,18 +19,6 @@ export enum ApplicationErrors {
   NotPending = 'This application is not pending and cannot be modified.',
 }
 
-export enum ApplicationState {
-  Pending = 'pending',
-  Active = 'active',
-  Accepted = 'accepted',
-  Denied = 'denied',
-}
-
-export enum ApplicationStateResponses {
-  Disabled = 'disabled',
-  Enabled = 'enabled',
-}
-
 export const ApplyCommandFunctionResponses = Object.freeze({
   blacklistedMessage: (reason: string) =>
     `You cannot apply as you are blacklisted for: ${reason}.`,

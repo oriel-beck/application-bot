@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { DBApplicationApplicationsService } from '../../services';
 
 // utils
-import { ApplicationState, decideApplication } from '../../utils';
+import { ApplicationState } from '../../constants';
 
 // guards
 import {
@@ -15,6 +15,7 @@ import {
   ApplicationManagerNotFoundExceptionFilter,
   ApplicationNotFoundExceptionFilter,
 } from '../../guards';
+import { decideApplication } from '../../utils';
 
 @Injectable()
 export class ModalDecisionComponent {

@@ -20,7 +20,7 @@ import { DBApplicationBlacklistService } from '../../services';
 import {
   ApplicationBlacklistCommandFunctionResponses,
   ApplicationBlacklistCommandResponses,
-} from '../../utils';
+} from '../../constants';
 
 // guards
 import {

@@ -1,5 +1,5 @@
 import { StringOption } from 'necord';
-import { ApplicationState } from '../../utils';
+import { ApplicationState } from '../../constants';
 
 export class ApplicationListOptionsDto {
   @StringOption({

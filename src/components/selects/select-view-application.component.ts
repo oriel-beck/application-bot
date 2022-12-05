@@ -3,13 +3,13 @@ import { DBApplicationApplicationsService } from '../../services';
 import { Context, SelectMenuContext, StringSelect } from 'necord';
 import { ApplicationManagerNotFoundExceptionFilter } from '../../guards';
 import {
-  ApplicationState,
   generateApplicationResponseComponents,
   generateApplicationResponseEmbed,
 } from '../../utils';
 import { ApplicationNotFoundException } from '../../exceptions';
 import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
 import { ConfigService } from '@nestjs/config';
+import { ApplicationState } from '../../constants';
 
 @UseFilters(ApplicationManagerNotFoundExceptionFilter)
 @Injectable()

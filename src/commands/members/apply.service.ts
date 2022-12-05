@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Context, SlashCommand, SlashCommandContext } from 'necord';
-import { Client, DMChannel } from 'discord.js';
-import { delay, from, interval, mergeMap } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 
 // db services
@@ -16,11 +14,13 @@ import {
 
 // utils
 import {
-  ApplyCommandFunctionResponses,
-  ApplyCommandResponses,
   generateApplicationDashboardComponents,
   generateApplicationDashboardEmbed,
 } from '../../utils';
+import {
+  ApplyCommandFunctionResponses,
+  ApplyCommandResponses,
+} from '../../constants';
 
 @Injectable()
 export class MembersCommandsService {
