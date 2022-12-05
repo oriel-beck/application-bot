@@ -9,6 +9,7 @@ import { BDFDApplication } from '../../entities';
 import { DBApplicationQuestionsService } from './application-questions.service';
 import { ApplicationState } from '../../constants';
 import { ApplicationNotFoundException } from '../../exceptions';
+import { RedisService } from '../redis';
 
 @Injectable()
 export class DBApplicationApplicationsService {
@@ -16,6 +17,7 @@ export class DBApplicationApplicationsService {
     @InjectRepository(BDFDApplication)
     private apps: Repository<BDFDApplication>,
     private questionService: DBApplicationQuestionsService,
+    private redis: RedisService,
   ) {}
 
   async createApp(userid: bigint): Promise<InsertResult> {
@@ -72,7 +74,9 @@ export class DBApplicationApplicationsService {
       .execute();
   }
 
-  deleteApplication(userid: bigint): Promise<DeleteResult | null> {
+  async deleteApplication(userid: bigint): Promise<DeleteResult | null> {
+    const app = await this.getApp(userid);
+    this.redis.del(`application-${app.userid}-${app.messageid}`);
     return this.apps
       .delete({ userid })
       .then((res) => !!res.affected)
@@ -80,6 +84,7 @@ export class DBApplicationApplicationsService {
   }
 
   resetApplications(): Promise<DeleteResult> {
+    this.redis.reset().catch(() => null);
     return this.apps.createQueryBuilder().delete().execute();
   }
 
