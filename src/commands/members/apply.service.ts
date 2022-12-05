@@ -28,6 +28,11 @@ import { ConfigService } from '@nestjs/config';
 export class MembersCommandsService {
   editLoop = this.configSetvice.get<string>('edit_loop') === 'true';
   timeout = this.configSetvice.get<number>('applications.timeout');
+  // loop every 5 minutes, shorter can cause ratelimites sometimes
+  loop$ = interval(60000 * 5).pipe(
+    mergeMap(() => from(this.redisClient.keys('application-*'))),
+    mergeMap((apps: string[]) => from(apps).pipe(delay(3000))),
+  );
   constructor(
     private appService: DBApplicationApplicationsService,
     private blacklistService: DBApplicationBlacklistService,
@@ -195,16 +200,11 @@ export class MembersCommandsService {
   }
 
   startApplicationLoop() {
-    interval(60000)
-      .pipe(
-        mergeMap(() => from(this.redisClient.keys('application-*'))),
-        mergeMap((apps: string[]) => from(apps).pipe(delay(3000))),
-      )
-      .subscribe({
-        next: async (appString) => {
-          const TTL = await this.redisClient.ttl(appString).catch(() => null);
-          this.editApplicationTimeoutTime(appString, TTL);
-        },
-      });
+    this.loop$.subscribe({
+      next: async (appString) => {
+        const TTL = await this.redisClient.ttl(appString).catch(() => null);
+        this.editApplicationTimeoutTime(appString, TTL);
+      },
+    });
   }
 }
