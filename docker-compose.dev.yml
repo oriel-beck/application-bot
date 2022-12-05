@@ -13,6 +13,8 @@ services:
       - appbot_net
     restart: always
     command: npm run start:dev
+    environment:
+      REDIS_PASSWORD: ''
 
   # postgres database
   postgres:
@@ -33,7 +35,7 @@ services:
       - appbot_net
     restart: always
     # change the password on your instance
-    command: redis-server /usr/local/etc/redis/redis.conf --requirepass CHANGE_ME!!!
+    command: redis-server /usr/local/etc/redis/redis.conf --loglevel debug --protected-mode no
     volumes:
       - ./redisconf:/usr/local/etc/redis:r
 

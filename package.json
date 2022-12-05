@@ -9,8 +9,10 @@
   "scripts": {
     "DOCKER": "=========================================",
     "docker": "docker compose up",
+    "docker-down": "docker compose down",
     "docker:build": "docker compose up --build",
     "docker:debug": "docker compose -f docker-compose.dev.yml up --build",
+    "docker:debug-down": "docker compose -f docker-compose.dev.yml down",
     "INTERNAL": "=========================================",
     "start": "nest start",
     "start:dev": "nest start --watch",
