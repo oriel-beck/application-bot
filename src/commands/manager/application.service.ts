@@ -45,6 +45,7 @@ import {
   ApplicationState,
   ApplicationStateResponses,
 } from '../../constants';
+import { APIMessageComponentEmoji } from 'discord.js';
 
 export const ApplicationCommandGroupDecorator = createCommandGroupDecorator({
   name: 'application',
@@ -88,14 +89,8 @@ export class ApplicationService {
           app.userid.toString(),
           this.configService.get<number>('applications.max_questions_per_page'),
           this.configService.get<number>('applications.max_questions'),
-          {
-            id: this.configService.get<string>('emojis.next.id'),
-            name: this.configService.get<string>('emojis.next.name'),
-          },
-          {
-            id: this.configService.get<string>('emojis.prev.id'),
-            name: this.configService.get<string>('emojis.prev.name'),
-          },
+          this.configService.get<APIMessageComponentEmoji>('emojis.next'),
+          this.configService.get<APIMessageComponentEmoji>('emojis.prev'),
           0,
           app.state === ApplicationState.Pending,
         ),
@@ -128,14 +123,8 @@ export class ApplicationService {
         components: generateApplicationListComponents(
           allApplications,
           count,
-          {
-            id: this.configService.get<string>('emojis.next.id'),
-            name: this.configService.get<string>('emojis.next.name'),
-          },
-          {
-            id: this.configService.get<string>('emojis.prev.id'),
-            name: this.configService.get<string>('emojis.prev.name'),
-          },
+          this.configService.get<APIMessageComponentEmoji>('emojis.next'),
+          this.configService.get<APIMessageComponentEmoji>('emojis.prev'),
         ),
       })
       .catch(() => null);

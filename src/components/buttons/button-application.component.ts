@@ -7,7 +7,7 @@ import {
   generateApplicationResponseEmbed,
 } from '../../utils';
 import { ConfigService } from '@nestjs/config';
-import { GuildTextBasedChannel } from 'discord.js';
+import { APIMessageComponentEmoji, GuildTextBasedChannel } from 'discord.js';
 import {
   ApplicationExistsGuard,
   ApplicationNotFoundExceptionFilter,
@@ -70,14 +70,8 @@ export class ButtonApplicationComponent {
           finalApp.userid.toString(),
           this.configService.get<number>('applications.max_questions_per_page'),
           this.configService.get<number>('applications.max_questions'),
-          {
-            id: this.configService.get<string>('emojis.next.id'),
-            name: this.configService.get<string>('emojis.next.name'),
-          },
-          {
-            id: this.configService.get<string>('emojis.prev.id'),
-            name: this.configService.get<string>('emojis.prev.name'),
-          },
+          this.configService.get<APIMessageComponentEmoji>('emojis.next'),
+          this.configService.get<APIMessageComponentEmoji>('emojis.prev'),
         ),
       })
       .catch(() => null);

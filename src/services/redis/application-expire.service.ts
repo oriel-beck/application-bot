@@ -10,14 +10,13 @@ import { expiredInitiated, expireInit } from '../services.module';
 
 @Injectable()
 export class ApplicationExpireService {
-  editLoop = this.configService.get<string>('edit_loop') === 'true';
+  editLoop = this.configService.get<boolean>('edit_loop');
   timeout = this.configService.get<number>('applications.timeout');
   // loop every 5 minutes, shorter can cause ratelimites sometimes
   loop$ = interval(60000 * 5).pipe(
     mergeMap(() => from(this.redisService.keys('application-*'))),
     mergeMap((apps: string[]) => from(apps).pipe(delay(3000))),
   );
-  subscriberRedis = this.redisService.duplicate();
   constructor(
     private configService: ConfigService,
     private redisService: RedisService,

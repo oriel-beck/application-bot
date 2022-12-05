@@ -12,6 +12,7 @@ import {
 } from '../../guards';
 import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
 import { ConfigService } from '@nestjs/config';
+import { APIMessageComponentEmoji } from 'discord.js';
 
 @Injectable()
 export class ButtonPaginationComponent {
@@ -47,14 +48,8 @@ export class ButtonPaginationComponent {
         userid,
         this.configService.get<number>('applications.max_questions_per_page'),
         this.configService.get<number>('applications.max_questions'),
-        {
-          id: this.configService.get<string>('emojis.next.id'),
-          name: this.configService.get<string>('emojis.next.name'),
-        },
-        {
-          id: this.configService.get<string>('emojis.prev.id'),
-          name: this.configService.get<string>('emojis.prev.name'),
-        },
+        this.configService.get<APIMessageComponentEmoji>('emojis.next'),
+        this.configService.get<APIMessageComponentEmoji>('emojis.prev'),
         num,
       ),
     });
@@ -86,14 +81,8 @@ export class ButtonPaginationComponent {
         userid,
         this.configService.get<number>('applications.max_questions_per_page'),
         this.configService.get<number>('applications.max_questions'),
-        {
-          id: this.configService.get<string>('emojis.next.id'),
-          name: this.configService.get<string>('emojis.next.name'),
-        },
-        {
-          id: this.configService.get<string>('emojis.prev.id'),
-          name: this.configService.get<string>('emojis.prev.name'),
-        },
+        this.configService.get<APIMessageComponentEmoji>('emojis.next'),
+        this.configService.get<APIMessageComponentEmoji>('emojis.prev'),
         num,
       ),
     });

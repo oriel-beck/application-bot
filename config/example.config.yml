@@ -48,12 +48,14 @@ emojis:
   prev:
     id: '' # Required
     name: '' # Required for custom emojis
+    animated: false # Default false
   next:
     id: '' # Required
     name: '' # Required for custom emojis
+    animated: false # Default false
 
 # This enabled/disables the loop that notifies applications of remaining time, do not use this in a big scale bot (default 'false')
-edit_loop: 'false'
+edit_loop: false
 
 # The apply command ID (unique to each instance of the bot)
 command_id: ''

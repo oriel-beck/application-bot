@@ -33,6 +33,7 @@ import {
   QuestionCommandResponses,
 } from '../../constants';
 import { ConfigService } from '@nestjs/config';
+import { APIMessageComponentEmoji } from 'discord.js';
 
 // group command decorator
 export const QuestionsCommandGroupDecorator = createCommandGroupDecorator({
@@ -112,14 +113,8 @@ export class QuestionsService {
         embeds: generateQuestionListEmbed(questions),
         components: generateQuestionListComponents(
           questions,
-          {
-            id: this.configService.get<string>('emojis.next.id'),
-            name: this.configService.get<string>('emojis.next.name'),
-          },
-          {
-            id: this.configService.get<string>('emojis.prev.id'),
-            name: this.configService.get<string>('emojis.prev.name'),
-          },
+          this.configService.get<APIMessageComponentEmoji>('emojis.next'),
+          this.configService.get<APIMessageComponentEmoji>('emojis.prev'),
         ),
       })
       .catch(() => null);

@@ -25,7 +25,7 @@ import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
 
 @Injectable()
 export class MembersCommandsService {
-  editLoop = this.configService.get<string>('edit_loop') === 'true';
+  editLoop = this.configService.get<boolean>('edit_loop');
   timeout = this.configService.get<number>('applications.timeout');
   constructor(
     private appService: DBApplicationApplicationsService,
