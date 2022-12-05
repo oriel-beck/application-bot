@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { NecordModule } from 'necord';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { RedisModule } from '@nestjs-modules/ioredis';
 
 // config env
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -40,17 +39,6 @@ import {
         host: configService.get('DB_HOST'),
         entities: [BDFDApplication, BDFDQuestion, BDFDSetting, BDFDBlacklist],
         synchronize: true,
-      }),
-    }),
-    // enable redis
-    RedisModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        config: {
-          host: 'redis',
-          password: configService.get<string>('REDIS_PASSWORD'),
-        },
       }),
     }),
     // enable bot

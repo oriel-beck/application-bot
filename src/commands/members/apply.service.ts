@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Context, SlashCommand, SlashCommandContext } from 'necord';
-import { InjectRedis, Redis } from '@nestjs-modules/ioredis';
-import { Channel, Client, DMChannel } from 'discord.js';
-import { delay, from, interval, mergeMap, tap } from 'rxjs';
+import { Client, DMChannel } from 'discord.js';
+import { delay, from, interval, mergeMap } from 'rxjs';
+import { ConfigService } from '@nestjs/config';
+import * as Redis from 'ioredis';
 
 // db services
 import {
@@ -19,16 +20,19 @@ import {
   generateApplicationDashboardComponents,
   generateApplicationDashboardEmbed,
 } from '../../utils';
-import { ConfigService } from '@nestjs/config';
 
 /**
  * DO NOT initiate this class, this only needs to be initiated once by necord otherwise the loop will overload
  */
 @Injectable()
 export class MembersCommandsService {
-  editLoop = this.configSetvice.get<string>('edit_loop') === 'true';
-  timeout = this.configSetvice.get<number>('applications.timeout');
+  editLoop = this.configService.get<string>('edit_loop') === 'true';
+  timeout = this.configService.get<number>('applications.timeout');
   // loop every 5 minutes, shorter can cause ratelimites sometimes
+  redisClient: Redis = new Redis({
+    host: 'redis',
+    password: this.configService.get<string>('REDIS_PASSWORD'),
+  });
   loop$ = interval(60000 * 5).pipe(
     mergeMap(() => from(this.redisClient.keys('application-*'))),
     mergeMap((apps: string[]) => from(apps).pipe(delay(3000))),
@@ -38,9 +42,8 @@ export class MembersCommandsService {
     private blacklistService: DBApplicationBlacklistService,
     private settingService: DBApplicationSettingsService,
     private questionService: DBApplicationQuestionsService,
-    private configSetvice: ConfigService,
+    private configService: ConfigService,
     private client: Client,
-    @InjectRedis() private redisClient: Redis,
   ) {
     if (this.timeout) {
       const subRedisClient = this.redisClient.duplicate();
