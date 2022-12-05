@@ -118,7 +118,10 @@ export class ApplicationBlacklistService {
     const blacklist = await this.blacklistService.getBlacklist(BigInt(user.id));
     if (!blacklist)
       return interaction
-        .reply("This user isn't blacklisted.")
+        .reply({
+          content: ApplicationBlacklistCommandResponses.NotBlacklisted,
+          ephemeral: true,
+        })
         .catch(() => null);
     return interaction
       .reply({

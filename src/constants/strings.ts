@@ -1,4 +1,4 @@
-import { User } from 'discord.js';
+import { Message, User } from 'discord.js';
 
 export const ApplicationFunctionResponses = Object.freeze({
   dmAccept: (reason?: string) =>
@@ -59,6 +59,7 @@ export enum ApplicationBlacklistCommandResponses {
   FailedBlacklist = 'Failed to blacklisted, is this user blacklisted already?',
   FailedDelete = 'Failed to delete the blacklist.',
   FailedRereason = 'Failed to re-reason the blacklist, is this user blacklisted?',
+  NotBlacklisted = 'This user is not blacklisted.',
 }
 
 export enum ApplicationDoneButtonResponses {
@@ -91,3 +92,71 @@ export enum ApplicationInterceptorsResponses {
   ApplicationNotFound = 'I could not found any application in the database.',
   ApplicationNotActive = 'This application is not currently active.',
 }
+
+export enum QuestionCommandResponses {
+  Added = 'Added the question to the database.',
+  NotFound = 'Could not find any question with the provided ID.',
+  NoQuestions = 'There are no questions to list.',
+}
+
+export const QuestionCommandFunctionResponses = Object.freeze({
+  deleted: (id: string) => `Deleted question ${id}`,
+  edited: (id: string) => `Edited question ${id}`,
+});
+
+export enum ReportModalResponses {
+  Label = 'Report reason',
+  Heading = 'New Report',
+  ChannelNotFound = 'No report channel was found.',
+  SentToReview = 'Sent your report to review, thank you.',
+}
+
+export const ReportEmbedFunctionResponses = Object.freeze({
+  title: (tag: string) => `New report from ${tag}`,
+  description: (targetUser: User, message: string, targetMsg?: Message) =>
+    `Reported user: ${targetUser} (${targetUser.id})\n\nReason: ${message}${
+      targetMsg ? `\n\nProof: [${targetMsg.content}](${targetMsg.url})` : ''
+    }`,
+});
+
+export enum ButtonApplicationComponentResponses {
+  Cancelled = 'Cancelled application process, you can re-apply by using </apply:0> in <#567714226337087498>.',
+}
+
+export enum ApplicationReviewEmbedResponses {
+  Title = 'New Application',
+}
+
+export enum ApplicationReviewModalResponses {
+  AcceptLabel = 'Accept reason (Optional)',
+  DenyLabel = 'Deny reason (Optional',
+}
+export const ApplicationReviewModalFunctionResponses = Object.freeze({
+  acceptTitle: (id: bigint) => `Accept application ${id}`,
+  denyTitle: (id: bigint) => `Accept application ${id}`,
+});
+
+export enum ApplicationApplyDashboardEmbedResponses {
+  QuestionName = 'Question',
+  AnswerName = 'Answer',
+  FooterText = 'Press the Answer button to answer, you can edit your answers via the select menu, the application will time out after 40 minutes.',
+  MissingAnswer = 'N/A',
+}
+
+export enum ApplicationApplyDashboardComponentsResponses {
+  MissingAnswer = 'N/A',
+  Cancel = 'Cancel',
+  Answer = 'Answer',
+  Done = 'Done',
+  SelectPlaceholder = 'Choose a question to view',
+}
+
+export const ApplicationApplyDashboardComponentsFunctionResponses =
+  Object.freeze({
+    selectLabel: (num: number) => `Question ${num}`,
+    selectDescription: (num: number) => `Click to view question ${num}`,
+  });
+
+export const ApplicationApplyDashboardModalFunctionResponses = Object.freeze({
+  title: (num: number) => `Question ${num}`,
+});

@@ -2,7 +2,6 @@ import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import { DBApplicationApplicationsService } from '../../services';
 import { Button, ButtonContext, Context } from 'necord';
 import {
-  applicationExistThrower,
   generateApplicationResponseComponents,
   generateApplicationResponseEmbed,
 } from '../../utils';
@@ -31,14 +30,14 @@ export class ButtonPaginationComponent {
   async applicationPrev(@Context() [interaction]: ButtonContext) {
     const split = interaction.customId.split('-');
 
-    const userid = split.at(1);
-    await applicationExistThrower(BigInt(userid), this.appsService);
+    const userid = BigInt(split.at(1));
+    const app = await this.appsService.getAppOrThrow(userid);
 
     const num = Number(split.at(-1));
 
     return interaction.update({
       embeds: await generateApplicationResponseEmbed(
-        await this.appsService.getApp(BigInt(userid)),
+        app,
         interaction.client,
         this.colors,
         this.configService.get<number>('applications.max_questions_per_page'),
@@ -61,14 +60,14 @@ export class ButtonPaginationComponent {
   async applicationNext(@Context() [interaction]: ButtonContext) {
     const split = interaction.customId.split('-');
 
-    const userid = split.at(1);
-    await applicationExistThrower(BigInt(userid), this.appsService);
+    const userid = BigInt(split.at(1));
+    const app = await this.appsService.getAppOrThrow(userid);
 
     const num = Number(split.at(-1));
 
     return interaction.update({
       embeds: await generateApplicationResponseEmbed(
-        await this.appsService.getApp(BigInt(userid)),
+        app,
         interaction.client,
         this.colors,
         this.configService.get<number>('applications.max_questions_per_page'),

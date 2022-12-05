@@ -17,6 +17,7 @@ import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
 import {
   ApplicationDoneButtonResponses,
   ApplicationState,
+  ButtonApplicationComponentResponses,
 } from '../../constants';
 
 @UseGuards(ApplicationExistsGuard)
@@ -35,8 +36,7 @@ export class ButtonApplicationComponent {
     return interaction.update({
       embeds: [],
       components: [],
-      content:
-        'Cancelled application process, you can re-apply by using </apply:0> in <#567714226337087498>.',
+      content: ButtonApplicationComponentResponses.Cancelled,
     });
   }
 

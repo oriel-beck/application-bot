@@ -12,6 +12,11 @@ import {
 } from 'discord.js';
 import type { Client } from 'discord.js';
 import { Colors } from '../providers';
+import {
+  ApplicationReviewEmbedResponses,
+  ApplicationReviewModalFunctionResponses,
+  ApplicationReviewModalResponses,
+} from '../constants';
 
 export async function generateApplicationResponseEmbed(
   app: BDFDApplication,
@@ -28,7 +33,7 @@ export async function generateApplicationResponseEmbed(
 
   return [
     new EmbedBuilder()
-      .setTitle(`New Application`)
+      .setTitle(ApplicationReviewEmbedResponses.Title)
       .addFields(
         Array.from({ length: answers.length }, (_, i) => ({
           name: `${i + 1 + page * maxperpage}) ${questions[i]}`,
@@ -43,7 +48,7 @@ export async function generateApplicationResponseEmbed(
 }
 
 export function generateApplicationResponseComponents(
-  userid: string,
+  userid: string | bigint,
   maxQuestionsPerPage: number,
   maxQuestions: number,
   page = 0,
@@ -92,12 +97,12 @@ export function generateApplicationResponseComponents(
 
 export function generateAcceptModal(userid: bigint): ModalBuilder {
   return new ModalBuilder()
-    .setTitle(`Accept application ${userid}`)
+    .setTitle(ApplicationReviewModalFunctionResponses.acceptTitle(userid))
     .setCustomId(`accept-${userid}`)
     .addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents([
         new TextInputBuilder()
-          .setLabel('Accept reason (Optional)')
+          .setLabel(ApplicationReviewModalResponses.AcceptLabel)
           .setStyle(TextInputStyle.Paragraph)
           .setCustomId(`accept-input-${userid}`)
           .setRequired(false),
@@ -107,12 +112,12 @@ export function generateAcceptModal(userid: bigint): ModalBuilder {
 
 export function generateDenyModal(userid: bigint): ModalBuilder {
   return new ModalBuilder()
-    .setTitle(`Accept application ${userid}`)
+    .setTitle(ApplicationReviewModalFunctionResponses.denyTitle(userid))
     .setCustomId(`deny-${userid}`)
     .addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents([
         new TextInputBuilder()
-          .setLabel('Deny reason (Optional')
+          .setLabel(ApplicationReviewModalResponses.DenyLabel)
           .setStyle(TextInputStyle.Paragraph)
           .setCustomId(`deny-input-${userid}`)
           .setRequired(false),

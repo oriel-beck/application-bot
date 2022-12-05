@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { TextBasedChannel, TextInputModalData } from 'discord.js';
 import { generateReportEmbed } from '../../utils';
 import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
+import { ReportModalResponses } from '../../constants';
 
 @Injectable()
 export class ModalReportComponent {
@@ -31,7 +32,7 @@ export class ModalReportComponent {
     if (!reportChannel)
       return interaction
         .reply({
-          content: 'No report channel was found.',
+          content: ReportModalResponses.ChannelNotFound,
           ephemeral: true,
         })
         .catch(() => null);
@@ -50,7 +51,7 @@ export class ModalReportComponent {
 
     return interaction
       .reply({
-        content: 'Sent your report to review, thank you.',
+        content: ReportModalResponses.SentToReview,
         ephemeral: true,
       })
       .catch(() => null);

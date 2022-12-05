@@ -12,6 +12,12 @@ import {
   TextInputStyle,
 } from 'discord.js';
 import type { BDFDQuestion } from '../entities';
+import {
+  ApplicationApplyDashboardComponentsFunctionResponses,
+  ApplicationApplyDashboardComponentsResponses,
+  ApplicationApplyDashboardEmbedResponses,
+  ApplicationApplyDashboardModalFunctionResponses,
+} from '../constants';
 
 export function utilGenerateQuestions(baseQuestions: string[]) {
   return function (questions: BDFDQuestion[]) {
@@ -22,24 +28,24 @@ export function utilGenerateQuestions(baseQuestions: string[]) {
 export function generateApplicationDashboardEmbed(
   num: number,
   question: string,
-  answer = 'N/A',
+  answer: string = ApplicationApplyDashboardEmbedResponses.MissingAnswer,
 ): [EmbedBuilder] {
   return [
     new EmbedBuilder()
       .setColor(Colors.DarkPurple)
       .addFields([
         {
-          name: 'Question',
+          name: ApplicationApplyDashboardEmbedResponses.QuestionName,
           value: question,
         },
         {
-          name: 'Answer',
+          name: ApplicationApplyDashboardEmbedResponses.AnswerName,
           value: answer,
         },
       ])
       .setTitle(`Question ${num + 1}`)
       .setFooter({
-        text: 'Press the Answer button to answer, you can edit your answers via the select menu, the application will time out in 40 minutes.',
+        text: ApplicationApplyDashboardEmbedResponses.FooterText,
       }),
   ];
 }
@@ -51,7 +57,7 @@ export function generateApplicationDashboardComponents(
   answers: string[],
 ): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {
   if (answers.length !== questions.length) {
-    answers.push('N/A');
+    answers.push(ApplicationApplyDashboardComponentsResponses.MissingAnswer);
   }
 
   const selectAmount = Math.ceil(questions.length / 25);
@@ -63,11 +69,11 @@ export function generateApplicationDashboardComponents(
       new ActionRowBuilder<ButtonBuilder>().addComponents([
         new ButtonBuilder()
           .setStyle(ButtonStyle.Danger)
-          .setLabel('Cancel')
+          .setLabel(ApplicationApplyDashboardComponentsResponses.Cancel)
           .setCustomId(`cancel`),
         new ButtonBuilder()
           .setStyle(ButtonStyle.Primary)
-          .setLabel('Answer')
+          .setLabel(ApplicationApplyDashboardComponentsResponses.Answer)
           .setCustomId(`answer-${current}`),
         new ButtonBuilder()
           .setStyle(
@@ -75,7 +81,7 @@ export function generateApplicationDashboardComponents(
               ? ButtonStyle.Success
               : ButtonStyle.Secondary,
           )
-          .setLabel('Done')
+          .setLabel(ApplicationApplyDashboardComponentsResponses.Done)
           .setCustomId(`done`)
           .setDisabled(questions.length !== answers.length),
       ]),
@@ -83,15 +89,22 @@ export function generateApplicationDashboardComponents(
   ).concat(
     Array.from({ length: selectAmount }, (_, selectNum) => {
       const options = answers.splice(0, 25).map((answer, i) => ({
-        label: `Question ${i + 1 + selectNum * 25}`,
+        label: ApplicationApplyDashboardComponentsFunctionResponses.selectLabel(
+          i + 1 + selectNum * 25,
+        ),
         value: String(i + selectNum * 25),
-        description: `Click to view question ${i + 1 + selectNum * 25}`,
+        description:
+          ApplicationApplyDashboardComponentsFunctionResponses.selectDescription(
+            i + 1 + selectNum * 25,
+          ),
       }));
       return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
         new StringSelectMenuBuilder()
           .addOptions(options)
           .setCustomId(`view-${selectNum}`)
-          .setPlaceholder('Choose a question to view'),
+          .setPlaceholder(
+            ApplicationApplyDashboardComponentsResponses.SelectPlaceholder,
+          ),
       ]);
     }),
   );
@@ -105,7 +118,7 @@ export function generateApplicationDashboardModal(
 ): ModalBuilder {
   return new ModalBuilder()
     .setCustomId(`answer`)
-    .setTitle(`Question ${num + 1}`)
+    .setTitle(ApplicationApplyDashboardModalFunctionResponses.title(num + 1))
     .addComponents([
       new ActionRowBuilder<TextInputBuilder>().addComponents([
         new TextInputBuilder()

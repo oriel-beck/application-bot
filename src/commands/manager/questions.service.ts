@@ -28,6 +28,10 @@ import {
   generateQuestionListComponents,
   generateQuestionListEmbed,
 } from '../../utils';
+import {
+  QuestionCommandFunctionResponses,
+  QuestionCommandResponses,
+} from '../../constants';
 
 // group command decorator
 export const QuestionsCommandGroupDecorator = createCommandGroupDecorator({
@@ -53,7 +57,7 @@ export class QuestionsService {
     await this.questionService.addQuestion(question);
     return interaction
       .reply({
-        content: 'Added the question to the database.',
+        content: QuestionCommandResponses.Added,
         ephemeral: true,
       })
       .catch(() => null);
@@ -72,14 +76,14 @@ export class QuestionsService {
     if (!removed.affected)
       return interaction
         .reply({
-          content: 'Could not find any question with the provided ID.',
+          content: QuestionCommandResponses.NotFound,
           ephemeral: true,
         })
         .catch(() => null);
 
     return interaction
       .reply({
-        content: `Deleted question ${id}`,
+        content: QuestionCommandFunctionResponses.deleted(id),
         ephemeral: true,
       })
       .catch(() => null);
@@ -94,7 +98,7 @@ export class QuestionsService {
     if (!questions.length)
       return interaction
         .reply({
-          content: 'There are no questions to list.',
+          content: QuestionCommandResponses.NoQuestions,
           ephemeral: true,
         })
         .catch(() => null);
@@ -120,14 +124,14 @@ export class QuestionsService {
     if (!edited.affected)
       return interaction
         .reply({
-          content: 'Could not find any question with the provided ID.',
+          content: QuestionCommandResponses.NotFound,
           ephemeral: true,
         })
         .catch(() => null);
 
     return interaction
       .reply({
-        content: `Edited question ${id}`,
+        content: QuestionCommandFunctionResponses.edited(id),
         ephemeral: true,
       })
       .catch(() => null);

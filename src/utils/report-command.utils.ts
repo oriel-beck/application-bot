@@ -7,6 +7,10 @@ import {
 } from 'discord.js';
 import { ActionRowBuilder, EmbedBuilder } from '@discordjs/builders';
 import { Colors } from '../providers';
+import {
+  ReportEmbedFunctionResponses,
+  ReportModalResponses,
+} from '../constants';
 
 export function generateReportEmbed(
   user: User,
@@ -17,11 +21,13 @@ export function generateReportEmbed(
 ): [EmbedBuilder] {
   return [
     new EmbedBuilder()
-      .setTitle(`New report from ${user.tag}`)
+      .setTitle(ReportEmbedFunctionResponses.title(user.tag))
       .setDescription(
-        `Reported user: ${targetUser} (${targetUser.id})\n\nReason: ${message}${
-          targetMsg ? `\n\nProof: [${targetMsg.content}](${targetMsg.url})` : ''
-        }`,
+        ReportEmbedFunctionResponses.description(
+          targetUser,
+          message,
+          targetMsg,
+        ),
       )
       .setColor(colors['primary']),
   ];
@@ -32,16 +38,16 @@ export function generateReportModal(
   targetMessage?: Message,
 ): ModalBuilder {
   return new ModalBuilder()
+    .setTitle(ReportModalResponses.Heading)
+    .setCustomId(`report-modal-${targetUser.id}-${targetMessage.id}`)
     .addComponents([
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder()
           .setCustomId('message')
-          .setLabel('Report reason')
+          .setLabel(ReportModalResponses.Label)
           .setRequired(true)
           .setStyle(TextInputStyle.Paragraph)
           .setMaxLength(1000),
       ),
-    ])
-    .setCustomId(`report-modal-${targetUser.id}-${targetMessage.id}`)
-    .setTitle('New Report');
+    ]);
 }
