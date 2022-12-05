@@ -37,7 +37,7 @@
     "@nestjs/typeorm": "^9.0.1",
     "bl": "^6.0.0",
     "discord.js": "^14.7.0",
-    "ioredis": "^4.28.5",
+    "ioredis": "^5.2.4",
     "js-yaml": "^4.1.0",
     "necord": "^5.4.0",
     "pg": "^8.8.0",

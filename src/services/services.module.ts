@@ -16,6 +16,7 @@ import {
   BDFDQuestion,
   BDFDSetting,
 } from '../entities';
+import { RedisService } from './redis.service';
 
 @Module({
   providers: [
@@ -23,6 +24,7 @@ import {
     DBApplicationQuestionsService,
     DBApplicationSettingsService,
     DBApplicationBlacklistService,
+    RedisService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -37,6 +39,7 @@ import {
     DBApplicationQuestionsService,
     DBApplicationSettingsService,
     DBApplicationBlacklistService,
+    RedisService,
   ],
 })
 export class ServicesModule {}

@@ -20,6 +20,7 @@ import {
   generateApplicationDashboardComponents,
   generateApplicationDashboardEmbed,
 } from '../../utils';
+import { RedisService } from '../../services/redis.service';
 
 /**
  * DO NOT initiate this class, this only needs to be initiated once by necord otherwise the loop will overload
@@ -29,12 +30,8 @@ export class MembersCommandsService {
   editLoop = this.configService.get<string>('edit_loop') === 'true';
   timeout = this.configService.get<number>('applications.timeout');
   // loop every 5 minutes, shorter can cause ratelimites sometimes
-  redisClient: Redis = new Redis({
-    host: 'redis',
-    password: this.configService.get<string>('REDIS_PASSWORD'),
-  });
   loop$ = interval(60000 * 5).pipe(
-    mergeMap(() => from(this.redisClient.keys('application-*'))),
+    mergeMap(() => from(this.redisService.keys('application-*'))),
     mergeMap((apps: string[]) => from(apps).pipe(delay(3000))),
   );
   constructor(
@@ -44,9 +41,10 @@ export class MembersCommandsService {
     private questionService: DBApplicationQuestionsService,
     private configService: ConfigService,
     private client: Client,
+    private redisService: RedisService,
   ) {
     if (this.timeout) {
-      const subRedisClient = this.redisClient.duplicate();
+      const subRedisClient = this.redisService.duplicate();
       subRedisClient.subscribe('__keyevent@0__:expired');
       subRedisClient.on('message', (_, i) => this.handleApplicationTimeout(i));
     }
@@ -144,11 +142,11 @@ export class MembersCommandsService {
     await this.appService.updateAppMessageID(userid, BigInt(initMessage.id));
 
     if (this.editLoop) {
-      this.redisClient
+      this.redisService
         .setex(
           `application-${userid}-${initMessage.id}`,
           60 * this.timeout,
-          userid,
+          userid.toString(),
         )
         .catch(() => null);
     }
@@ -205,7 +203,7 @@ export class MembersCommandsService {
   startApplicationLoop() {
     this.loop$.subscribe({
       next: async (appString) => {
-        const TTL = await this.redisClient.ttl(appString).catch(() => null);
+        const TTL = await this.redisService.ttl(appString).catch(() => null);
         this.editApplicationTimeoutTime(appString, TTL);
       },
     });
