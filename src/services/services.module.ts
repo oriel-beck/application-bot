@@ -19,6 +19,10 @@ import {
   BDFDSetting,
 } from '../entities';
 
+// utils for ApplicationExpireService
+export let expireInit = false;
+export const expiredInitiated = () => (expireInit = true);
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
