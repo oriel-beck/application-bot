@@ -1,4 +1,5 @@
 import { Message, User } from 'discord.js';
+import { ApplicationState } from './constants';
 
 export const ApplicationFunctionResponses = Object.freeze({
   dmAccept: (reason?: string) =>
@@ -119,9 +120,10 @@ export const ReportEmbedFunctionResponses = Object.freeze({
     }`,
 });
 
-export enum ButtonApplicationComponentResponses {
-  Cancelled = 'Cancelled application process, you can re-apply by using </apply:0> in <#567714226337087498>.',
-}
+export const ButtonApplicationComponentFunctionResponses = Object.freeze({
+  Cancelled: (commandid: string, channelid: string) =>
+    `Cancelled application process, you can re-apply by using </apply:${commandid}> in <#${channelid}>.`,
+});
 
 export enum ApplicationReviewEmbedResponses {
   Title = 'New Application',
@@ -159,4 +161,25 @@ export const ApplicationApplyDashboardComponentsFunctionResponses =
 
 export const ApplicationApplyDashboardModalFunctionResponses = Object.freeze({
   title: (num: number) => `Question ${num}`,
+});
+
+export enum ApplicationCommandListEmbedResponses {
+  Title = 'Applications list',
+}
+
+export const ApplicationCommandListEmbedFunctionResponses = Object.freeze({
+  description: (count: number, state: ApplicationState, page: number) =>
+    `There are currently \`${count}\` applications \`${state}\`, page \`${page}/${
+      count > 125 ? Math.ceil(count / 100) : 1
+    }\``,
+});
+
+export enum ApplicationListCommandComponentsResponses {
+  Placeholder = 'Select an application to view',
+}
+
+export const ApplicationListCommandComponentsFunctionResponses = Object.freeze({
+  selectLabel: (userid: bigint | string) => `Application from ${userid}`,
+  selectDescription: (userid: bigint | string) =>
+    `Click to view the application of ${userid}`,
 });

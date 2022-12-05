@@ -5,7 +5,6 @@ import {
 } from '@discordjs/builders';
 import {
   ButtonStyle,
-  Colors,
   ModalBuilder,
   StringSelectMenuBuilder,
   TextInputBuilder,
@@ -29,10 +28,11 @@ export function generateApplicationDashboardEmbed(
   num: number,
   question: string,
   answer: string = ApplicationApplyDashboardEmbedResponses.MissingAnswer,
+  primaryColor: number,
 ): [EmbedBuilder] {
   return [
     new EmbedBuilder()
-      .setColor(Colors.DarkPurple)
+      .setColor(primaryColor)
       .addFields([
         {
           name: ApplicationApplyDashboardEmbedResponses.QuestionName,

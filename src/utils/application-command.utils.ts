@@ -1,5 +1,15 @@
-import { ButtonStyle, StringSelectMenuBuilder } from 'discord.js';
-import { ApplicationState } from '../constants';
+import {
+  APIMessageComponentEmoji,
+  ButtonStyle,
+  StringSelectMenuBuilder,
+} from 'discord.js';
+import {
+  ApplicationCommandListEmbedFunctionResponses,
+  ApplicationCommandListEmbedResponses,
+  ApplicationListCommandComponentsFunctionResponses,
+  ApplicationListCommandComponentsResponses,
+  ApplicationState,
+} from '../constants';
 import { BDFDApplication } from '../entities';
 import {
   ActionRowBuilder,
@@ -12,14 +22,16 @@ export function generateApplicationListEmbed(
   state,
   page = 1,
 ): [EmbedBuilder] {
-  state = state || ApplicationState.Pending;
+  state ||= ApplicationState.Pending;
   return [
     new EmbedBuilder()
-      .setTitle('Applications list')
+      .setTitle(ApplicationCommandListEmbedResponses.Title)
       .setDescription(
-        `There are currently \`${count}\` applications \`${state}\`, page \`${page}/${
-          count > 125 ? Math.ceil(count / 100) : 1
-        }\``,
+        ApplicationCommandListEmbedFunctionResponses.description(
+          count,
+          state,
+          page,
+        ),
       ),
   ];
 }
@@ -27,6 +39,8 @@ export function generateApplicationListEmbed(
 export function generateApplicationListComponents(
   applications: BDFDApplication[],
   count: number,
+  prevEmoji: APIMessageComponentEmoji,
+  nextEmoji: APIMessageComponentEmoji,
   page = 0,
 ): ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] {
   if (!count) return [];
@@ -41,12 +55,18 @@ export function generateApplicationListComponents(
       new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`app-list-${i}`)
-          .setPlaceholder('Select an application to view')
+          .setPlaceholder(ApplicationListCommandComponentsResponses.Placeholder)
           .addOptions(
             applications.splice(0, 25).map((app) => ({
-              label: `Application from ${app.userid}`,
+              label:
+                ApplicationListCommandComponentsFunctionResponses.selectLabel(
+                  app.userid,
+                ),
               value: app.userid.toString(),
-              description: `Click to view the application of ${app.userid}`,
+              description:
+                ApplicationListCommandComponentsFunctionResponses.selectDescription(
+                  app.userid,
+                ),
             })),
           ),
       ),
@@ -56,8 +76,8 @@ export function generateApplicationListComponents(
     buttons.push(
       new ButtonBuilder()
         .setCustomId(`app-list-prev-${page}`)
-        // TODO: find a prev emoji
-        .setLabel('Prev')
+        .setLabel(prevEmoji.id ? null : 'Prev')
+        .setEmoji(prevEmoji.id ? prevEmoji : null)
         .setStyle(ButtonStyle.Primary)
         .setDisabled(page === 0),
     );
@@ -65,7 +85,8 @@ export function generateApplicationListComponents(
     buttons.push(
       new ButtonBuilder()
         .setCustomId(`app-list-next-${page}`)
-        .setLabel('Next')
+        .setLabel(nextEmoji.id ? null : 'Next')
+        .setEmoji(nextEmoji.id ? nextEmoji : null)
         .setStyle(ButtonStyle.Primary)
         .setDisabled(Math.ceil(count / 100) === page),
     );

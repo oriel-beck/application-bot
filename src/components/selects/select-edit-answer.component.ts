@@ -1,4 +1,4 @@
-import { Injectable, UseFilters } from '@nestjs/common';
+import { Inject, Injectable, UseFilters } from '@nestjs/common';
 import { SelectMenuContext, StringSelect } from 'necord';
 import { DBApplicationApplicationsService } from '../../services';
 import {
@@ -7,11 +7,15 @@ import {
 } from '../../utils';
 import { ApplicationNotFoundExceptionFilter } from '../../guards';
 import { ApplicationNotFoundException } from '../../exceptions';
+import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
 
 @UseFilters(ApplicationNotFoundExceptionFilter)
 @Injectable()
 export class SelectEditAnswerComponent {
-  constructor(private appService: DBApplicationApplicationsService) {}
+  constructor(
+    private appService: DBApplicationApplicationsService,
+    @Inject(COLOR_PROVIDER_TOKEN) private colors: Colors,
+  ) {}
 
   @StringSelect('view-:id')
   async viewQuestion([interaction]: SelectMenuContext) {
@@ -27,6 +31,7 @@ export class SelectEditAnswerComponent {
         qnum,
         app.questions[qnum],
         app.answers[qnum],
+        this.colors['primary'],
       ),
       components: generateApplicationDashboardComponents(
         qnum,

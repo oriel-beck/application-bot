@@ -5,6 +5,7 @@ import {
   EmbedBuilder,
 } from '@discordjs/builders';
 import {
+  APIMessageComponentEmoji,
   ButtonStyle,
   ModalBuilder,
   TextInputBuilder,
@@ -51,6 +52,8 @@ export function generateApplicationResponseComponents(
   userid: string | bigint,
   maxQuestionsPerPage: number,
   maxQuestions: number,
+  nextEmoji: APIMessageComponentEmoji,
+  prevEmoji: APIMessageComponentEmoji,
   page = 0,
   pending = true,
 ): [ActionRowBuilder<ButtonBuilder>] {
@@ -63,8 +66,8 @@ export function generateApplicationResponseComponents(
       new ButtonBuilder()
         .setCustomId(`prev-${userid}-${page - 1}`)
         .setDisabled(page === 0)
-        // TODO: prev emoji
-        .setLabel('Prev')
+        .setLabel(prevEmoji.id ? null : 'Prev')
+        .setEmoji(prevEmoji.id ? prevEmoji : null)
         .setStyle(ButtonStyle.Primary),
     );
   }
@@ -87,8 +90,8 @@ export function generateApplicationResponseComponents(
       new ButtonBuilder()
         .setCustomId(`next-${userid}-${page + 1}`)
         .setDisabled(page === lastPage)
-        // TODO: next emoji
-        .setLabel('Next')
+        .setLabel(nextEmoji.id ? null : 'Next')
+        .setEmoji(nextEmoji.id ? nextEmoji : null)
         .setStyle(ButtonStyle.Primary),
     );
   }

@@ -4,7 +4,7 @@ import {
   ButtonBuilder,
   EmbedBuilder,
 } from '@discordjs/builders';
-import { ButtonStyle } from 'discord.js';
+import { APIMessageComponentEmoji, ButtonStyle } from 'discord.js';
 
 export function generateQuestionListEmbed(
   questions: BDFDQuestion[],
@@ -23,19 +23,21 @@ export function generateQuestionListEmbed(
 
 export function generateQuestionListComponents(
   questions: BDFDQuestion[],
+  nextEmoji: APIMessageComponentEmoji,
+  prevEmoji: APIMessageComponentEmoji,
   page = 0,
 ): [ActionRowBuilder<ButtonBuilder>] {
   return [
     new ActionRowBuilder<ButtonBuilder>().addComponents([
       new ButtonBuilder()
-        // TODO: find a prev emoji
-        .setLabel('Prev')
+        .setLabel(prevEmoji.id ? null : 'Prev')
+        .setEmoji(prevEmoji.id ? prevEmoji : null)
         .setStyle(ButtonStyle.Primary)
         .setCustomId(`question-list-${page - 1}`)
         .setDisabled(page === 0),
       new ButtonBuilder()
-        // TODO: find a next emoji
-        .setLabel('Next')
+        .setLabel(nextEmoji.id ? null : 'Next')
+        .setEmoji(nextEmoji.id ? nextEmoji : null)
         .setStyle(ButtonStyle.Primary)
         .setCustomId(`question-list-${page + 1}`)
         .setDisabled(page === Math.ceil(questions.length / 10)),

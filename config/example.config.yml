@@ -10,6 +10,8 @@ channels:
   staff: ''
   # The channel to send user reports to
   reports: ''
+  # The channel to send people to re-apply in
+  bot: ''
 
 # Roles config
 roles:
@@ -41,5 +43,17 @@ colors:
   # The color for all embeds in all commands (excluding the above)
   primary: ''
 
+# Optional, default to labels of ('Prev' and 'Next')
+emojis:
+  prev:
+    id: '' # Required
+    name: '' # Required for custom emojis
+  next:
+    id: '' # Required
+    name: '' # Required for custom emojis
+
 # This enabled/disables the loop that notifies applications of remaining time, do not use this in a big scale bot (default 'false')
-edit_loop: 'true/false'
+edit_loop: 'false'
+
+# The apply command ID (unique to each instance of the bot)
+command_id: ''

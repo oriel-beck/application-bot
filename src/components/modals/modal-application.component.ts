@@ -1,4 +1,4 @@
-import { Injectable, UseFilters, UseGuards } from '@nestjs/common';
+import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import { Modal, ModalContext } from 'necord';
 import { DBApplicationApplicationsService } from '../../services';
 import { TextInputModalData } from 'discord.js';
@@ -11,10 +11,14 @@ import {
   ApplicationNotFoundExceptionFilter,
 } from '../../guards';
 import { ApplicationErrors } from '../../constants';
+import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
 
 @Injectable()
 export class ModalApplicationComponent {
-  constructor(private appService: DBApplicationApplicationsService) {}
+  constructor(
+    private appService: DBApplicationApplicationsService,
+    @Inject(COLOR_PROVIDER_TOKEN) private colors: Colors,
+  ) {}
 
   @UseGuards(ApplicationExistsGuard)
   @UseFilters(ApplicationNotFoundExceptionFilter)
@@ -69,6 +73,7 @@ export class ModalApplicationComponent {
         qnum,
         app.questions[qnum],
         app.answers[qnum],
+        this.colors['primary'],
       ),
       components: generateApplicationDashboardComponents(
         qnum,

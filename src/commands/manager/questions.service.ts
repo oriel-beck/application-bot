@@ -32,6 +32,7 @@ import {
   QuestionCommandFunctionResponses,
   QuestionCommandResponses,
 } from '../../constants';
+import { ConfigService } from '@nestjs/config';
 
 // group command decorator
 export const QuestionsCommandGroupDecorator = createCommandGroupDecorator({
@@ -44,7 +45,10 @@ export const QuestionsCommandGroupDecorator = createCommandGroupDecorator({
 @Injectable()
 @QuestionsCommandGroupDecorator()
 export class QuestionsService {
-  constructor(private questionService: DBApplicationQuestionsService) {}
+  constructor(
+    private questionService: DBApplicationQuestionsService,
+    private configService: ConfigService,
+  ) {}
 
   @Subcommand({
     name: 'add',
@@ -106,7 +110,17 @@ export class QuestionsService {
     return interaction
       .reply({
         embeds: generateQuestionListEmbed(questions),
-        components: generateQuestionListComponents(questions),
+        components: generateQuestionListComponents(
+          questions,
+          {
+            id: this.configService.get<string>('emojis.next.id'),
+            name: this.configService.get<string>('emojis.next.name'),
+          },
+          {
+            id: this.configService.get<string>('emojis.prev.id'),
+            name: this.configService.get<string>('emojis.prev.name'),
+          },
+        ),
       })
       .catch(() => null);
   }

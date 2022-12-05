@@ -17,7 +17,7 @@ import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
 import {
   ApplicationDoneButtonResponses,
   ApplicationState,
-  ButtonApplicationComponentResponses,
+  ButtonApplicationComponentFunctionResponses,
 } from '../../constants';
 
 @UseGuards(ApplicationExistsGuard)
@@ -36,7 +36,10 @@ export class ButtonApplicationComponent {
     return interaction.update({
       embeds: [],
       components: [],
-      content: ButtonApplicationComponentResponses.Cancelled,
+      content: ButtonApplicationComponentFunctionResponses.Cancelled(
+        this.configService.get<string>('channels.bot'),
+        this.configService.get<string>('command_id'),
+      ),
     });
   }
 
@@ -67,6 +70,14 @@ export class ButtonApplicationComponent {
           finalApp.userid.toString(),
           this.configService.get<number>('applications.max_questions_per_page'),
           this.configService.get<number>('applications.max_questions'),
+          {
+            id: this.configService.get<string>('emojis.next.id'),
+            name: this.configService.get<string>('emojis.next.name'),
+          },
+          {
+            id: this.configService.get<string>('emojis.prev.id'),
+            name: this.configService.get<string>('emojis.prev.name'),
+          },
         ),
       })
       .catch(() => null);

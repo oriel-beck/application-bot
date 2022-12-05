@@ -47,6 +47,15 @@ export class ButtonPaginationComponent {
         userid,
         this.configService.get<number>('applications.max_questions_per_page'),
         this.configService.get<number>('applications.max_questions'),
+        {
+          id: this.configService.get<string>('emojis.next.id'),
+          name: this.configService.get<string>('emojis.next.name'),
+        },
+        {
+          id: this.configService.get<string>('emojis.prev.id'),
+          name: this.configService.get<string>('emojis.prev.name'),
+        },
+        num,
       ),
     });
   }
@@ -77,7 +86,15 @@ export class ButtonPaginationComponent {
         userid,
         this.configService.get<number>('applications.max_questions_per_page'),
         this.configService.get<number>('applications.max_questions'),
-        1,
+        {
+          id: this.configService.get<string>('emojis.next.id'),
+          name: this.configService.get<string>('emojis.next.name'),
+        },
+        {
+          id: this.configService.get<string>('emojis.prev.id'),
+          name: this.configService.get<string>('emojis.prev.name'),
+        },
+        num,
       ),
     });
   }

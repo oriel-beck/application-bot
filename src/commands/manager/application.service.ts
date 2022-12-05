@@ -88,6 +88,14 @@ export class ApplicationService {
           app.userid.toString(),
           this.configService.get<number>('applications.max_questions_per_page'),
           this.configService.get<number>('applications.max_questions'),
+          {
+            id: this.configService.get<string>('emojis.next.id'),
+            name: this.configService.get<string>('emojis.next.name'),
+          },
+          {
+            id: this.configService.get<string>('emojis.prev.id'),
+            name: this.configService.get<string>('emojis.prev.name'),
+          },
           0,
           app.state === ApplicationState.Pending,
         ),
@@ -117,7 +125,18 @@ export class ApplicationService {
     return interaction
       .reply({
         embeds: generateApplicationListEmbed(count, state),
-        components: generateApplicationListComponents(allApplications, count),
+        components: generateApplicationListComponents(
+          allApplications,
+          count,
+          {
+            id: this.configService.get<string>('emojis.next.id'),
+            name: this.configService.get<string>('emojis.next.name'),
+          },
+          {
+            id: this.configService.get<string>('emojis.prev.id'),
+            name: this.configService.get<string>('emojis.prev.name'),
+          },
+        ),
       })
       .catch(() => null);
   }

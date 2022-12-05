@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Context, SlashCommand, SlashCommandContext } from 'necord';
 import { ConfigService } from '@nestjs/config';
 
@@ -21,6 +21,7 @@ import {
   ApplyCommandFunctionResponses,
   ApplyCommandResponses,
 } from '../../constants';
+import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
 
 @Injectable()
 export class MembersCommandsService {
@@ -33,6 +34,7 @@ export class MembersCommandsService {
     private questionService: DBApplicationQuestionsService,
     private configService: ConfigService,
     private redisService: RedisService,
+    @Inject(COLOR_PROVIDER_TOKEN) private colors: Colors,
     expireService: ApplicationExpireService,
   ) {
     expireService.init();
@@ -116,6 +118,8 @@ export class MembersCommandsService {
       embeds: generateApplicationDashboardEmbed(
         0,
         this.questionService.baseQuestions[0],
+        '',
+        this.colors['primary'],
       ),
       components: generateApplicationDashboardComponents(
         0,

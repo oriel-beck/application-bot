@@ -28,7 +28,6 @@ import {
   ApplicationManagerNotFoundExceptionFilter,
 } from '../../guards';
 
-// TODO: add a list command
 @UseGuards(ApplicationManagerGuard)
 @UseFilters(ApplicationManagerNotFoundExceptionFilter)
 @Injectable()
