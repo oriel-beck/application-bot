@@ -7,7 +7,7 @@ import { AppUpdate } from './app-update.service';
 import { ServicesModule } from '../services/services.module';
 
 @Module({
-  providers: [AppUpdate],
   imports: [ServicesModule],
+  providers: [AppUpdate],
 })
 export class EventsModule {}

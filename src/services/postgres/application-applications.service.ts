@@ -3,12 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, InsertResult, Repository, UpdateResult } from 'typeorm';
 
 // typeorm entities
-import { BDFDApplication } from '../entities';
+import { BDFDApplication } from '../../entities';
 
 // db services
 import { DBApplicationQuestionsService } from './application-questions.service';
-import { ApplicationState } from '../utils';
-import { ApplicationNotFoundException } from '../exceptions';
+import { ApplicationState } from '../../utils';
+import { ApplicationNotFoundException } from '../../exceptions';
 
 @Injectable()
 export class DBApplicationApplicationsService {

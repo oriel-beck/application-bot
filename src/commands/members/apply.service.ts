@@ -20,7 +20,7 @@ import {
   generateApplicationDashboardComponents,
   generateApplicationDashboardEmbed,
 } from '../../utils';
-import { RedisService } from '../../services/redis.service';
+import { RedisService } from '../../services/redis/redis.service';
 
 /**
  * DO NOT initiate this class, this only needs to be initiated once by necord otherwise the loop will overload

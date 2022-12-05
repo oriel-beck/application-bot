@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 // typeorm entities
-import { BDFDSetting } from '../entities';
+import { BDFDSetting } from '../../entities';
 
 @Injectable()
 export class DBApplicationSettingsService {

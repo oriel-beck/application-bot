@@ -5,10 +5,10 @@ import { readFileSync, existsSync } from 'fs';
 import { ConfigService } from '@nestjs/config';
 
 // typeorm entities
-import { BDFDQuestion } from '../entities';
+import { BDFDQuestion } from '../../entities';
 
 // utils
-import { utilGenerateQuestions } from '../utils';
+import { utilGenerateQuestions } from '../../utils';
 
 @Injectable()
 export class DBApplicationQuestionsService {

@@ -14,6 +14,7 @@ import { ApplicationManagerGuard } from '../guards';
 import { ColorProvider } from '../providers';
 
 @Module({
+  imports: [ServicesModule],
   providers: [
     // commands
     ApplicationService,
@@ -27,6 +28,5 @@ import { ColorProvider } from '../providers';
     // providers
     ColorProvider,
   ],
-  imports: [ServicesModule],
 })
 export class CommandsModule {}

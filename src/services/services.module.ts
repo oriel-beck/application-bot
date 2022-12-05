@@ -7,6 +7,8 @@ import {
   DBApplicationQuestionsService,
   DBApplicationSettingsService,
   DBApplicationBlacklistService,
+  ApplicationExpireService,
+  RedisService,
 } from '.';
 
 // typeorm entities
@@ -16,16 +18,8 @@ import {
   BDFDQuestion,
   BDFDSetting,
 } from '../entities';
-import { RedisService } from './redis.service';
 
 @Module({
-  providers: [
-    DBApplicationApplicationsService,
-    DBApplicationQuestionsService,
-    DBApplicationSettingsService,
-    DBApplicationBlacklistService,
-    RedisService,
-  ],
   imports: [
     TypeOrmModule.forFeature([
       BDFDApplication,
@@ -34,11 +28,20 @@ import { RedisService } from './redis.service';
       BDFDBlacklist,
     ]),
   ],
+  providers: [
+    DBApplicationApplicationsService,
+    DBApplicationQuestionsService,
+    DBApplicationSettingsService,
+    DBApplicationBlacklistService,
+    ApplicationExpireService,
+    RedisService,
+  ],
   exports: [
     DBApplicationApplicationsService,
     DBApplicationQuestionsService,
     DBApplicationSettingsService,
     DBApplicationBlacklistService,
+    ApplicationExpireService,
     RedisService,
   ],
 })

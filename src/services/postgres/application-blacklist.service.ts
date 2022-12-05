@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, InsertResult, Repository, UpdateResult } from 'typeorm';
 
 // typeorm entities
-import { BDFDBlacklist } from '../entities';
+import { BDFDBlacklist } from '../../entities';
 
 @Injectable()
 export class DBApplicationBlacklistService {
