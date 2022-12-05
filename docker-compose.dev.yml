@@ -24,8 +24,6 @@ services:
     networks:
       - appbot_net
     restart: always
-    volumes:
-      - pgdata:/var/lib/postgresql/data
 
   redis:
     image: redis:7
@@ -37,14 +35,8 @@ services:
     # change the password on your instance
     command: redis-server /usr/local/etc/redis/redis.conf --requirepass CHANGE_ME!!!
     volumes:
-      - redisdata:/data
       - ./redisconf:/usr/local/etc/redis:r
 
 # internal network
 networks:
   appbot_net:
-
-# volumes
-volumes:
-  pgdata:
-  redisdata:
