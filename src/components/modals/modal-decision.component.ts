@@ -47,6 +47,7 @@ export class ModalDecisionComponent {
           this.configService.get<string>('roles.staff'),
           this.configService.get<string>('channels.staff'),
           this.configService.get<number>('applications.max_questions_per_page'),
+          this.configService.get<string>('welcome_msg'),
         ),
       )
       .catch(() => null);
@@ -75,6 +76,7 @@ export class ModalDecisionComponent {
           this.configService.get<string>('roles.staff'),
           this.configService.get<string>('channels.staff'),
           this.configService.get<number>('applications.max_questions_per_page'),
+          this.configService.get<string>('welcome_msg'),
           interaction.guild,
         ),
       )

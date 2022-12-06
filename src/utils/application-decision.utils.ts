@@ -95,13 +95,14 @@ export async function sendWelcome(
   userid: string,
   client: Client,
   staffChannel: string,
+  welcomeMsg: string,
 ) {
   const channel = await client.channels.fetch(staffChannel);
   if (!channel || !channel.isTextBased()) return false;
 
   const msg = await channel
     .send({
-      content: ApplicationFunctionResponses.sitChannelSend(userid),
+      content: `${welcomeMsg}\n<@${userid}>`,
     })
     .catch(() => null);
 
@@ -119,6 +120,7 @@ export async function decideApplication(
   staffRole: string,
   staffChannel: string,
   maxQuestionsPerPage: number,
+  welcomeMsg: string,
   guild?: Guild,
 ): Promise<InteractionReplyOptions> {
   const app = await appService.getAppOrThrow(userid);
@@ -156,14 +158,19 @@ export async function decideApplication(
 
   const addRole = await addStaffRoleToUser(userid.toString(), guild, staffRole);
 
-  const welcomeMsg = await sendWelcome(userid.toString(), client, staffChannel);
+  const welcomeSent = await sendWelcome(
+    userid.toString(),
+    client,
+    staffChannel,
+    welcomeMsg,
+  );
 
   return {
     content: ApplicationDecisionModalFunctionResponses.accepted(
       !!sendDM,
       !!sendDecidedApplication,
       !!addRole,
-      !!welcomeMsg,
+      !!welcomeSent,
     ),
     ephemeral: true,
   };
