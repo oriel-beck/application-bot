@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import {
   Context,
   MessageCommand,
@@ -18,8 +17,6 @@ import { generateReportModal } from '../../utils';
 
 @Injectable()
 export class ReportService {
-  constructor(private configService: ConfigService) {}
-
   @SlashCommand({
     name: 'report',
     description: 'Report a member for cheating on the application.',

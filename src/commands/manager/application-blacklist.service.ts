@@ -14,7 +14,7 @@ import {
 } from '../../dto/application/blacklist';
 
 // services
-import { DBApplicationBlacklistService } from '../../services';
+import { DBApplicationBlacklistService } from '../../services/postgres';
 
 // utils
 import {

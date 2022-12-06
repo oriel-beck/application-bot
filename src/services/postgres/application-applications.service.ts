@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, InsertResult, Repository, UpdateResult } from 'typeorm';
+import Redis from 'ioredis';
 
 // typeorm entities
 import { BDFDApplication } from '../../entities';
@@ -9,15 +10,19 @@ import { BDFDApplication } from '../../entities';
 import { DBApplicationQuestionsService } from './application-questions.service';
 import { ApplicationState } from '../../constants';
 import { ApplicationNotFoundException } from '../../exceptions';
-import { RedisService } from '../redis';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DBApplicationApplicationsService {
+  redis = new Redis({
+    host: 'redis',
+    password: this.configService.get<string>('REDIS_PASSWORD'),
+  });
   constructor(
     @InjectRepository(BDFDApplication)
     private apps: Repository<BDFDApplication>,
     private questionService: DBApplicationQuestionsService,
-    private redis: RedisService,
+    private configService: ConfigService,
   ) {}
 
   async createApp(userid: bigint): Promise<InsertResult> {

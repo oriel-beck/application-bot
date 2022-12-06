@@ -5,22 +5,25 @@ import { Client, DMChannel } from 'discord.js';
 
 // db services
 import { RedisService } from '.';
-import { DBApplicationApplicationsService } from '../postgres';
-import { expiredInitiated, expireInit } from '../services.module';
+// import { expiredInit, expireInit } from './redis.module';
+import { InjectRepository } from '@nestjs/typeorm';
+import { BDFDApplication } from '../../entities';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ApplicationExpireService {
   editLoop = this.configService.get<boolean>('edit_loop');
   timeout = this.configService.get<number>('applications.timeout');
   // loop every 5 minutes, shorter can cause ratelimites sometimes
-  loop$ = interval(60000 * 5).pipe(
+  loop$ = interval(10000).pipe(
     mergeMap(() => from(this.redisService.keys('application-*'))),
     mergeMap((apps: string[]) => from(apps).pipe(delay(3000))),
   );
   constructor(
     private configService: ConfigService,
     private redisService: RedisService,
-    private appService: DBApplicationApplicationsService,
+    @InjectRepository(BDFDApplication)
+    private apps: Repository<BDFDApplication>,
     private discordClient: Client,
   ) {}
 
@@ -28,8 +31,8 @@ export class ApplicationExpireService {
    * You CANNOT initiate this class more than once, otherwise the loop will overload
    */
   public init() {
-    if (expireInit) return false;
-    expiredInitiated();
+    // if (expiredInit) return false;
+    // expireInit();
     if (this.timeout) {
       const subRedisClient = this.redisService.duplicate();
       subRedisClient.subscribe('__keyevent@0__:expired');
@@ -64,7 +67,11 @@ export class ApplicationExpireService {
   }
 
   private async handleApplicationTimeout(appString: string) {
-    this.appService.deleteApplication(BigInt(appString.split('-').at(1)));
+    this.apps
+      .delete({
+        userid: BigInt(appString.split('-').at(1)),
+      })
+      .catch(() => null);
     const msg = await this.getApplicationMessage(appString);
     if (!msg) return;
 

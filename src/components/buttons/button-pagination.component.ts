@@ -1,5 +1,5 @@
 import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
-import { DBApplicationApplicationsService } from '../../services';
+import { DBApplicationApplicationsService } from '../../services/postgres';
 import { Button, ButtonContext, Context } from 'necord';
 import {
   generateApplicationResponseComponents,

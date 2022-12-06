@@ -4,13 +4,11 @@ import { ConfigService } from '@nestjs/config';
 
 // db services
 import {
-  ApplicationExpireService,
   DBApplicationApplicationsService,
   DBApplicationBlacklistService,
   DBApplicationQuestionsService,
   DBApplicationSettingsService,
-  RedisService,
-} from '../../services';
+} from '../../services/postgres';
 
 // utils
 import {
@@ -22,9 +20,10 @@ import {
   ApplyCommandResponses,
 } from '../../constants';
 import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
+import { ApplicationExpireService, RedisService } from '../../services/redis';
 
 @Injectable()
-export class MembersCommandsService {
+export class ApplyCommandsService {
   editLoop = this.configService.get<boolean>('edit_loop');
   timeout = this.configService.get<number>('applications.timeout');
   constructor(
@@ -35,7 +34,7 @@ export class MembersCommandsService {
     private configService: ConfigService,
     private redisService: RedisService,
     @Inject(COLOR_PROVIDER_TOKEN) private colors: Colors,
-    expireService: ApplicationExpireService,
+    private expireService: ApplicationExpireService,
   ) {
     expireService.init();
   }

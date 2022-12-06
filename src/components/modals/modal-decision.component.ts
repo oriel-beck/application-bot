@@ -4,7 +4,7 @@ import { TextInputModalData } from 'discord.js';
 import { ConfigService } from '@nestjs/config';
 
 // services
-import { DBApplicationApplicationsService } from '../../services';
+import { DBApplicationApplicationsService } from '../../services/postgres';
 
 // utils
 import { ApplicationState } from '../../constants';

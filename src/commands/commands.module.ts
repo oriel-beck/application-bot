@@ -2,34 +2,34 @@ import { Module } from '@nestjs/common';
 
 // commands
 import { ApplicationBlacklistService, ApplicationService } from './manager';
-import { MembersCommandsService, ReportService } from './members';
+import { ApplyCommandsService, ReportService } from './members';
 import { OwnerService } from './owner/owner';
 
 // db services
-import { ServicesModule } from '../services/services.module';
 
 // guards
 import { ApplicationManagerGuard } from '../guards';
 
 // colors
 import { ColorProvider } from '../providers';
+import { PostgresModule } from '../services/postgres/postgres.module';
+import { RedisModule } from '../services/redis/redis.module';
 
 @Module({
-  imports: [ServicesModule],
+  imports: [PostgresModule, RedisModule],
   providers: [
     // commands
     ApplicationService,
     ApplicationBlacklistService,
-    MembersCommandsService,
+    ApplyCommandsService,
     ReportService,
+    OwnerService,
 
     // guards
     ApplicationManagerGuard,
 
     // providers
     ColorProvider,
-
-    OwnerService,
   ],
 })
 export class CommandsModule {}

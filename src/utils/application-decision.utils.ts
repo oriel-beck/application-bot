@@ -7,7 +7,7 @@ import {
   Message,
   TextInputModalData,
 } from 'discord.js';
-import { DBApplicationApplicationsService } from '../services';
+import { DBApplicationApplicationsService } from '../services/postgres';
 import {
   ApplicationDecisionModalFunctionResponses,
   ApplicationFunctionResponses,

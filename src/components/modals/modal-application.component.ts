@@ -1,6 +1,6 @@
 import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import { Modal, ModalContext } from 'necord';
-import { DBApplicationApplicationsService } from '../../services';
+import { DBApplicationApplicationsService } from '../../services/postgres';
 import { TextInputModalData } from 'discord.js';
 import {
   generateApplicationDashboardComponents,

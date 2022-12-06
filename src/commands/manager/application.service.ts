@@ -20,7 +20,7 @@ import {
 import {
   DBApplicationApplicationsService,
   DBApplicationSettingsService,
-} from '../../services';
+} from '../../services/postgres';
 
 // guards
 import {

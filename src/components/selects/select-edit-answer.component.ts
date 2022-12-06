@@ -1,6 +1,6 @@
 import { Inject, Injectable, UseFilters } from '@nestjs/common';
 import { SelectMenuContext, StringSelect } from 'necord';
-import { DBApplicationApplicationsService } from '../../services';
+import { DBApplicationApplicationsService } from '../../services/postgres';
 import {
   generateApplicationDashboardComponents,
   generateApplicationDashboardEmbed,

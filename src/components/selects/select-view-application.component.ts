@@ -1,5 +1,5 @@
 import { Inject, Injectable, UseFilters } from '@nestjs/common';
-import { DBApplicationApplicationsService } from '../../services';
+import { DBApplicationApplicationsService } from '../../services/postgres';
 import { Context, SelectMenuContext, StringSelect } from 'necord';
 import { ApplicationManagerNotFoundExceptionFilter } from '../../guards';
 import {

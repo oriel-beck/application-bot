@@ -17,13 +17,13 @@ import {
 } from './modals';
 
 // db services
-import { ServicesModule } from '../services/services.module';
 
 // guards
 import { ApplicationExistsGuard, ApplicationManagerGuard } from '../guards';
 
 // providers
 import { ColorProvider } from '../providers';
+import { PostgresModule } from '../services/postgres/postgres.module';
 
 @Module({
   providers: [
@@ -44,6 +44,6 @@ import { ColorProvider } from '../providers';
     // providers
     ColorProvider,
   ],
-  imports: [ServicesModule],
+  imports: [PostgresModule],
 })
 export class ComponentsModule {}

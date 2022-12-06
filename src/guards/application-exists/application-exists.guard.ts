@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { DBApplicationApplicationsService } from '../../services';
+import { DBApplicationApplicationsService } from '../../services/postgres';
 import { SlashCommandContext } from 'necord';
 import { ApplicationNotFoundException } from '../../exceptions';
 

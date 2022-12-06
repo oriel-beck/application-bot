@@ -15,7 +15,7 @@ import {
 } from '../../dto/question';
 
 // db services
-import { DBApplicationQuestionsService } from '../../services';
+import { DBApplicationQuestionsService } from '../../services/postgres';
 
 // guards
 import {

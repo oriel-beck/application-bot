@@ -6,7 +6,7 @@ import {
   ApplicationManagerNotFoundExceptionFilter,
   ApplicationNotFoundExceptionFilter,
 } from '../../guards';
-import { DBApplicationApplicationsService } from '../../services';
+import { DBApplicationApplicationsService } from '../../services/postgres';
 import { ApplicationNotFoundException } from '../../exceptions';
 import { ApplicationErrors, ApplicationState } from '../../constants';
 
