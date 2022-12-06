@@ -38,7 +38,9 @@
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/typeorm": "^9.0.1",
     "bl": "^6.0.0",
+    "bufferutil": "^4.0.7",
     "discord.js": "^14.7.0",
+    "erlpack": "github:discord/erlpack",
     "ioredis": "^5.2.4",
     "js-yaml": "^4.1.0",
     "necord": "^5.4.0",
@@ -46,7 +48,9 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
-    "typeorm": "^0.3.10"
+    "typeorm": "^0.3.10",
+    "utf-8-validate": "^5.0.10",
+    "zlib-sync": "^0.1.7"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.3.0",
