@@ -1,2 +1,2 @@
 export * from './application-exists.guard';
-export * from './application-exists.interceptor';
+export * from './application-exists.filter';

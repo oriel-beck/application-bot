@@ -1,2 +1,2 @@
 export * from './app-active.guard';
-export * from './app-active.interceptor';
+export * from './app-active.filter';
