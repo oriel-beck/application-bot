@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 // commands
 import { ApplicationBlacklistService, ApplicationService } from './manager';
 import { MembersCommandsService, ReportService } from './members';
+import { OwnerService } from './owner/owner';
 
 // db services
 import { ServicesModule } from '../services/services.module';
@@ -27,6 +28,8 @@ import { ColorProvider } from '../providers';
 
     // providers
     ColorProvider,
+
+    OwnerService,
   ],
 })
 export class CommandsModule {}
