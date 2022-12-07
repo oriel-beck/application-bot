@@ -183,3 +183,14 @@ export const ApplicationListCommandComponentsFunctionResponses = Object.freeze({
   selectDescription: (userid: bigint | string) =>
     `Click to view the application of ${userid}`,
 });
+
+export enum ApplicationExpireResponses {
+  Expired = 'Application timed out, components will no longer respond.',
+}
+
+export const ApplicationExpireFunctionResponses = Object.freeze({
+  expireIn: (seconds: number) =>
+    `Reminder: The application will time out in **${(seconds / 60).toFixed(
+      1,
+    )} minutes**`,
+});

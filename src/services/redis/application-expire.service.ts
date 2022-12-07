@@ -1,18 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { delay, from, interval, mergeMap } from 'rxjs';
-import { Client, DMChannel } from 'discord.js';
+import { Client, DMChannel, Message } from 'discord.js';
 import { RedisService } from '.';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BDFDApplication } from '../../entities';
 import { Repository } from 'typeorm';
+import {
+  ApplicationExpireFunctionResponses,
+  ApplicationExpireResponses,
+} from '../../constants';
 
 @Injectable()
 export class ApplicationExpireService {
   editLoop = this.configService.get<boolean>('edit_loop');
   timeout = this.configService.get<number>('applications.timeout');
   // loop every 5 minutes, shorter can cause ratelimites sometimes
-  loop$ = interval(60000 * 5).pipe(
+  loop$ = interval(10000).pipe(
     mergeMap(() => from(this.redisService.keys('application-*'))),
     mergeMap((apps: string[]) => from(apps).pipe(delay(3000))),
   );
@@ -54,9 +58,7 @@ export class ApplicationExpireService {
 
     msg
       .edit({
-        content: `Reminder: The application will time out in **${(
-          seconds / 60
-        ).toFixed(1)} minutes**`,
+        content: ApplicationExpireFunctionResponses.expireIn(seconds),
       })
       .catch(() => null);
   }
@@ -68,16 +70,18 @@ export class ApplicationExpireService {
       })
       .catch(() => null);
     const msg = await this.getApplicationMessage(appString);
-    if (!msg) return;
+    if (!msg || !msg.embeds.length || !msg.components.length) return;
 
     return msg
       .edit({
-        content: 'Application timed out, components will no longer respond.',
+        content: ApplicationExpireResponses.Expired,
       })
       .catch(() => null);
   }
 
-  private async getApplicationMessage(appString: string) {
+  private async getApplicationMessage(
+    appString: string,
+  ): Promise<Message | null> {
     const split = appString.split('-');
     const user = await this.discordClient.users
       .fetch(split.at(1))

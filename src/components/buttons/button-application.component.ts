@@ -19,6 +19,7 @@ import {
   ApplicationState,
   ButtonApplicationComponentFunctionResponses,
 } from '../../constants';
+import { RedisService } from '../../services/redis';
 
 @UseGuards(ApplicationExistsGuard)
 @UseFilters(ApplicationNotFoundExceptionFilter)
@@ -28,6 +29,7 @@ export class ButtonApplicationComponent {
     private configService: ConfigService,
     private appService: DBApplicationApplicationsService,
     @Inject(COLOR_PROVIDER_TOKEN) private colors: Colors,
+    private redisService: RedisService,
   ) {}
 
   @Button('cancel')
@@ -83,6 +85,10 @@ export class ButtonApplicationComponent {
           ephemeral: true,
         })
         .catch(() => null);
+
+    this.redisService
+      .del(`application-${interaction.user.id}-${interaction.message.id}`)
+      .catch(() => null);
 
     return interaction
       .update({
