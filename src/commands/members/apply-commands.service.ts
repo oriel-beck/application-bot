@@ -9,18 +9,23 @@ import {
   DBApplicationQuestionsService,
   DBApplicationSettingsService,
 } from '../../services/postgres';
+import { ApplicationExpireService, RedisService } from '../../services/redis';
 
 // utils
 import {
   generateApplicationDashboardComponents,
   generateApplicationDashboardEmbed,
 } from '../../utils';
+
+// constants
 import {
   ApplyCommandFunctionResponses,
   ApplyCommandResponses,
 } from '../../constants';
-import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
-import { ApplicationExpireService, RedisService } from '../../services/redis';
+
+// providers
+import { COLOR_PROVIDER_TOKEN } from '../../providers';
+import type { Colors } from '../../providers';
 
 @Injectable()
 export class ApplyCommandsService {

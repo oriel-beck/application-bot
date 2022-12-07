@@ -1,11 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
 import { inspect } from 'util';
 import { EvalDto } from '../../../dto/owner/eval.dto';
 import { EmbedBuilder } from '@discordjs/builders';
 
 @Injectable()
-export class OwnerService {
+export class OwnerCommandsService {
+  logger = new Logger(OwnerCommandsService.name);
   @SlashCommand({
     name: 'eval',
     description: 'Eval a js code',
@@ -20,14 +21,16 @@ export class OwnerService {
       res = eval(asyncFunction ? `( async () => { ${code} })()` : code);
     } catch (error) {
       res = error;
+    } finally {
+      res = inspect(res, showHidden, depth);
+
+      const embed = new EmbedBuilder().setDescription(`\`\`\`js\n${res}\`\`\``);
+
+      interaction
+        .reply({
+          embeds: [embed],
+        })
+        .catch((err) => this.logger.error(err));
     }
-
-    res = inspect(res, showHidden, depth);
-
-    const embed = new EmbedBuilder().setDescription(`\`\`\`js\n${res}\`\`\``);
-
-    return interaction.reply({
-      embeds: [embed],
-    });
   }
 }

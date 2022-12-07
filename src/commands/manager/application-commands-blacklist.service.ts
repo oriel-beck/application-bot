@@ -2,21 +2,18 @@ import { Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import { Context, Options, SlashCommandContext, Subcommand } from 'necord';
 import { Colors } from 'discord.js';
 
-// group command decorator
-import { ApplicationCommandGroupDecorator } from './application.service';
-
 // options dto
 import {
   ApplicationBlacklistAddOptionsDto,
-  ApplicationBlacklistRemoveOptionsDto,
   ApplicationBlacklistReasonOptionDto,
+  ApplicationBlacklistRemoveOptionsDto,
   ApplicationBlacklistShowOptionsDto,
 } from '../../dto/application/blacklist';
 
 // services
 import { DBApplicationBlacklistService } from '../../services/postgres';
 
-// utils
+// constants
 import {
   ApplicationBlacklistCommandFunctionResponses,
   ApplicationBlacklistCommandResponses,
@@ -28,6 +25,9 @@ import {
   ApplicationManagerNotFoundExceptionFilter,
 } from '../../guards';
 
+// group command decorator
+import { ApplicationCommandGroupDecorator } from './application-commands.service';
+
 @UseGuards(ApplicationManagerGuard)
 @UseFilters(ApplicationManagerNotFoundExceptionFilter)
 @Injectable()
@@ -35,7 +35,7 @@ import {
   name: 'blacklist',
   description: 'Manages the application blacklist system',
 })
-export class ApplicationBlacklistService {
+export class ApplicationCommandsBlacklistService {
   constructor(private blacklistService: DBApplicationBlacklistService) {}
 
   @Subcommand({
@@ -51,10 +51,13 @@ export class ApplicationBlacklistService {
       reason,
       BigInt(interaction.user.id),
     );
-    if (!blacklisted)
+
+    if (!blacklisted) {
       return interaction
         .reply(ApplicationBlacklistCommandResponses.FailedBlacklist)
         .catch(() => null);
+    }
+
     return interaction
       .reply(
         ApplicationBlacklistCommandFunctionResponses.blacklisted(user, reason),
@@ -73,10 +76,13 @@ export class ApplicationBlacklistService {
     const deleted = await this.blacklistService.removeBlacklist(
       BigInt(user.id),
     );
-    if (!deleted || !deleted.affected)
+
+    if (!deleted || !deleted.affected) {
       return interaction
         .reply(ApplicationBlacklistCommandResponses.FailedDelete)
         .catch(() => null);
+    }
+
     return interaction
       .reply(ApplicationBlacklistCommandFunctionResponses.unblacklisted(user))
       .catch(() => null);
@@ -95,10 +101,13 @@ export class ApplicationBlacklistService {
       reason,
       BigInt(interaction.user.id),
     );
-    if (!reasoned || !reasoned.affected)
+
+    if (!reasoned || !reasoned.affected) {
       return interaction
         .reply(ApplicationBlacklistCommandResponses.FailedRereason)
         .catch(() => null);
+    }
+
     return interaction
       .reply(
         ApplicationBlacklistCommandFunctionResponses.rereasoned(user, reason),
@@ -115,13 +124,15 @@ export class ApplicationBlacklistService {
     @Options() { user }: ApplicationBlacklistShowOptionsDto,
   ) {
     const blacklist = await this.blacklistService.getBlacklist(BigInt(user.id));
-    if (!blacklist)
+    if (!blacklist) {
       return interaction
         .reply({
           content: ApplicationBlacklistCommandResponses.NotBlacklisted,
           ephemeral: true,
         })
         .catch(() => null);
+    }
+
     return interaction
       .reply({
         embeds: [

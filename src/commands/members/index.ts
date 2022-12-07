@@ -1,2 +1,2 @@
-export * from './apply.service';
-export * from './report.service';
+export * from './apply-commands.service';
+export * from './report-commands.service';

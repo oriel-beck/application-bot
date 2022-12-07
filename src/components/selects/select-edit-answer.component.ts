@@ -1,13 +1,24 @@
 import { Inject, Injectable, UseFilters } from '@nestjs/common';
-import { SelectMenuContext, StringSelect } from 'necord';
+import { StringSelect, StringSelectContext } from 'necord';
+
+// db services
 import { DBApplicationApplicationsService } from '../../services/postgres';
+
+// utils
 import {
   generateApplicationDashboardComponents,
   generateApplicationDashboardEmbed,
 } from '../../utils';
+
+// guards
 import { ApplicationNotFoundExceptionFilter } from '../../guards';
+
+// exceptions
 import { ApplicationNotFoundException } from '../../exceptions';
-import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
+
+// providers
+import { COLOR_PROVIDER_TOKEN } from '../../providers';
+import type { Colors } from '../../providers';
 
 @UseFilters(ApplicationNotFoundExceptionFilter)
 @Injectable()
@@ -18,7 +29,7 @@ export class SelectEditAnswerComponent {
   ) {}
 
   @StringSelect('view-:id')
-  async viewQuestion([interaction]: SelectMenuContext) {
+  async viewQuestion([interaction]: StringSelectContext) {
     const userid = BigInt(interaction.user.id);
     const qnum = Number(interaction.values[0]);
 

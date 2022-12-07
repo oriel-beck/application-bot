@@ -1,4 +1,3 @@
-import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import {
   Context,
   createCommandGroupDecorator,
@@ -6,6 +5,13 @@ import {
   SlashCommandContext,
   Subcommand,
 } from 'necord';
+import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { APIMessageComponentEmoji } from 'discord.js';
+
+// providers
+import { COLOR_PROVIDER_TOKEN } from '../../providers';
+import type { Colors } from '../../providers';
 
 // options dto
 import {
@@ -37,16 +43,16 @@ import {
   generateApplicationResponseComponents,
   generateApplicationResponseEmbed,
 } from '../../utils';
-import { ConfigService } from '@nestjs/config';
-import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
+
+// constants
 import {
   ApplicationCommandFunctionResponses,
   ApplicationCommandResponses,
   ApplicationState,
   ApplicationStateResponses,
 } from '../../constants';
-import { APIMessageComponentEmoji } from 'discord.js';
 
+// group decorator
 export const ApplicationCommandGroupDecorator = createCommandGroupDecorator({
   name: 'application',
   description: 'Manage the applications and submissions',
@@ -60,7 +66,7 @@ export const ApplicationCommandGroupDecorator = createCommandGroupDecorator({
 )
 @Injectable()
 @ApplicationCommandGroupDecorator()
-export class ApplicationService {
+export class ApplicationCommandsService {
   constructor(
     private appService: DBApplicationApplicationsService,
     private settingService: DBApplicationSettingsService,

@@ -1,4 +1,3 @@
-import { Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import {
   Context,
   createCommandGroupDecorator,
@@ -6,6 +5,9 @@ import {
   SlashCommandContext,
   Subcommand,
 } from 'necord';
+import { Injectable, UseFilters, UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { APIMessageComponentEmoji } from 'discord.js';
 
 // options dto
 import {
@@ -28,12 +30,12 @@ import {
   generateQuestionListComponents,
   generateQuestionListEmbed,
 } from '../../utils';
+
+// constants
 import {
   QuestionCommandFunctionResponses,
   QuestionCommandResponses,
 } from '../../constants';
-import { ConfigService } from '@nestjs/config';
-import { APIMessageComponentEmoji } from 'discord.js';
 
 // group command decorator
 export const QuestionsCommandGroupDecorator = createCommandGroupDecorator({
@@ -46,7 +48,7 @@ export const QuestionsCommandGroupDecorator = createCommandGroupDecorator({
 @UseFilters(ApplicationManagerNotFoundExceptionFilter)
 @Injectable()
 @QuestionsCommandGroupDecorator()
-export class QuestionsService {
+export class QuestionsCommandsService {
   constructor(
     private questionService: DBApplicationQuestionsService,
     private configService: ConfigService,

@@ -2,8 +2,15 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Context, Modal, ModalContext } from 'necord';
 import { ConfigService } from '@nestjs/config';
 import { TextBasedChannel, TextInputModalData } from 'discord.js';
+
+// utils
 import { generateReportEmbed } from '../../utils';
-import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
+
+// providers
+import { COLOR_PROVIDER_TOKEN } from '../../providers';
+import type { Colors } from '../../providers';
+
+// constants
 import { ReportModalResponses } from '../../constants';
 
 @Injectable()
@@ -17,9 +24,11 @@ export class ModalReportComponent {
   async reportModal(@Context() [interaction]: ModalContext) {
     const data = interaction.components[0].components[0] as TextInputModalData;
     const split = interaction.customId.split('-');
+
     const targetUser = await interaction.client.users
       .fetch(split.at(2))
       .catch(() => null);
+
     const targetMessage = split.at(-1)
       ? await interaction.channel.messages.fetch(split.at(-1)).catch(() => null)
       : null;
@@ -29,13 +38,14 @@ export class ModalReportComponent {
         .fetch(this.configService.get<string>('channels.report'))
         .catch(() => null);
 
-    if (!reportChannel)
+    if (!reportChannel) {
       return interaction
         .reply({
           content: ReportModalResponses.ChannelNotFound,
           ephemeral: true,
         })
         .catch(() => null);
+    }
 
     reportChannel
       .send({

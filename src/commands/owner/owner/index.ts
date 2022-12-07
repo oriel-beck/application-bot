@@ -1,1 +1,1 @@
-export * from './owner.service';
+export * from './owner-commands.service';

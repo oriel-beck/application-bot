@@ -17,13 +17,13 @@ import {
 } from './modals';
 
 // db services
+import { PostgresModule } from '../services/postgres/postgres.module';
 
 // guards
 import { ApplicationExistsGuard, ApplicationManagerGuard } from '../guards';
 
 // providers
 import { ColorProvider } from '../providers';
-import { PostgresModule } from '../services/postgres/postgres.module';
 
 @Module({
   providers: [

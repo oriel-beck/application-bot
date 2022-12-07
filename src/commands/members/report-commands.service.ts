@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import {
   Context,
   MessageCommand,
@@ -11,12 +10,17 @@ import {
   UserCommand,
   UserCommandContext,
 } from 'necord';
+import { Injectable } from '@nestjs/common';
 import { Message, User } from 'discord.js';
+
+// dto
 import { ReportDto } from '../../dto/members';
+
+// utils
 import { generateReportModal } from '../../utils';
 
 @Injectable()
-export class ReportService {
+export class ReportCommandsService {
   @SlashCommand({
     name: 'report',
     description: 'Report a member for cheating on the application.',

@@ -1,16 +1,28 @@
 import { Inject, Injectable, UseFilters } from '@nestjs/common';
+import { Context, StringSelectContext, StringSelect } from 'necord';
+import { ConfigService } from '@nestjs/config';
+import type { APIMessageComponentEmoji } from 'discord.js';
+
+// db services
 import { DBApplicationApplicationsService } from '../../services/postgres';
-import { Context, SelectMenuContext, StringSelect } from 'necord';
+
+// guards
 import { ApplicationManagerNotFoundExceptionFilter } from '../../guards';
+
+// utils
 import {
   generateApplicationResponseComponents,
   generateApplicationResponseEmbed,
 } from '../../utils';
+
+// exceptions
 import { ApplicationNotFoundException } from '../../exceptions';
+
+// providers
 import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
-import { ConfigService } from '@nestjs/config';
+
+// constants
 import { ApplicationState } from '../../constants';
-import { APIMessageComponentEmoji } from 'discord.js';
 
 @UseFilters(ApplicationManagerNotFoundExceptionFilter)
 @Injectable()
@@ -21,7 +33,7 @@ export class SelectViewApplicationComponent {
     @Inject(COLOR_PROVIDER_TOKEN) private colors: Colors,
   ) {}
   @StringSelect('app-list-:id')
-  async viewApplication(@Context() [interaction]: SelectMenuContext) {
+  async viewApplication(@Context() [interaction]: StringSelectContext) {
     const userid = interaction.values[0];
 
     const app = await this.appService.getApp(BigInt(userid));

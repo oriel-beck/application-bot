@@ -1,17 +1,28 @@
 import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import { Modal, ModalContext } from 'necord';
-import { DBApplicationApplicationsService } from '../../services/postgres';
 import { TextInputModalData } from 'discord.js';
+
+// db services
+import { DBApplicationApplicationsService } from '../../services/postgres';
+
+// utils
 import {
   generateApplicationDashboardComponents,
   generateApplicationDashboardEmbed,
 } from '../../utils';
+
+// guards
 import {
   ApplicationExistsGuard,
   ApplicationNotFoundExceptionFilter,
 } from '../../guards';
+
+// constants
 import { ApplicationErrors } from '../../constants';
-import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
+
+// providers
+import { COLOR_PROVIDER_TOKEN } from '../../providers';
+import type { Colors } from '../../providers';
 
 @Injectable()
 export class ModalApplicationComponent {
@@ -36,13 +47,14 @@ export class ModalApplicationComponent {
     // If the answer doesn't exist and the amount of questions is not the same as the amount of questions skips to the next question
     const showNextQuestion = !app.answers[qnum];
 
-    if (!app)
+    if (!app) {
       return interaction
         .reply({
           content: ApplicationErrors.NotExistStartNew,
           ephemeral: true,
         })
         .catch(() => null);
+    }
 
     // If an answer exist, update the question
     if (app.answers[qnum]) {

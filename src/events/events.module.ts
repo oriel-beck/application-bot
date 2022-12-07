@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 
 // events services
-import { AppUpdate } from './app-update.service';
+import { AppUpdateEvents } from './app-update.service';
 
 @Module({
-  providers: [AppUpdate],
+  providers: [AppUpdateEvents],
 })
 export class EventsModule {}

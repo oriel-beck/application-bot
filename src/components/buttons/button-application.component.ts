@@ -1,25 +1,38 @@
 import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import { Button, ButtonContext } from 'necord';
+import { ConfigService } from '@nestjs/config';
+import { APIMessageComponentEmoji, GuildTextBasedChannel } from 'discord.js';
+
+// db services
 import { DBApplicationApplicationsService } from '../../services/postgres';
+import { RedisService } from '../../services/redis';
+
+// utils
 import {
   generateApplicationDashboardModal,
   generateApplicationResponseComponents,
   generateApplicationResponseEmbed,
 } from '../../utils';
-import { ConfigService } from '@nestjs/config';
-import { APIMessageComponentEmoji, GuildTextBasedChannel } from 'discord.js';
+
+// guards
 import {
   ApplicationExistsGuard,
   ApplicationNotFoundExceptionFilter,
 } from '../../guards';
+
+// exceptions
 import { ApplicationNotFoundException } from '../../exceptions';
-import { COLOR_PROVIDER_TOKEN, Colors } from '../../providers';
+
+// providers
+import { COLOR_PROVIDER_TOKEN } from '../../providers';
+import type { Colors } from '../../providers';
+
+// constants
 import {
   ApplicationDoneButtonResponses,
   ApplicationState,
   ButtonApplicationComponentFunctionResponses,
 } from '../../constants';
-import { RedisService } from '../../services/redis';
 
 @UseGuards(ApplicationExistsGuard)
 @UseFilters(ApplicationNotFoundExceptionFilter)
@@ -35,6 +48,7 @@ export class ButtonApplicationComponent {
   @Button('cancel')
   async cancelButton([interaction]: ButtonContext) {
     await this.appService.deleteApplication(BigInt(interaction.user.id));
+
     return interaction.update({
       embeds: [],
       components: [],
