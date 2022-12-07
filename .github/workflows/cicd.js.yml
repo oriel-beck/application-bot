@@ -28,7 +28,7 @@ jobs:
         cache: 'npm'
 
     - name: Set up npm packages
-      run: npm run ci
+      run: npm ci
         
     - name: Run linter
       run: npm run lint
