@@ -12,7 +12,7 @@ export class ApplicationExpireService {
   editLoop = this.configService.get<boolean>('edit_loop');
   timeout = this.configService.get<number>('applications.timeout');
   // loop every 5 minutes, shorter can cause ratelimites sometimes
-  loop$ = interval(10000).pipe(
+  loop$ = interval(60000 * 5).pipe(
     mergeMap(() => from(this.redisService.keys('application-*'))),
     mergeMap((apps: string[]) => from(apps).pipe(delay(3000))),
   );

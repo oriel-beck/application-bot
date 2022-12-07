@@ -26,6 +26,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+      run: npm ci
         
     - name: Run linter
       run: npm run lint
