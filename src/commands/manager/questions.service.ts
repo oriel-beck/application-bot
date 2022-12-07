@@ -39,6 +39,7 @@ import { APIMessageComponentEmoji } from 'discord.js';
 export const QuestionsCommandGroupDecorator = createCommandGroupDecorator({
   name: 'question',
   description: 'Manage the questions',
+  dmPermission: false,
 });
 
 @UseGuards(ApplicationManagerGuard)

@@ -33,6 +33,9 @@ export class ModalApplicationComponent {
     // get the current state of the app (if exists)
     const app = await this.appService.getApp(BigInt(interaction.user.id));
 
+    // If the answer doesn't exist and the amount of questions is not the same as the amount of questions skips to the next question
+    const showNextQuestion = !app.answers[qnum];
+
     if (!app)
       return interaction
         .reply({
@@ -41,17 +44,13 @@ export class ModalApplicationComponent {
         })
         .catch(() => null);
 
-    // If the answer doesn't exist and the amount of questions is not the same as the amount of questions skips to the next question
-    const showNextQuestion =
-      !app.answers[qnum] && app.answers.length - 1 !== app.questions.length;
-
     // If an answer exist, update the question
     if (app.answers[qnum]) {
       app.answers[qnum] = data.value;
       // Postgres arrays start from 1, so up the number by 1
       await this.appService.updateAppAnswer(
         BigInt(interaction.user.id),
-        qnum + 1,
+        qnum,
         data.value,
       );
     } else {
@@ -61,8 +60,7 @@ export class ModalApplicationComponent {
     }
 
     // Update the question num to show the next question
-    qnum = showNextQuestion ? qnum + 1 : qnum;
-    qnum = qnum >= app.questions.length ? app.questions.length : qnum;
+    if (showNextQuestion && app.answers.length < app.questions.length) qnum++;
 
     // Defer the interaction so I can close the modal
     await interaction.deferUpdate();

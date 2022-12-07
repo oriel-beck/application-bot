@@ -2,10 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { delay, from, interval, mergeMap } from 'rxjs';
 import { Client, DMChannel } from 'discord.js';
-
-// db services
 import { RedisService } from '.';
-// import { expiredInit, expireInit } from './redis.module';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BDFDApplication } from '../../entities';
 import { Repository } from 'typeorm';
@@ -31,8 +28,6 @@ export class ApplicationExpireService {
    * You CANNOT initiate this class more than once, otherwise the loop will overload
    */
   public init() {
-    // if (expiredInit) return false;
-    // expireInit();
     if (this.timeout) {
       const subRedisClient = this.redisService.duplicate();
       subRedisClient.subscribe('__keyevent@0__:expired');

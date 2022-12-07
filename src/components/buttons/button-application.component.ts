@@ -37,8 +37,8 @@ export class ButtonApplicationComponent {
       embeds: [],
       components: [],
       content: ButtonApplicationComponentFunctionResponses.Cancelled(
-        this.configService.get<string>('channels.bot'),
         this.configService.get<string>('command_id'),
+        this.configService.get<string>('channels.bot'),
       ),
     });
   }

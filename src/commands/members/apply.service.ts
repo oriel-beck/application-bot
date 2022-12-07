@@ -42,6 +42,7 @@ export class ApplyCommandsService {
   @SlashCommand({
     name: 'apply',
     description: 'Start the application process',
+    dmPermission: false,
   })
   async startApplication(@Context() [interaction]: SlashCommandContext) {
     // check if applications are enabled

@@ -27,9 +27,10 @@ export function utilGenerateQuestions(baseQuestions: string[]) {
 export function generateApplicationDashboardEmbed(
   num: number,
   question: string,
-  answer: string = ApplicationApplyDashboardEmbedResponses.MissingAnswer,
+  answer: string,
   primaryColor: number,
 ): [EmbedBuilder] {
+  answer ||= ApplicationApplyDashboardEmbedResponses.MissingAnswer;
   return [
     new EmbedBuilder()
       .setColor(primaryColor)
@@ -56,37 +57,35 @@ export function generateApplicationDashboardComponents(
   questions: string[],
   answers: string[],
 ): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {
-  if (answers.length !== questions.length) {
-    answers.push(ApplicationApplyDashboardComponentsResponses.MissingAnswer);
-  }
-
   const selectAmount = Math.ceil(questions.length / 25);
   if (selectAmount > 4)
     throw new Error('Cannot generate more than 4 select menus');
+  const components = [
+    new ActionRowBuilder<ButtonBuilder>().addComponents([
+      new ButtonBuilder()
+        .setStyle(ButtonStyle.Danger)
+        .setLabel(ApplicationApplyDashboardComponentsResponses.Cancel)
+        .setCustomId(`cancel`),
+      new ButtonBuilder()
+        .setStyle(ButtonStyle.Primary)
+        .setLabel(ApplicationApplyDashboardComponentsResponses.Answer)
+        .setCustomId(`answer-${current}`),
+      new ButtonBuilder()
+        .setStyle(
+          questions.length === answers.length
+            ? ButtonStyle.Success
+            : ButtonStyle.Secondary,
+        )
+        .setLabel(ApplicationApplyDashboardComponentsResponses.Done)
+        .setCustomId(`done`)
+        .setDisabled(questions.length !== answers.length),
+    ]),
+  ] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
 
-  return (
-    [
-      new ActionRowBuilder<ButtonBuilder>().addComponents([
-        new ButtonBuilder()
-          .setStyle(ButtonStyle.Danger)
-          .setLabel(ApplicationApplyDashboardComponentsResponses.Cancel)
-          .setCustomId(`cancel`),
-        new ButtonBuilder()
-          .setStyle(ButtonStyle.Primary)
-          .setLabel(ApplicationApplyDashboardComponentsResponses.Answer)
-          .setCustomId(`answer-${current}`),
-        new ButtonBuilder()
-          .setStyle(
-            questions.length === answers.length
-              ? ButtonStyle.Success
-              : ButtonStyle.Secondary,
-          )
-          .setLabel(ApplicationApplyDashboardComponentsResponses.Done)
-          .setCustomId(`done`)
-          .setDisabled(questions.length !== answers.length),
-      ]),
-    ] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[]
-  ).concat(
+  if (answers.length !== questions.length) {
+    answers.push(ApplicationApplyDashboardComponentsResponses.MissingAnswer);
+  }
+  return components.concat(
     Array.from({ length: selectAmount }, (_, selectNum) => {
       const options = answers.splice(0, 25).map((answer, i) => ({
         label: ApplicationApplyDashboardComponentsFunctionResponses.selectLabel(

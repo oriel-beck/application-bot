@@ -50,6 +50,7 @@ import { APIMessageComponentEmoji } from 'discord.js';
 export const ApplicationCommandGroupDecorator = createCommandGroupDecorator({
   name: 'application',
   description: 'Manage the applications and submissions',
+  dmPermission: false,
 });
 
 @UseGuards(ApplicationManagerGuard)

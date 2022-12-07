@@ -61,7 +61,9 @@ export class DBApplicationApplicationsService {
     answer: string,
   ): Promise<unknown> {
     return this.apps.query(
-      `UPDATE bdfd_application SET answers[${loc}] = $1 WHERE userid = ${userid};`,
+      `UPDATE bdfd_application SET answers[${
+        loc + 1
+      }] = $1 WHERE userid = ${userid};`,
       [answer],
     );
   }

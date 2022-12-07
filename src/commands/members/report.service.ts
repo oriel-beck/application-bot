@@ -20,6 +20,7 @@ export class ReportService {
   @SlashCommand({
     name: 'report',
     description: 'Report a member for cheating on the application.',
+    dmPermission: false,
   })
   reportSlash(
     @Context() [interaction]: SlashCommandContext,
