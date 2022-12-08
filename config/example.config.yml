@@ -1,3 +1,5 @@
+# TODO: When the bot is multi guild move all config to the database and manage via a config panel (embed and buttons)
+# NOTE: When the bot is multi guild add a bot owner config and bot manager config
 # Channels config
 channels:
   # The channel to send the initial application to
