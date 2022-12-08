@@ -19,4 +19,8 @@ export class BDFDBlacklist {
    */
   @Column({ type: 'bigint', nullable: false })
   mod: bigint;
+
+  // TODO: make the bot multi guild
+  // @Column({ type: 'bigint', nullable: false })
+  // guildid: bigint;
 }

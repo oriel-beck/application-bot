@@ -13,4 +13,8 @@ export class BDFDQuestion {
    */
   @Column({ type: 'text' })
   question: string;
+
+  // TODO: make the bot multi guild
+  // @Column({ type: 'bigint', nullable: false })
+  // guildid: bigint;
 }
