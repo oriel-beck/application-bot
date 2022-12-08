@@ -217,18 +217,12 @@ export class ApplicationCommandsService {
     );
 
     // toggle the current state
-    const state = await this.settingService.toggle(BigInt(interaction.guildId));
-
-    // if nothing was updated send an error
-    if (!state.affected)
-      return interaction
-        .reply(ApplicationCommandResponses.MissingServer)
-        .catch(() => null);
+    await this.settingService.toggle(BigInt(interaction.guildId));
 
     return interaction
       .reply(
         `${
-          currentState.enabled
+          currentState
             ? ApplicationStateResponses.Disabled
             : ApplicationStateResponses.Enabled
         } applications!`,

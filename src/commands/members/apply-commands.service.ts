@@ -54,7 +54,7 @@ export class ApplyCommandsService {
     const applicationsEnabled = await this.settingService.getCurrentState(
       BigInt(interaction.guildId),
     );
-    if (!applicationsEnabled.enabled)
+    if (!applicationsEnabled)
       return interaction
         .reply({
           content: ApplyCommandResponses.Disabled,
