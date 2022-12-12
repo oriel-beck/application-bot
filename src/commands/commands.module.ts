@@ -5,7 +5,11 @@ import {
   ApplicationCommandsBlacklistService,
   ApplicationCommandsService,
 } from './manager';
-import { ApplyCommandsService, ReportCommandsService } from './members';
+import {
+  AboutCommandsService,
+  ApplyCommandsService,
+  ReportCommandsService,
+} from './members';
 import { OwnerCommandsService } from './owner/owner';
 
 // db services
@@ -27,6 +31,7 @@ import { ColorProvider } from '../providers';
     ApplyCommandsService,
     ReportCommandsService,
     OwnerCommandsService,
+    AboutCommandsService,
 
     // guards
     ApplicationManagerGuard,
