@@ -34,6 +34,6 @@ export class BDFDApplication {
   state: ApplicationState;
 
   // TODO: make the bot multi guild
-  // @Column({ type: 'bigint', nullable: false })
-  // guildid: bigint;
+  @Column({ type: 'bigint', nullable: false })
+  guildid: bigint;
 }

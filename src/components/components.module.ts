@@ -18,6 +18,7 @@ import {
 
 // db services
 import { PostgresModule } from '../services/postgres/postgres.module';
+import { RedisModule } from '../services/redis/redis.module';
 
 // guards
 import { ApplicationExistsGuard, ApplicationManagerGuard } from '../guards';
@@ -44,6 +45,6 @@ import { ColorProvider } from '../providers';
     // providers
     ColorProvider,
   ],
-  imports: [PostgresModule],
+  imports: [PostgresModule, RedisModule],
 })
 export class ComponentsModule {}

@@ -41,3 +41,7 @@ config/config.yml
 
 # util
 .npmrc
+
+# questions
+base-questions.json
+init-questions.json

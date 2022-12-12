@@ -18,15 +18,8 @@ export class DBApplicationQuestionsService {
     @InjectRepository(BDFDQuestion) private questions: Repository<BDFDQuestion>,
     private configService: ConfigService,
   ) {
-    if (existsSync('/app/base-questions.json')) {
-      this.baseQuestions = JSON.parse(
-        readFileSync('/app/base-questions.json').toString(),
-      );
-      this.logger.log('Updated base questions');
-    } else
-      this.logger.warn(
-        'Cannot file base-questions.json, loading 0 base questions',
-      );
+    this.initBaseQuestions();
+    this.initRandomQuestions();
   }
 
   editQuestions(id: string, question: string): Promise<UpdateResult | null> {
@@ -83,5 +76,52 @@ export class DBApplicationQuestionsService {
       .execute()
       .then(utilGenerateQuestions(this.baseQuestions))
       .catch(() => []);
+  }
+
+  initBaseQuestions() {
+    if (existsSync('/app/base-questions.json')) {
+      try {
+        this.baseQuestions = JSON.parse(
+          readFileSync('/app/base-questions.json', 'utf-8'),
+        );
+        this.logger.log(`Updated ${this.baseQuestions.length} base questions`);
+      } catch {
+        this.logger.warn(
+          "Failed to load base-questions.json, please make sure it's structured correctly",
+        );
+      }
+    } else {
+      this.logger.warn(
+        'Cannot file base-questions.json, loading 0 base questions',
+      );
+    }
+  }
+  initRandomQuestions() {
+    if (existsSync('/app/init-questions.json')) {
+      let initQuestions: BDFDQuestion[] = [];
+      try {
+        initQuestions = JSON.parse(
+          readFileSync('/app/init-questions.json', 'utf-8'),
+        );
+        this.questions
+          .createQueryBuilder()
+          .insert()
+          .orIgnore()
+          .into(BDFDQuestion)
+          .values(initQuestions)
+          .execute()
+          .then((res) =>
+            this.logger.log(
+              `Loaded ${res.identifiers.length} random questions`,
+            ),
+          );
+      } catch {
+        this.logger.warn('Failed to load init-questions.json');
+      }
+    } else {
+      this.logger.warn(
+        'Cannot file init-questions.json, loading 0 random questions',
+      );
+    }
   }
 }
