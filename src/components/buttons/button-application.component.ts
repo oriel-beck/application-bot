@@ -1,7 +1,10 @@
 import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import { Button, ButtonContext } from 'necord';
 import { ConfigService } from '@nestjs/config';
-import { APIMessageComponentEmoji, GuildTextBasedChannel } from 'discord.js';
+import type {
+  APIMessageComponentEmoji,
+  GuildTextBasedChannel,
+} from 'discord.js';
 
 // db services
 import { DBApplicationApplicationsService } from '../../services/postgres';
@@ -47,7 +50,10 @@ export class ButtonApplicationComponent {
 
   @Button('cancel')
   async cancelButton([interaction]: ButtonContext) {
-    await this.appService.deleteApplication(BigInt(interaction.user.id));
+    await this.appService.deleteApplication(
+      BigInt(interaction.user.id),
+      BigInt(interaction.guildId),
+    );
 
     return interaction.update({
       embeds: [],
@@ -66,7 +72,10 @@ export class ButtonApplicationComponent {
       ApplicationState.Pending,
     );
 
-    const finalApp = await this.appService.getApp(BigInt(interaction.user.id));
+    const finalApp = await this.appService.getApp(
+      BigInt(interaction.user.id),
+      BigInt(interaction.guildId),
+    );
 
     if (!finalApp) throw new ApplicationNotFoundException();
 
@@ -117,7 +126,10 @@ export class ButtonApplicationComponent {
   async answerButton([interaction]: ButtonContext) {
     const num = Number(interaction.customId.split('-').at(-1));
 
-    const app = await this.appService.getApp(BigInt(interaction.user.id));
+    const app = await this.appService.getApp(
+      BigInt(interaction.user.id),
+      BigInt(interaction.guildId),
+    );
     if (!app) throw new ApplicationNotFoundException();
 
     return interaction.showModal(

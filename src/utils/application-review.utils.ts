@@ -18,6 +18,7 @@ import {
   ApplicationReviewModalFunctionResponses,
   ApplicationReviewModalResponses,
 } from '../constants';
+import { setEmojiToButton } from './set-emojis.utils';
 
 export async function generateApplicationResponseEmbed(
   app: BDFDApplication,
@@ -62,14 +63,14 @@ export function generateApplicationResponseComponents(
   const lastPage = Math.ceil(maxQuestions / maxQuestionsPerPage);
 
   if (paginationNeeded) {
-    actionRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`prev-${userid}-${page - 1}`)
-        .setDisabled(page === 0)
-        .setLabel(prevEmoji.id ? null : 'Prev')
-        .setEmoji(prevEmoji.id ? prevEmoji : null)
-        .setStyle(ButtonStyle.Primary),
-    );
+    const prevButton = new ButtonBuilder()
+      .setCustomId(`prev-${userid}-${page - 1}`)
+      .setDisabled(page === 0)
+      .setStyle(ButtonStyle.Primary);
+
+    setEmojiToButton(prevButton, 'Prev', prevEmoji);
+
+    actionRow.addComponents(prevButton);
   }
 
   if (pending) {
@@ -86,14 +87,14 @@ export function generateApplicationResponseComponents(
   }
 
   if (paginationNeeded) {
-    actionRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`next-${userid}-${page + 1}`)
-        .setDisabled(page === lastPage)
-        .setLabel(nextEmoji.id ? null : 'Next')
-        .setEmoji(nextEmoji.id ? nextEmoji : null)
-        .setStyle(ButtonStyle.Primary),
-    );
+    const nextButton = new ButtonBuilder()
+      .setCustomId(`next-${userid}-${page + 1}`)
+      .setDisabled(page === lastPage)
+      .setStyle(ButtonStyle.Primary);
+
+    setEmojiToButton(nextButton, 'Next', nextEmoji);
+
+    actionRow.addComponents();
   }
   return [actionRow];
 }

@@ -4,13 +4,14 @@ import { Module } from '@nestjs/common';
 import {
   ApplicationCommandsBlacklistService,
   ApplicationCommandsService,
+  QuestionsCommandsService,
 } from './manager';
 import {
   AboutCommandsService,
   ApplyCommandsService,
   ReportCommandsService,
 } from './members';
-import { OwnerCommandsService } from './owner/owner';
+import { OwnerCommandsService } from './owner';
 
 // db services
 import { PostgresModule } from '../services/postgres/postgres.module';
@@ -32,6 +33,7 @@ import { ColorProvider } from '../providers';
     ReportCommandsService,
     OwnerCommandsService,
     AboutCommandsService,
+    QuestionsCommandsService,
 
     // guards
     ApplicationManagerGuard,

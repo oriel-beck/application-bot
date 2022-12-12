@@ -13,7 +13,7 @@ export class AppActiveGuard implements CanActivate {
     ];
 
     const appActive = await this.appService
-      .getApp(BigInt(interaction.user.id))
+      .getApp(BigInt(interaction.user.id), BigInt(interaction.guildId))
       .then((app) => app.state === ApplicationState.Active);
 
     if (!appActive) {

@@ -1,7 +1,7 @@
 import { Inject, Injectable, UseFilters, UseGuards } from '@nestjs/common';
 import { Button, ButtonContext, Context } from 'necord';
 import { ConfigService } from '@nestjs/config';
-import { APIMessageComponentEmoji, ButtonInteraction } from 'discord.js';
+import type { APIMessageComponentEmoji, ButtonInteraction } from 'discord.js';
 
 // db services
 import { DBApplicationApplicationsService } from '../../services/postgres';
@@ -55,7 +55,10 @@ export class ButtonPaginationComponent {
     const split = interaction.customId.split('-');
 
     const userid = BigInt(split.at(1));
-    const app = await this.appsService.getAppOrThrow(userid);
+    const app = await this.appsService.getAppOrThrow(
+      userid,
+      BigInt(interaction.guildId),
+    );
 
     const num = Number(split.at(-1));
 

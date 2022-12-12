@@ -64,9 +64,14 @@ export class ApplyCommandsService {
 
     // save the user ID as bigint
     const userid = BigInt(interaction.user.id);
+    const guildid = BigInt(interaction.guildId);
 
     // check if the user is blacklisted
-    const blacklisted = await this.blacklistService.getBlacklist(userid);
+    const blacklisted = await this.blacklistService.getBlacklist(
+      userid,
+      guildid,
+    );
+
     if (blacklisted)
       return interaction
         .reply({
@@ -78,7 +83,7 @@ export class ApplyCommandsService {
         .catch(() => null);
 
     // check if there is any application is progress or made
-    const hasApplication = await this.appService.getApp(userid);
+    const hasApplication = await this.appService.getApp(userid, guildid);
     if (hasApplication)
       return interaction
         .reply({
@@ -101,7 +106,7 @@ export class ApplyCommandsService {
 
     // check if you can start the application
     const applicationStart = await this.appService
-      .createApp(userid)
+      .createApp(userid, guildid)
       .catch(() => null);
     if (!applicationStart) {
       initMessage
@@ -135,7 +140,11 @@ export class ApplyCommandsService {
     });
 
     // update the message ID of the app in the database
-    await this.appService.updateAppMessageID(userid, BigInt(initMessage.id));
+    await this.appService.updateAppMessageID(
+      userid,
+      BigInt(initMessage.id),
+      guildid,
+    );
 
     if (this.editLoop) {
       this.redisService

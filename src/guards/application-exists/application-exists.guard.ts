@@ -12,7 +12,7 @@ export class ApplicationExistsGuard implements CanActivate {
     ];
 
     const appExist = await this.appService
-      .getApp(BigInt(interaction.user.id))
+      .getApp(BigInt(interaction.user.id), BigInt(interaction.guildId))
       .then((app) => !!app);
 
     if (!appExist) {

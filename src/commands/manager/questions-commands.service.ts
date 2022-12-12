@@ -62,7 +62,10 @@ export class QuestionsCommandsService {
     @Context() [interaction]: SlashCommandContext,
     @Options() { question }: QuestionAddOptionsDto,
   ) {
-    await this.questionService.addQuestion(question);
+    await this.questionService.addQuestion(
+      question,
+      BigInt(interaction.guildId),
+    );
     return interaction
       .reply({
         content: QuestionCommandResponses.Added,
@@ -79,7 +82,10 @@ export class QuestionsCommandsService {
     @Context() [interaction]: SlashCommandContext,
     @Options() { id }: QuestionRemoveOptionsDto,
   ) {
-    const removed = await this.questionService.deleteQuestion(id);
+    const removed = await this.questionService.deleteQuestion(
+      id,
+      BigInt(interaction.guildId),
+    );
 
     if (!removed.affected)
       return interaction
@@ -102,7 +108,9 @@ export class QuestionsCommandsService {
     description: 'List all questions',
   })
   async listQuestions(@Context() [interaction]: SlashCommandContext) {
-    const questions = await this.questionService.getAllQuestions();
+    const questions = await this.questionService.getAllQuestions(
+      BigInt(interaction.guildId),
+    );
     if (!questions.length)
       return interaction
         .reply({
@@ -131,7 +139,11 @@ export class QuestionsCommandsService {
     @Context() [interaction]: SlashCommandContext,
     @Options() { id, question }: QuestionEditOptionsDto,
   ) {
-    const edited = await this.questionService.editQuestions(id, question);
+    const edited = await this.questionService.editQuestions(
+      id,
+      question,
+      BigInt(interaction.guildId),
+    );
 
     if (!edited.affected)
       return interaction

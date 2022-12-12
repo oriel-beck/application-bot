@@ -33,7 +33,10 @@ export class SelectEditAnswerComponent {
     const userid = BigInt(interaction.user.id);
     const qnum = Number(interaction.values[0]);
 
-    const app = await this.appService.getApp(userid);
+    const app = await this.appService.getApp(
+      userid,
+      BigInt(interaction.guildId),
+    );
 
     if (!app) throw new ApplicationNotFoundException();
 

@@ -36,7 +36,10 @@ export class SelectViewApplicationComponent {
   async viewApplication(@Context() [interaction]: StringSelectContext) {
     const userid = interaction.values[0];
 
-    const app = await this.appService.getApp(BigInt(userid));
+    const app = await this.appService.getApp(
+      BigInt(userid),
+      BigInt(interaction.guildId),
+    );
     if (!app) throw new ApplicationNotFoundException();
 
     return interaction

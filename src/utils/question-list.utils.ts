@@ -5,6 +5,7 @@ import {
   EmbedBuilder,
 } from '@discordjs/builders';
 import { APIMessageComponentEmoji, ButtonStyle } from 'discord.js';
+import { setEmojiToButton } from './set-emojis.utils';
 
 export function generateQuestionListEmbed(
   questions: BDFDQuestion[],
@@ -27,20 +28,24 @@ export function generateQuestionListComponents(
   prevEmoji: APIMessageComponentEmoji,
   page = 0,
 ): [ActionRowBuilder<ButtonBuilder>] {
+  const prevButton = new ButtonBuilder()
+    .setStyle(ButtonStyle.Primary)
+    .setCustomId(`question-list-${page - 1}`)
+    .setDisabled(page === 0);
+
+  setEmojiToButton(prevButton, 'Prev', prevEmoji);
+
+  const nextButton = new ButtonBuilder()
+    .setStyle(ButtonStyle.Primary)
+    .setCustomId(`question-list-${page + 1}`)
+    .setDisabled(page === Math.ceil(questions.length / 10));
+
+  setEmojiToButton(nextButton, 'Next', nextEmoji);
+
   return [
     new ActionRowBuilder<ButtonBuilder>().addComponents([
-      new ButtonBuilder()
-        .setLabel(prevEmoji.id ? null : 'Prev')
-        .setEmoji(prevEmoji.id ? prevEmoji : null)
-        .setStyle(ButtonStyle.Primary)
-        .setCustomId(`question-list-${page - 1}`)
-        .setDisabled(page === 0),
-      new ButtonBuilder()
-        .setLabel(nextEmoji.id ? null : 'Next')
-        .setEmoji(nextEmoji.id ? nextEmoji : null)
-        .setStyle(ButtonStyle.Primary)
-        .setCustomId(`question-list-${page + 1}`)
-        .setDisabled(page === Math.ceil(questions.length / 10)),
+      prevButton,
+      nextButton,
     ]),
   ];
 }

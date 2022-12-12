@@ -14,7 +14,7 @@ export class AboutCommandsService {
         {
           title: 'About the bot',
           description:
-            "**Framework:** [NeCord](https://necord.org/)\n**Created By:** <@311808747141857292> (oriel-beck#0001)\n**Description:** This bot is an Application Bot created for [BDFD](https://botdesignerdiscord.com/), you can find the bot's source code on [GitHub]().\n\nThis bot is distributed under the MIT license.",
+            "**Framework:** **[NeCord](https://necord.org/)**\n**Created By:** <@311808747141857292> (oriel beck#0001)\n**Description:** This bot is an Application Bot created for **[BDFD](https://botdesignerdiscord.com/)**, you can find the bot's source code on **[GitHub](https://github.com/oriel-beck/application-bot)**.\n\nThis bot is distributed under the MIT license.",
           footer: {
             text: 'All rights reserved (C) - Oriel Beck',
           },

@@ -1,11 +1,15 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+// db services
 import {
   DBApplicationApplicationsService,
   DBApplicationQuestionsService,
   DBApplicationSettingsService,
   DBApplicationBlacklistService,
 } from '.';
-import { TypeOrmModule } from '@nestjs/typeorm';
+
+// typeorm entities
 import {
   BDFDApplication,
   BDFDBlacklist,

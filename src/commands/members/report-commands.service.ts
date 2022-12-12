@@ -11,7 +11,7 @@ import {
   UserCommandContext,
 } from 'necord';
 import { Injectable } from '@nestjs/common';
-import { Message, User } from 'discord.js';
+import type { Message, User } from 'discord.js';
 
 // dto
 import { ReportDto } from '../../dto/members';

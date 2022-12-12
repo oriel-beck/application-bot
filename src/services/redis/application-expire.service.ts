@@ -1,11 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { delay, from, interval, mergeMap } from 'rxjs';
-import { Client, DMChannel, Message } from 'discord.js';
-import { RedisService } from '.';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BDFDApplication } from '../../entities';
+import { delay, from, fromEvent, interval, mergeMap, switchMap } from 'rxjs';
+import { Client } from 'discord.js';
 import { Repository } from 'typeorm';
+import type { DMChannel, Message } from 'discord.js';
+
+// db services
+import { RedisService } from '.';
+
+// typeorm entities
+import { BDFDApplication } from '../../entities';
+
+// constants
 import {
   ApplicationExpireFunctionResponses,
   ApplicationExpireResponses,
@@ -17,7 +24,14 @@ export class ApplicationExpireService {
   timeout = this.configService.get<number>('applications.timeout');
   // loop every 5 minutes, shorter can cause ratelimites sometimes
   loop$ = interval(10000).pipe(
-    mergeMap(() => from(this.redisService.keys('application-*'))),
+    switchMap(() =>
+      fromEvent(
+        this.redisService.scanStream({
+          match: 'application-*',
+        }),
+        'data',
+      ),
+    ),
     mergeMap((apps: string[]) => from(apps).pipe(delay(3000))),
   );
   constructor(

@@ -123,7 +123,7 @@ export async function decideApplication(
   welcomeMsg: string,
   guild?: Guild,
 ): Promise<InteractionReplyOptions> {
-  const app = await appService.getAppOrThrow(userid);
+  const app = await appService.getAppOrThrow(userid, BigInt(guild.id));
   app.state = type;
 
   await appService.updateApplicationState(userid, type);

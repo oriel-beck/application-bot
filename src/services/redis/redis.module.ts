@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ApplicationExpireService } from './application-expire.service';
-import { RedisService } from './redis.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
+// db services
+import { RedisService } from './redis.service';
+
+// typeorm entities
 import { BDFDApplication } from '../../entities';
 
 @Module({

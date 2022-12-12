@@ -50,6 +50,7 @@ export class ApplicationCommandsBlacklistService {
       BigInt(user.id),
       reason,
       BigInt(interaction.user.id),
+      BigInt(interaction.guildId),
     );
 
     if (!blacklisted) {
@@ -75,6 +76,7 @@ export class ApplicationCommandsBlacklistService {
   ) {
     const deleted = await this.blacklistService.removeBlacklist(
       BigInt(user.id),
+      BigInt(interaction.guildId),
     );
 
     if (!deleted || !deleted.affected) {
@@ -100,6 +102,7 @@ export class ApplicationCommandsBlacklistService {
       BigInt(user.id),
       reason,
       BigInt(interaction.user.id),
+      BigInt(interaction.guildId),
     );
 
     if (!reasoned || !reasoned.affected) {
@@ -123,7 +126,10 @@ export class ApplicationCommandsBlacklistService {
     @Context() [interaction]: SlashCommandContext,
     @Options() { user }: ApplicationBlacklistShowOptionsDto,
   ) {
-    const blacklist = await this.blacklistService.getBlacklist(BigInt(user.id));
+    const blacklist = await this.blacklistService.getBlacklist(
+      BigInt(user.id),
+      BigInt(interaction.guildId),
+    );
     if (!blacklist) {
       return interaction
         .reply({

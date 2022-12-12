@@ -82,7 +82,10 @@ export class ApplicationCommandsService {
     @Context() [interaction]: SlashCommandContext,
     @Options() { user }: ApplicationShowOptionsDto,
   ) {
-    const app = await this.appService.getAppOrThrow(BigInt(user.id));
+    const app = await this.appService.getAppOrThrow(
+      BigInt(user.id),
+      BigInt(interaction.guildId),
+    );
 
     return interaction
       .reply({
@@ -198,7 +201,10 @@ export class ApplicationCommandsService {
   })
   async resetApplication(@Context() [interaction]: SlashCommandContext) {
     // reset all applications, return count
-    const apps = await this.appService.resetApplications();
+    const apps = await this.appService.resetApplications(
+      BigInt(interaction.guildId),
+    );
+
     return interaction
       .reply(
         ApplicationCommandFunctionResponses.resetApplications(apps.affected),
@@ -239,7 +245,10 @@ export class ApplicationCommandsService {
     @Options() { user }: ApplicationDeleteOptionsDto,
   ) {
     // delete an application
-    const deleted = await this.appService.deleteApplication(BigInt(user.id));
+    const deleted = await this.appService.deleteApplication(
+      BigInt(user.id),
+      BigInt(interaction.guildId),
+    );
 
     // if deleted nothing, return an error
     if (!deleted)

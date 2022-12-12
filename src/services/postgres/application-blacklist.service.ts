@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, InsertResult, Repository, UpdateResult } from 'typeorm';
+import type {
+  DeleteResult,
+  InsertResult,
+  Repository,
+  UpdateResult,
+} from 'typeorm';
 
 // typeorm entities
 import { BDFDBlacklist } from '../../entities';
@@ -16,6 +21,7 @@ export class DBApplicationBlacklistService {
     userid: bigint,
     reason: string,
     mod: bigint,
+    guildid: bigint,
   ): Promise<InsertResult | null> {
     return this.blacklists
       .insert(
@@ -23,6 +29,7 @@ export class DBApplicationBlacklistService {
           userid,
           reason,
           mod,
+          guildid,
         }),
       )
       .catch(() => null);
@@ -32,11 +39,13 @@ export class DBApplicationBlacklistService {
     userid: bigint,
     reason: string,
     mod: bigint,
+    guildid: bigint,
   ): Promise<UpdateResult | null> {
     return this.blacklists
       .update(
         {
           userid,
+          guildid,
         },
         {
           userid,
@@ -47,19 +56,24 @@ export class DBApplicationBlacklistService {
       .catch(() => null);
   }
 
-  removeBlacklist(userid: bigint): Promise<DeleteResult | null> {
+  removeBlacklist(
+    userid: bigint,
+    guildid: bigint,
+  ): Promise<DeleteResult | null> {
     return this.blacklists
       .delete({
         userid,
+        guildid,
       })
       .catch(() => null);
   }
 
-  getBlacklist(userid: bigint): Promise<BDFDBlacklist | null> {
+  getBlacklist(userid: bigint, guildid: bigint): Promise<BDFDBlacklist | null> {
     return this.blacklists
       .findOneOrFail({
         where: {
           userid,
+          guildid,
         },
       })
       .catch(() => null);

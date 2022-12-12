@@ -16,6 +16,7 @@ import {
   ButtonBuilder,
   EmbedBuilder,
 } from '@discordjs/builders';
+import { setEmojiToButton } from './set-emojis.utils';
 
 export function generateApplicationListEmbed(
   count: number,
@@ -73,23 +74,23 @@ export function generateApplicationListComponents(
   );
 
   if (count > 125) {
-    buttons.push(
-      new ButtonBuilder()
-        .setCustomId(`app-list-prev-${page}`)
-        .setLabel(prevEmoji.id ? null : 'Prev')
-        .setEmoji(prevEmoji.id ? prevEmoji : null)
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(page === 0),
-    );
+    const prevButton = new ButtonBuilder()
+      .setCustomId(`app-list-prev-${page - 1}`)
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(page === 0);
 
-    buttons.push(
-      new ButtonBuilder()
-        .setCustomId(`app-list-next-${page}`)
-        .setLabel(nextEmoji.id ? null : 'Next')
-        .setEmoji(nextEmoji.id ? nextEmoji : null)
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(Math.ceil(count / 100) === page),
-    );
+    setEmojiToButton(prevButton, 'Prev', prevEmoji);
+
+    buttons.push(prevButton);
+
+    const nextButton = new ButtonBuilder()
+      .setCustomId(`app-list-next-${page + 1}`)
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(Math.ceil(count / 100) === page);
+
+    setEmojiToButton(nextButton, 'Next', nextEmoji);
+
+    buttons.push(nextButton);
   }
   return selects.concat(buttons);
 }

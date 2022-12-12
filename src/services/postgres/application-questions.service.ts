@@ -1,8 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, InsertResult, Repository, UpdateResult } from 'typeorm';
 import { readFileSync, existsSync } from 'fs';
 import { ConfigService } from '@nestjs/config';
+import type {
+  DeleteResult,
+  InsertResult,
+  Repository,
+  UpdateResult,
+} from 'typeorm';
 
 // typeorm entities
 import { BDFDQuestion } from '../../entities';
@@ -22,11 +27,16 @@ export class DBApplicationQuestionsService {
     this.initRandomQuestions();
   }
 
-  editQuestions(id: string, question: string): Promise<UpdateResult | null> {
+  editQuestions(
+    id: string,
+    question: string,
+    guildid: bigint,
+  ): Promise<UpdateResult | null> {
     return this.questions
       .update(
         {
           id,
+          guildid,
         },
         {
           question,
@@ -35,37 +45,46 @@ export class DBApplicationQuestionsService {
       .catch(() => null);
   }
 
-  addQuestion(question: string): Promise<InsertResult | null> {
+  addQuestion(question: string, guildid: bigint): Promise<InsertResult | null> {
     return this.questions
       .insert({
         question,
+        guildid,
       })
       .catch(() => null);
   }
 
-  deleteQuestion(id: string): Promise<DeleteResult | null> {
+  deleteQuestion(id: string, guildid: bigint): Promise<DeleteResult | null> {
     return this.questions
       .delete({
         id,
+        guildid,
       })
       .catch(() => null);
   }
 
-  getQuestion(id: string): Promise<BDFDQuestion | null> {
+  getQuestion(id: string, guildid: bigint): Promise<BDFDQuestion | null> {
     return this.questions
       .findOneOrFail({
         where: {
           id,
+          guildid,
         },
       })
       .catch(() => null);
   }
 
-  getAllQuestions(): Promise<BDFDQuestion[] | null> {
-    return this.questions.find().catch(() => null);
+  getAllQuestions(guildid: bigint): Promise<BDFDQuestion[] | null> {
+    return this.questions
+      .find({
+        where: {
+          guildid,
+        },
+      })
+      .catch(() => null);
   }
 
-  generateQuestions(): Promise<string[]> {
+  generateQuestions(guildid: bigint): Promise<string[]> {
     return this.questions
       .createQueryBuilder()
       .select()
@@ -73,6 +92,9 @@ export class DBApplicationQuestionsService {
       .limit(
         Number(this.configService.get<string>('applications.max_questions')),
       )
+      .where({
+        guildid,
+      })
       .execute()
       .then(utilGenerateQuestions(this.baseQuestions))
       .catch(() => []);

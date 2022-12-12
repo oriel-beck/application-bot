@@ -33,7 +33,10 @@ export class ButtonDecisionComponent {
   async applicationDeny(@Context() [interaction]: ButtonContext) {
     const userid = BigInt(interaction.customId.split('-').at(-1));
 
-    const appState = await this.appService.getApp(userid);
+    const appState = await this.appService.getApp(
+      userid,
+      BigInt(interaction.guildId),
+    );
 
     if (!appState) throw new ApplicationNotFoundException();
 
@@ -58,7 +61,10 @@ export class ButtonDecisionComponent {
   async applicationAccept(@Context() [interaction]: ButtonContext) {
     const userid = BigInt(interaction.customId.split('-').at(-1));
 
-    const appState = await this.appService.getApp(userid);
+    const appState = await this.appService.getApp(
+      userid,
+      BigInt(interaction.guildId),
+    );
 
     if (!appState) throw new ApplicationNotFoundException();
 

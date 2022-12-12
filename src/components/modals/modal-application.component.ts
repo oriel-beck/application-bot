@@ -42,7 +42,10 @@ export class ModalApplicationComponent {
     let qnum = Number(data.customId.split('-').at(-1));
 
     // get the current state of the app (if exists)
-    const app = await this.appService.getApp(BigInt(interaction.user.id));
+    const app = await this.appService.getApp(
+      BigInt(interaction.user.id),
+      BigInt(interaction.guildId),
+    );
 
     // If the answer doesn't exist and the amount of questions is not the same as the amount of questions skips to the next question
     const showNextQuestion = !app.answers[qnum];
@@ -64,11 +67,16 @@ export class ModalApplicationComponent {
         BigInt(interaction.user.id),
         qnum,
         data.value,
+        BigInt(interaction.guildId),
       );
     } else {
       // If the answer doesn't exist, append the answer
       app.answers.push(data.value);
-      await this.appService.addAnswer(BigInt(interaction.user.id), data.value);
+      await this.appService.addAnswer(
+        BigInt(interaction.user.id),
+        data.value,
+        BigInt(interaction.guildId),
+      );
     }
 
     // Update the question num to show the next question

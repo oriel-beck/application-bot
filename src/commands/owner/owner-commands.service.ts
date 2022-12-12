@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
 import { inspect } from 'util';
-import { EvalDto } from '../../../dto/owner/eval.dto';
+import { EvalDto } from '../../dto/owner/eval.dto';
 import { EmbedBuilder } from '@discordjs/builders';
 
 @Injectable()
