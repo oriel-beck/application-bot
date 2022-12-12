@@ -35,7 +35,7 @@ export class ModalReportComponent {
 
     const reportChannel: TextBasedChannel | null =
       await interaction.client.channels
-        .fetch(this.configService.get<string>('channels.report'))
+        .fetch(this.configService.get<string>('channels.reports'))
         .catch(() => null);
 
     if (!reportChannel) {

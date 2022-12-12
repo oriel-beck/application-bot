@@ -26,11 +26,30 @@ export class ReportCommandsService {
     description: 'Report a member for cheating on the application.',
     dmPermission: false,
   })
-  reportSlash(
+  async reportSlash(
     @Context() [interaction]: SlashCommandContext,
-    @Options() { user }: ReportDto,
+    @Options() { user, proof }: ReportDto,
   ) {
-    return interaction.showModal(generateReportModal(user)).catch(() => null);
+    const msgLink =
+      /\/([0-9]{17,19}.*)\/([0-9]{17,19}.*)\/([0-9]{17,19}.*[^/])\/*/.exec(
+        proof,
+      );
+    let msg;
+
+    if (
+      Array.isArray(msgLink) &&
+      msgLink.at(1) === interaction.guildId &&
+      interaction.guild.channels.cache.has(msgLink.at(2))
+    ) {
+      const channel = await interaction.guild.channels.cache.get(msgLink.at(2));
+      if (channel.isTextBased()) {
+        msg = await channel.messages.fetch(msgLink.at(3)).catch(() => null);
+      }
+    }
+
+    return interaction
+      .showModal(generateReportModal(user, msg))
+      .catch(() => null);
   }
 
   @UserCommand({

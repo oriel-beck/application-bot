@@ -39,7 +39,7 @@ export function generateReportModal(
 ): ModalBuilder {
   return new ModalBuilder()
     .setTitle(ReportModalResponses.Heading)
-    .setCustomId(`report-modal-${targetUser.id}-${targetMessage.id}`)
+    .setCustomId(`report-modal-${targetUser.id}-${targetMessage?.id}`)
     .addComponents([
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder()
