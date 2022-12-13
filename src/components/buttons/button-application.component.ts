@@ -34,7 +34,7 @@ import type { Colors } from '../../providers';
 import {
   ApplicationDoneButtonResponses,
   ApplicationState,
-  ButtonApplicationComponentFunctionResponses,
+  ButtonApplicationComponentResponses,
 } from '../../constants';
 
 @UseGuards(ApplicationExistsGuard)
@@ -58,10 +58,7 @@ export class ButtonApplicationComponent {
     return interaction.update({
       embeds: [],
       components: [],
-      content: ButtonApplicationComponentFunctionResponses.Cancelled(
-        this.configService.get<string>('command_id'),
-        this.configService.get<string>('channels.bot'),
-      ),
+      content: ButtonApplicationComponentResponses.Cancelled,
     });
   }
 

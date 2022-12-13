@@ -12,8 +12,6 @@ channels:
   staff: ''
   # The channel to send user reports to
   reports: ''
-  # The channel to send people to re-apply in
-  bot: ''
 
 # Roles config
 roles:

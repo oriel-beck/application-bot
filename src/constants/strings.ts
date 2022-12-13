@@ -120,10 +120,9 @@ export const ReportEmbedFunctionResponses = Object.freeze({
     }`,
 });
 
-export const ButtonApplicationComponentFunctionResponses = Object.freeze({
-  Cancelled: (commandid: string, channelid: string) =>
-    `Cancelled application process, you can re-apply by using </apply:${commandid}> in <#${channelid}>.`,
-});
+export enum ButtonApplicationComponentResponses {
+  Cancelled = 'Cancelled application process, Please re-apply',
+}
 
 export enum ApplicationReviewEmbedResponses {
   Title = 'New Application',

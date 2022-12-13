@@ -19,6 +19,7 @@ import {
   BDFDQuestion,
   BDFDSetting,
 } from './entities';
+import { UtilsModule } from './services/utils/utils.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import {
     CommandsModule,
     // enable components
     ComponentsModule,
+    UtilsModule,
   ],
 })
 export class AppModule {}
