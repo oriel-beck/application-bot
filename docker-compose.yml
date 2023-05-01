@@ -1,0 +1,23 @@
+version: '3.9'
+
+volumes:
+  scylla_db:
+
+services:
+  appbot:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - scylla
+
+  scylla:
+    image: scylladb/scylla
+    restart: unless-stopped
+    volumes:
+      - scylla_db:/var/lib/scylla
+    env_file:
+      - .env
+    ports:
+      - '9042:9042'

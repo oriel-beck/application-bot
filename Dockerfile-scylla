@@ -1,0 +1,6 @@
+FROM scylladb/scylla
+WORKDIR /app
+
+COPY ./scylla-init/ scylla-init/
+
+ENTRYPOINT ["/app/scylla-init/scylla-init.sh"]
