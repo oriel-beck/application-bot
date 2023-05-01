@@ -11,7 +11,7 @@ RUN yarn run build
 FROM node:18-alpine AS runner
 WORKDIR /app
 COPY --from=builder /app/node_modules node_modules
-COPY --from=builder /app/dist .
+COPY --from=builder /app/dist src
 COPY json json
 COPY *json ./
-CMD node index.js
+CMD node src/index.js

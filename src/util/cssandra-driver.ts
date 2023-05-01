@@ -10,11 +10,11 @@ export class CustomCassandraClient extends Client {
             .then(() => {
                 console.log('Connected tp cylla, took', this.attempt, 'attempts');
             })
-            .catch((err) => {
-                console.log('Failed to connect to scylla, attempt', this.attempt, '\n', err);
+            .catch(() => {
+                console.log('Failed to connect to scylla, attempt', this.attempt);
                 this.attempt++
                 setTimeout(() => {
-                    this.attemptConnection()
+                    this.attemptConnection();
                 }, 5000);
             });
     }
