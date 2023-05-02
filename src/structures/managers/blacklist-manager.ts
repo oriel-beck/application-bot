@@ -1,5 +1,6 @@
 import { container } from "@sapphire/framework";
 import { BaseManager } from "./base-manager";
+import type { Blacklist } from "../../types";
 
 export class BlacklistManager extends BaseManager {
     constructor() {
@@ -14,7 +15,7 @@ export class BlacklistManager extends BaseManager {
         return this.driver.execute(this.genDelete('user'), [userid], { prepare: true });
     }
 
-    public update(userid: string, field: string, value: any) {
+    public update(userid: string, field: keyof Blacklist, value: any) {
         return this.driver.execute(this.genUpdate(field, 'user'), [value, userid], { prepare: true });
     }
 

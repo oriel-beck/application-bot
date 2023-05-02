@@ -1,5 +1,6 @@
 import { container } from "@sapphire/framework";
 import { BaseManager } from "./base-manager";
+import type { Setting } from "../../types";
 
 export class SettingManager extends BaseManager {
     constructor() {
@@ -18,7 +19,7 @@ export class SettingManager extends BaseManager {
         return this.driver.execute(this.genDelete('guild'), [guildid], { prepare: true });
     }
 
-    public update(guildid: string, field: string, value: any) {
+    public update(guildid: string, field: keyof Setting, value: any) {
         return this.driver.execute(this.genUpdate(field, 'guild'), [value, guildid], { prepare: true });
     }
 }

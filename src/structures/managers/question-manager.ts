@@ -26,7 +26,7 @@ export class QuestionManager extends BaseManager {
         return this.driver.execute(this.genDelete('id'), [id], { prepare: true });
     }
 
-    public update(id: string, field: string, value: any) {
+    public update(id: string, field: keyof Question, value: any) {
         return this.driver.execute(this.genUpdate(field, 'id'), [value, id], { prepare: true });
     }
 

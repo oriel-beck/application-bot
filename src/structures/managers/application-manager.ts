@@ -1,6 +1,6 @@
 import { container } from "@sapphire/framework";
 import { BaseManager } from "./base-manager";
-import type { ApplicationState } from "../../types";
+import type { Application, ApplicationState } from "../../types";
 
 export class ApplicationManager extends BaseManager {
     max = 25;
@@ -25,7 +25,7 @@ export class ApplicationManager extends BaseManager {
         return this.driver.execute(this.genDelete('user'), [userid], { prepare: true });
     }
 
-    public update(userid: string, field: string, value: any) {
+    public update(userid: string, field: keyof Application, value: any) {
         return this.driver.execute(this.genUpdate(field, 'user'), [value, userid], { prepare: true });
     }
 
