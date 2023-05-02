@@ -50,11 +50,16 @@ export class SlashCommand extends Command {
       return interaction.editReply('Failed to create application, please try again later, if this error repeats open a ticket.')
     }
 
-    msg.edit({
+    const edit = await msg.edit({
       content: '',
       embeds: generateDMEmbed(questions[0]!),
       components: generateDMComponents([])
     }).catch((err) => console.log(err));
+
+    if (!edit) {
+      await this.container.applications.delete(interaction.user.id).catch(() => null);
+      return interaction.editReply('Failed to edit the message, please cancelling application process...');
+    }
 
     return interaction.editReply({
       content: 'Started the application in your DMs, good luck!',
