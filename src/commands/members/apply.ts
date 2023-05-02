@@ -1,22 +1,12 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { generateDMComponents, generateDMEmbed } from '../../util/util';
+import { generateComponents, generateEmbed } from '../../util/command-utils/apply/utils';
 
 @ApplyOptions<Command.Options>({
   name: 'apply',
   description: 'Start a staff application.'
 })
 export class SlashCommand extends Command {
-  public registerApplicationCommands(registry: Command.Registry) {
-    registry.registerChatInputCommand((builder) =>
-      builder
-        .setName(this.name)
-        .setDescription(this.description),
-        {
-          idHints: ['1098190026841538650']
-        });
-  }
-
   public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     await interaction.deferReply({
       ephemeral: true
@@ -28,7 +18,7 @@ export class SlashCommand extends Command {
       return interaction.editReply('Failed to connect to the database, please try again later.')
     }
 
-    if (get.rows.length) {
+    if (get.rowLength) {
       return interaction.editReply('You already have an application in progress, please finish or cancel it first.');
     }
 
@@ -52,8 +42,8 @@ export class SlashCommand extends Command {
 
     const edit = await msg.edit({
       content: '',
-      embeds: generateDMEmbed(questions[0]!),
-      components: generateDMComponents([])
+      embeds: generateEmbed(questions[0]!),
+      components: generateComponents([])
     }).catch((err) => console.log(err));
 
     if (!edit) {
@@ -64,5 +54,15 @@ export class SlashCommand extends Command {
     return interaction.editReply({
       content: 'Started the application in your DMs, good luck!',
     })
+  }
+
+  public registerApplicationCommands(registry: Command.Registry) {
+    registry.registerChatInputCommand((builder) =>
+      builder
+        .setName(this.name)
+        .setDescription(this.description),
+        {
+          idHints: ['1098190026841538650']
+        });
   }
 }

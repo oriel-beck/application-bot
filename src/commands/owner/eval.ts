@@ -8,39 +8,6 @@ import { inspect } from 'util';
   description: 'Evaluate JS code.'
 })
 export class SlashCommand extends Command {
-  public registerApplicationCommands(registry: Command.Registry) {
-    registry.registerChatInputCommand((builder) =>
-      builder
-        .setName(this.name)
-        .setDescription(this.description)
-        .addStringOption((option) =>
-          option
-            .setName('code')
-            .setDescription('The code to execute.')
-            .setRequired(true))
-        .addBooleanOption((option) =>
-          option
-            .setName('hidden')
-            .setDescription('Show hidden properties.')
-            .setRequired(false))
-        .addBooleanOption((option) =>
-          option
-            .setName('async')
-            .setDescription('Run the code asynchronously.')
-            .setRequired(false))
-        .addBooleanOption((option) =>
-          option
-            .setName('ephemeral')
-            .setDescription('Answer with an ephemeral message.')
-            .setRequired(false))
-        .addNumberOption((option) =>
-          option
-            .setName('depth')
-            .setDescription('Set the depth to inspect.')
-            .setRequired(false))
-    );
-  }
-
   public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     const ephemeral = !!interaction.options.getBoolean('ephemeral', false);
     await interaction.deferReply({ ephemeral });
@@ -73,5 +40,38 @@ export class SlashCommand extends Command {
         }
       ]
     })
+  }
+
+  public registerApplicationCommands(registry: Command.Registry) {
+    registry.registerChatInputCommand((builder) =>
+      builder
+        .setName(this.name)
+        .setDescription(this.description)
+        .addStringOption((option) =>
+          option
+            .setName('code')
+            .setDescription('The code to execute.')
+            .setRequired(true))
+        .addBooleanOption((option) =>
+          option
+            .setName('hidden')
+            .setDescription('Show hidden properties.')
+            .setRequired(false))
+        .addBooleanOption((option) =>
+          option
+            .setName('async')
+            .setDescription('Run the code asynchronously.')
+            .setRequired(false))
+        .addBooleanOption((option) =>
+          option
+            .setName('ephemeral')
+            .setDescription('Answer with an ephemeral message.')
+            .setRequired(false))
+        .addNumberOption((option) =>
+          option
+            .setName('depth')
+            .setDescription('Set the depth to inspect.')
+            .setRequired(false))
+    );
   }
 }

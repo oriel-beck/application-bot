@@ -29,14 +29,14 @@ import { Subcommand } from '@sapphire/plugin-subcommands';
   ]
 })
 export class SlashCommand extends Subcommand {
+  public async chatInputRun(interaction: Subcommand.ChatInputCommandInteraction) {
+
+  }
+
   public registerApplicationCommands(registry: Subcommand.Registry) {
     registry.registerChatInputCommand((builder) =>
       builder
         .setName(this.name)
         .setDescription(this.description));
-  }
-
-  public async chatInputRun(interaction: Subcommand.ChatInputCommandInteraction) {
-    return;
   }
 }

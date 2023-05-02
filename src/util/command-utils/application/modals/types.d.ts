@@ -1,0 +1,1 @@
+export type DecisionType = 'deny' | 'accept' | 'delete';

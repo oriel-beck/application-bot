@@ -1,9 +1,11 @@
+export type ApplicationState = 'active' | 'pending' | 'denied' | 'accepted';
+
 export interface Application {
     user: string;
     questions: string[];
     answers: string[];
     message: string;
-    state: 'active' | 'pending' | 'denied' | 'accepted';
+    state: ApplicationState;
 }
 
 export interface Blacklist {
