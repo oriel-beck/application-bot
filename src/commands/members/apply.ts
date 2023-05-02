@@ -17,17 +17,17 @@ export class SlashCommand extends Command {
   }
 
   public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
-    // const create = await this.container.applications.create(interaction.user.id).catch((err) => {
-    //   console.log(err);
-    //   return null;
-    // });
-    // console.log(create);
+    const create = await this.container.applications.create(interaction.user.id).catch((err) => {
+      console.log(err);
+      return null;
+    });
+    console.log(create);
 
-    // const get = await this.container.applications.get(interaction.user.id).catch((err) => {
-    //   console.log(err);
-    //   return null;
-    // });
-    // console.log(get);
+    const get = await this.container.applications.get(interaction.user.id).catch((err) => {
+      console.log(err);
+      return null;
+    });
+    console.log(get);
 
     interaction.reply({
       content: 'Hello there',

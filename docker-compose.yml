@@ -17,6 +17,7 @@ services:
     restart: unless-stopped
     volumes:
       - scylla_db:/var/lib/scylla
+      - ./scylla-init:/scylla-init
     env_file:
       - .env
     ports:

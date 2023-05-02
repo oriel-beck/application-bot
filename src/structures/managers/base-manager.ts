@@ -6,6 +6,6 @@ export abstract class BaseManager {
         if (container[name]) {
             console.warn('It\'s not recommended to create more than 1 instance of', BaseManager.constructor.name);
         }
-        console.log(BaseManager.constructor.name, 'is ready');
+        console.log(name, 'manager is ready');
     }
 }

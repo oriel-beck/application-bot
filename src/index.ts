@@ -1,7 +1,14 @@
 import { SapphireClient } from '@sapphire/framework';
 import { GatewayIntentBits } from 'discord.js';
+
+// register subcommand plugin
 import '@sapphire/plugin-subcommands/register';
-import './util/cssandra-driver.js';
+
+// assign cassandra driver to container.driver
+import './util/cssandra-driver-register.js';
+
+// assign managers to container
+import './structures/managers/register.js';
 
 const client = new SapphireClient({
   intents: [GatewayIntentBits.Guilds],

@@ -1,8 +1,5 @@
-import type { ApplicationManager } from "./structures/application-manager";
-import type { BlacklistManager } from "./structures/blacklist-manager";
-import type { QuestionManager } from "./structures/question-manager";
-import type { SettingManager } from "./structures/setting-manager";
-import type { CustomCassandraClient } from "./util/cssandra-driver";
+import type { ApplicationManager, BlacklistManager, QuestionManager, SettingManager } from "./structures/managers";
+import type { CustomCassandraClient } from "./util/cssandra-driver-register";
 
 declare module '@sapphire/pieces' {
     interface Container {

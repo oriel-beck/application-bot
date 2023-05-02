@@ -1,6 +1,5 @@
 import { container } from '@sapphire/framework';
 import { Client } from 'cassandra-driver';
-console.log('Assigning CassandraDriver to container.driver')
 
 export class CustomCassandraClient extends Client {
     private attempt = 1;
@@ -9,8 +8,9 @@ export class CustomCassandraClient extends Client {
         this.connect()
             .then(() => {
                 console.log('Connected tp cylla, took', this.attempt, 'attempts');
+                container.questions.initQuestions();
             })
-            .catch(() => {
+            .catch((_) => {
                 console.log('Failed to connect to scylla, attempt', this.attempt);
                 this.attempt++
                 setTimeout(() => {
@@ -30,4 +30,5 @@ container.driver = new CustomCassandraClient({
     },
 });
 
+console.log('Assigning CassandraDriver to container.driver')
 container.driver.attemptConnection();

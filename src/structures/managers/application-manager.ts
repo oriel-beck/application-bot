@@ -2,13 +2,14 @@ import { container } from "@sapphire/framework";
 import { BaseManager } from "./base-manager";
 
 export class ApplicationManager extends BaseManager {
+    max = 25
     constructor() {
         super('applications')
     }
     
     async create(userid: string | bigint) {
         // TODO: add max to settings
-        const questions = container.questions.getRand(15).map((question) => question.question);
+        const questions = container.questions.getRand(this.max);
         return this.driver.execute('INSERT INTO appbot.applications (user, questions, answers, message) VALUES (?, ?, ?, ?) IF NOT EXISTS', [BigInt(userid), questions, [], null]);
     }
 

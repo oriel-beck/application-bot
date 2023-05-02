@@ -1,3 +1,4 @@
+import { container } from "@sapphire/framework";
 import { BaseManager } from "./base-manager";
 
 export class SettingManager extends BaseManager {
@@ -13,3 +14,5 @@ export class SettingManager extends BaseManager {
         return this.driver.execute('SELECT * FROM appbot.settings WHERE guild = ?', [BigInt(guildid)]);
     }
 }
+
+container.settings = new SettingManager();

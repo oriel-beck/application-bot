@@ -1,3 +1,4 @@
+import { container } from "@sapphire/framework";
 import { BaseManager } from "./base-manager";
 
 export class BlacklistManager extends BaseManager {
@@ -17,3 +18,5 @@ export class BlacklistManager extends BaseManager {
         return this.driver.execute('UPDATE appbot.blacklists SET ? = ? WHERE user = ?', [field, value, BigInt(userid)]);
     }
 }
+
+container.blacklists = new BlacklistManager();
