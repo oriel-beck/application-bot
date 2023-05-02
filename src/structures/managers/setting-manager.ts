@@ -6,12 +6,20 @@ export class SettingManager extends BaseManager {
         super('settings')
     }
 
-    create(guildid: string | bigint) {
-        return this.driver.execute('INSERT INTO appbot.settings (guild, enabled) VALUES (?, ?) IF NOT EXISTS', [BigInt(guildid), false]);
+    public create(guildid: string | bigint) {
+        return this.driver.execute(this.genInsert('guild', 'enabled'), [BigInt(guildid), false]);
     }
 
-    get(guildid: string | bigint) {
-        return this.driver.execute('SELECT * FROM appbot.settings WHERE guild = ?', [BigInt(guildid)]);
+    public get(guildid: string | bigint) {
+        return this.driver.execute(this.genSelect('*', 'guild'), [BigInt(guildid)]);
+    }
+
+    public delete(guildid: string | bigint) {
+        return this.driver.execute(this.genDelete('guild'), [BigInt(guildid)]);
+    }
+
+    public update(guildid: string | bigint, field: string, value: any) {
+        return this.driver.execute(this.genUpdate(field, 'guild'), [value, BigInt(guildid)]);
     }
 }
 

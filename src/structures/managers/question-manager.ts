@@ -1,9 +1,9 @@
 import type { Question } from '../../types';
-import { readFile } from "fs/promises";
 import { join } from "path";
 import { BaseManager } from "./base-manager";
 import { container } from '@sapphire/framework';
-import { existsSync } from 'fs';
+import { canAccessFile, readFileToJson } from '../../util/util';
+import { randomUUID } from 'crypto'
 
 const jsonPaths = Object.freeze({
     rand: join(process.cwd(), 'json', 'rand-questions.json'),
@@ -18,23 +18,23 @@ export class QuestionManager extends BaseManager {
         super('questions')
     }
 
-    create(question: string) {
-        return this.driver.execute('INSERT INTO appbot.questions (question, id) VALUES (?, UUID())', [question]);
+    public create(question: string) {
+        return this.driver.execute(this.genInsert('id', 'question'), [randomUUID(), question]);
     }
 
-    delete(id: string) {
-        return this.driver.execute('DELETE FROM appbot.questions WHERE id = ?', [id]);
+    public delete(id: string) {
+        return this.driver.execute(this.genDelete('id'), [id]);
     }
 
-    update(id: string, field: string, value: any) {
-        return this.driver.execute('UPDATE appbot.questions SET ? = ? WHERE id = ?', [field, value, id]);
+    public update(id: string, field: string, value: any) {
+        return this.driver.execute(this.genUpdate(field, 'id'), [value, id]);
     }
 
-    get(id: string) {
-        return this.driver.execute('SELECT * FROM appbot.questions WHERE id = ?', [id]);
+    public get(id: string) {
+        return this.driver.execute(this.genSelect('*', 'id'), [id]);
     }
 
-    getRand(max: number) {
+    public getRand(max: number) {
         return this.defaultQuestions.concat(this.randomizeQuestions().splice(0, max - this.defaultQuestions.length).map((q) => q.question));
     }
 
@@ -57,26 +57,24 @@ export class QuestionManager extends BaseManager {
     }
 
     private async getRandomQuestionsFromFile() {
-        if (existsSync(jsonPaths.rand)) {
-            const json = await readFile(jsonPaths.rand, { encoding: 'utf-8' }).catch(() => '[]');
-            return JSON.parse(json) as Question[];
+        if (await canAccessFile(jsonPaths.rand)) {
+            return readFileToJson<Question[]>(jsonPaths.rand, '[]');
         }
         return [];
     }
 
     private getAllQuestions() {
-        return this.driver.execute('SELECT * FROM appbot.questions')
+        return this.driver.execute(this.genSelect())
     }
 
     private async getJsonQuestionsFromFile() {
-        if (existsSync(jsonPaths.base)) {
-            const json = await readFile(jsonPaths.base, { encoding: 'utf-8' }).catch(() => '[]');
-            return JSON.parse(json) as string[];
+        if (await canAccessFile(jsonPaths.base)) {
+            return readFileToJson<string[]>(jsonPaths.base, '[]');
         }
         return [];
     }
 
-    async initQuestions() {
+    public async initQuestions() {
         // TODO: insert only missing questions
         //const randQuestions = await this.getRandomQuestionsFromFile();
         //await Promise.all(randQuestions.map((q) => this.driver.execute('INSERT INTO appbot.questions (id, question) VALUES (?, ?) IF NOT EXISTS', [q.id, q.question])));

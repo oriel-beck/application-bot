@@ -7,26 +7,26 @@ export class ApplicationManager extends BaseManager {
         super('applications')
     }
     
-    async create(userid: string | bigint) {
+    public create(userid: string | bigint) {
         // TODO: add max to settings
         const questions = container.questions.getRand(this.max);
-        return this.driver.execute('INSERT INTO appbot.applications (user, questions, answers, message) VALUES (?, ?, ?, ?) IF NOT EXISTS', [BigInt(userid), questions, [], null]);
+        return this.driver.execute(this.genInsert('user', 'questions', 'answers', 'message'), [BigInt(userid), questions, [], null]);
     }
 
-    get(userid: string | bigint) {
-        return this.driver.execute('SELECT * FROM appbot.applications WHERE user = ?', [BigInt(userid)]);
+    public get(userid: string | bigint) {
+        return this.driver.execute(this.genSelect('user'), [BigInt(userid)]);
     }
 
-    delete(userid: string | bigint) {
-        return this.driver.execute('DELETE FROM appbot.applications WHERE user = ?', [BigInt(userid)]);
+    public delete(userid: string | bigint) {
+        return this.driver.execute(this.genDelete('user'), [BigInt(userid)]);
     }
 
-    update(userid: string | bigint, field: string, value: any) {
-        return this.driver.execute('UPDATE appbot.applications SET ? = ? WHERE user = ?', [field, value, BigInt(userid)]);
+    public update(userid: string | bigint, field: string, value: any) {
+        return this.driver.execute(this.genUpdate(field, 'user'), [value, BigInt(userid)]);
     }
 
-    addAnswer(userid: string | bigint, question: number, answer: string) {
-        return this.driver.execute(`UPDATE appbot.questions SET answers[${question}] = ? WHERE user = ?`, [answer, BigInt(userid)]);
+    public addAnswer(userid: string | bigint, question: number, answer: string) {
+        return this.driver.execute(this.genUpdate(`answers[${question}]`, 'user'), [answer, BigInt(userid)]);
     }
 }
 

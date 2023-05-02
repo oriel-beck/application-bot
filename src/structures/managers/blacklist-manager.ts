@@ -6,16 +6,20 @@ export class BlacklistManager extends BaseManager {
         super('blacklists')
     }
     
-    create(userid: string | bigint, reason: string, mod: string | bigint) {
-        return this.driver.execute('INSERT INTO appbot.blacklists (user, reason, mod) VALUES (?, ?, ?) IF NOT EXISTS', [BigInt(userid), reason, BigInt(mod)]);
+    public create(userid: string | bigint, reason: string, mod: string | bigint) {
+        return this.driver.execute(this.genInsert('user', 'reason', 'mod'), [BigInt(userid), reason, BigInt(mod)]);
     }
 
-    delete(userid: string | bigint) {
-        return this.driver.execute('DELETE FROM appbot.blacklists WHERE user = ?', [BigInt(userid)]);
+    public delete(userid: string | bigint) {
+        return this.driver.execute(this.genDelete('user'), [BigInt(userid)]);
     }
 
-    update(userid: string | bigint, field: string, value: any) {
-        return this.driver.execute('UPDATE appbot.blacklists SET ? = ? WHERE user = ?', [field, value, BigInt(userid)]);
+    public update(userid: string | bigint, field: string, value: any) {
+        return this.driver.execute(this.genUpdate(field, 'user'), [value, BigInt(userid)]);
+    }
+
+    public get(userid: string | bigint) {
+        return this.driver.execute(this.genSelect('*', 'user'), [BigInt(userid)]);
     }
 }
 

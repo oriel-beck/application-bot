@@ -14,5 +14,5 @@ const client = new SapphireClient({
   intents: [GatewayIntentBits.Guilds],
 });
 
-client.login(process.env.BOT_TOKEN).then(() => console.log('Bot is logged in')).catch((err) => console.error('Failed to start tht bot', err));
+client.login(process.env.BOT_TOKEN).catch((err) => console.error('Failed to start tht bot', err));
 
