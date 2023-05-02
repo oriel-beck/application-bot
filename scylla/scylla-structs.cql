@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS appbot.applications (
     questions LIST<TEXT>,
     answers LIST<TEXT>,
     message BIGINT
-);
+) WITH default_time_to_live = 2400;
 
 CREATE TABLE IF NOT EXISTS appbot.blacklists (
     user BIGINT PRIMARY KEY,
