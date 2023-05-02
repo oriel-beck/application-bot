@@ -23,3 +23,48 @@ DB_PASS=cassandra
 
 ## Startup
 To start, run in the main directory `docker compose up --build` and wait for the bot to connect.
+
+## Todo
+- [ ] Apply command
+    - [ ] DM Embed
+    - [ ] DM Buttons
+    - [ ] DM Select
+
+- [ ] Application command
+    - [ ] Reset
+    - [ ] Togggle
+    - [ ] Delete
+    - [ ] Deny
+        - [ ] Deny embed
+    - [ ] Accept
+        - [ ] Accept embed
+    - [ ] Show
+        - [ ] Show embed
+    - [ ] List
+        - [ ] List embed
+        - [ ] List select
+        - [ ] List buttons (over 125 apps)
+    
+- [ ] Blacklist command
+    - [ ] Add
+    - [ ] Remove
+    - [ ] Reason
+    - [ ] Show
+
+- [ ] Question command
+    - [ ] Add
+    - [ ] Remove
+    - [ ] Edit
+    - [ ] List
+        - [ ] List embed
+        - [ ] List select
+        - [ ] List buttons (over 125 questions)
+
+- [ ] Report command
+    - [ ] User command
+    - [ ] Message command
+    - [ ] Slash command
+
+- [ ] About command
+- [ ] Eval command
+- [ ] Application embed
