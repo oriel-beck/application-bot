@@ -6,20 +6,20 @@ export class SettingManager extends BaseManager {
         super('settings')
     }
 
-    public create(guildid: string | bigint) {
-        return this.driver.execute(this.genInsert('guild', 'enabled'), [BigInt(guildid), false]);
+    public create(guildid: string) {
+        return this.driver.execute(this.genInsert('guild', 'enabled'), [guildid, false], { prepare: true });
     }
 
-    public get(guildid: string | bigint) {
-        return this.driver.execute(this.genSelect('*', 'guild'), [BigInt(guildid)]);
+    public get(guildid: string) {
+        return this.driver.execute(this.genSelect('*', 'guild'), [guildid], { prepare: true });
     }
 
-    public delete(guildid: string | bigint) {
-        return this.driver.execute(this.genDelete('guild'), [BigInt(guildid)]);
+    public delete(guildid: string) {
+        return this.driver.execute(this.genDelete('guild'), [guildid], { prepare: true });
     }
 
-    public update(guildid: string | bigint, field: string, value: any) {
-        return this.driver.execute(this.genUpdate(field, 'guild'), [value, BigInt(guildid)]);
+    public update(guildid: string, field: string, value: any) {
+        return this.driver.execute(this.genUpdate(field, 'guild'), [value, guildid], { prepare: true });
     }
 }
 

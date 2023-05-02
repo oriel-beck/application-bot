@@ -19,19 +19,19 @@ export class QuestionManager extends BaseManager {
     }
 
     public create(question: string) {
-        return this.driver.execute(this.genInsert('id', 'question'), [randomUUID(), question]);
+        return this.driver.execute(this.genInsert('id', 'question'), [randomUUID(), question], { prepare: true });
     }
 
     public delete(id: string) {
-        return this.driver.execute(this.genDelete('id'), [id]);
+        return this.driver.execute(this.genDelete('id'), [id], { prepare: true });
     }
 
     public update(id: string, field: string, value: any) {
-        return this.driver.execute(this.genUpdate(field, 'id'), [value, id]);
+        return this.driver.execute(this.genUpdate(field, 'id'), [value, id], { prepare: true });
     }
 
     public get(id: string) {
-        return this.driver.execute(this.genSelect('*', 'id'), [id]);
+        return this.driver.execute(this.genSelect('*', 'id'), [id], { prepare: true });
     }
 
     public getRand(max: number) {
@@ -56,15 +56,15 @@ export class QuestionManager extends BaseManager {
         return array;
     }
 
-    private async getRandomQuestionsFromFile() {
-        if (await canAccessFile(jsonPaths.rand)) {
-            return readFileToJson<Question[]>(jsonPaths.rand, '[]');
-        }
-        return [];
-    }
+    // private async getRandomQuestionsFromFile() {
+    //     if (await canAccessFile(jsonPaths.rand)) {
+    //         return readFileToJson<Question[]>(jsonPaths.rand, '[]');
+    //     }
+    //     return [];
+    // }
 
     private getAllQuestions() {
-        return this.driver.execute(this.genSelect())
+        return this.driver.execute(this.genSelect(), [], { prepare: true })
     }
 
     private async getJsonQuestionsFromFile() {

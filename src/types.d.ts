@@ -1,18 +1,18 @@
 export interface Application {
-    user: bigint;
+    user: string;
     questions: string[];
     answers: string[];
-    message: bigint;
+    message: string;
 }
 
 export interface Blacklist {
-    user: bigint;
+    user: string;
     reason: string;
-    mod: bigint;
+    mod: string;
 }
 
 export interface Setting {
-    guild: bigint;
+    guild: string;
     enabled: boolean;
 }
 

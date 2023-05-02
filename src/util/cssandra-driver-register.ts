@@ -2,7 +2,7 @@ import { container } from '@sapphire/framework';
 import { Client } from 'cassandra-driver';
 
 export class CustomCassandraClient extends Client {
-    private attempt = 1;
+    private attempt = 0;
     attemptConnection() {
 
         this.connect()
@@ -11,8 +11,8 @@ export class CustomCassandraClient extends Client {
                 container.questions.initQuestions();
             })
             .catch((_) => {
-                console.log('Failed to connect to scylla, attempt', this.attempt);
                 this.attempt++
+                console.log('Failed to connect to scylla, attempt', this.attempt);
                 setTimeout(() => {
                     this.attemptConnection();
                 }, 5000);

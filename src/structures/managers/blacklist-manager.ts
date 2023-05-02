@@ -6,20 +6,20 @@ export class BlacklistManager extends BaseManager {
         super('blacklists')
     }
     
-    public create(userid: string | bigint, reason: string, mod: string | bigint) {
-        return this.driver.execute(this.genInsert('user', 'reason', 'mod'), [BigInt(userid), reason, BigInt(mod)]);
+    public create(userid: string, reason: string, mod: string | bigint) {
+        return this.driver.execute(this.genInsert('user', 'reason', 'mod'), [userid, reason, mod], { prepare: true });
     }
 
-    public delete(userid: string | bigint) {
-        return this.driver.execute(this.genDelete('user'), [BigInt(userid)]);
+    public delete(userid: string) {
+        return this.driver.execute(this.genDelete('user'), [userid], { prepare: true });
     }
 
-    public update(userid: string | bigint, field: string, value: any) {
-        return this.driver.execute(this.genUpdate(field, 'user'), [value, BigInt(userid)]);
+    public update(userid: string, field: string, value: any) {
+        return this.driver.execute(this.genUpdate(field, 'user'), [value, userid], { prepare: true });
     }
 
-    public get(userid: string | bigint) {
-        return this.driver.execute(this.genSelect('*', 'user'), [BigInt(userid)]);
+    public get(userid: string) {
+        return this.driver.execute(this.genSelect('*', 'user'), [userid], { prepare: true });
     }
 }
 
