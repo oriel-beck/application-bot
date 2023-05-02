@@ -3,6 +3,7 @@ export interface Application {
     questions: string[];
     answers: string[];
     message: string;
+    state: 'active' | 'pending' | 'denied' | 'accepted';
 }
 
 export interface Blacklist {
