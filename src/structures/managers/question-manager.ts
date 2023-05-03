@@ -18,8 +18,10 @@ export class QuestionManager extends BaseManager {
         super('questions')
     }
 
-    public create(question: string) {
-        return this.driver.execute(this.genInsert('id', 'question'), [randomUUID(), question], { prepare: true });
+    public async create(question: string) {
+        const uuid = randomUUID();
+        await this.driver.execute(this.genInsert('id', 'question'), [uuid, question], { prepare: true });
+        return uuid;
     }
 
     public delete(id: string) {
@@ -32,6 +34,10 @@ export class QuestionManager extends BaseManager {
 
     public get(id: string) {
         return this.driver.execute(this.genSelect('*', 'id'), [id], { prepare: true });
+    }
+
+    public getAll() {
+        return this.driver.execute(this.genSelect(), [], { prepare: true });
     }
 
     public getRand(max: number) {
