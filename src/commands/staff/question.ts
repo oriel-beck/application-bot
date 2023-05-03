@@ -5,6 +5,7 @@ import { Subcommand } from '@sapphire/plugin-subcommands';
 @ApplyOptions<Subcommand.Options>({
   name: 'question',
   description: 'Manages the questions system.',
+  preconditions: ['ModOnly'],
   subcommands: [
     {
         name: 'add',

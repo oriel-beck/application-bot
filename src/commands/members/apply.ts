@@ -4,23 +4,14 @@ import { generateComponents, generateEmbed } from '../../util/command-utils/appl
 
 @ApplyOptions<Command.Options>({
   name: 'apply',
-  description: 'Start a staff application.'
+  description: 'Start a staff application.',
+  preconditions: ['ApplicationEnabled', 'ApplicationInProgress']
 })
 export class SlashCommand extends Command {
   public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     await interaction.deferReply({
       ephemeral: true
     });
-
-    const get = await this.container.applications.get(interaction.user.id).catch((err) => console.log(err));
-
-    if (!get) {
-      return interaction.editReply('Failed to connect to the database, please try again later.')
-    }
-
-    if (get.rowLength) {
-      return interaction.editReply('You already have an application in progress, please finish or cancel it first.');
-    }
 
     const dm = await interaction.user.createDM().catch(() => null);
     if (!dm) {

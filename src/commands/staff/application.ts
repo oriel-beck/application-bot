@@ -9,6 +9,7 @@ import { generateComponents, generateEmbed } from '../../util/command-utils/appl
 @ApplyOptions<Subcommand.Options>({
   name: 'application',
   description: 'Manage the application.',
+  preconditions: ['ModOnly'],
   subcommands: [
     {
       name: 'deny',

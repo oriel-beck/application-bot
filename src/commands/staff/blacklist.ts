@@ -7,6 +7,7 @@ import type { Blacklist } from '../../types';
 @ApplyOptions<Subcommand.Options>({
   name: 'blacklist',
   description: 'Manages the blacklist system.',
+  preconditions: ['ModOnly'],
   subcommands: [
     {
       name: 'add',

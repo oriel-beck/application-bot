@@ -5,7 +5,8 @@ import { inspect } from 'util';
 
 @ApplyOptions<Command.Options>({
   name: 'eval',
-  description: 'Evaluate JS code.'
+  description: 'Evaluate JS code.',
+  preconditions: ['OwnerOnly']
 })
 export class SlashCommand extends Command {
   public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
