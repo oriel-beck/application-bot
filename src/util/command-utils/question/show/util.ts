@@ -13,7 +13,7 @@ export function generateEmbed(question: Question) {
 export function generateComponents(question: Question) {
     return [
         new ActionRowBuilder<ButtonBuilder>()
-            .addComponents([
+            .addComponents(
                 new ButtonBuilder()
                     .setLabel('Delete')
                     .setStyle(ButtonStyle.Danger)
@@ -22,6 +22,6 @@ export function generateComponents(question: Question) {
                     .setLabel('Edit')
                     .setStyle(ButtonStyle.Secondary)
                     .setCustomId(`question-edit-${question.id}`)
-            ])
+            )
     ]
 }

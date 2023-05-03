@@ -2,9 +2,9 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { SlashCommandSubcommandBuilder } from 'discord.js';
 import { generateModal } from '../../util/command-utils/application/modals/utils';
-import { generateApplicationEmbed } from '../../util/command-utils/application/embeds/utils';
+import { generateEmbed as showGenerateEmbed, generateComponents as showGenerateComponents } from '../../util/command-utils/application/embeds/utils';
 import type { Application, ApplicationState } from '../../types';
-import { generateComponents, generateEmbed } from '../../util/command-utils/application/list/util';
+import { generateComponents as listGenerateComponents, generateEmbed as listGenerateEmbed } from '../../util/command-utils/application/list/util';
 
 @ApplyOptions<Subcommand.Options>({
   name: 'application',
@@ -87,8 +87,8 @@ export class SlashCommand extends Subcommand {
     }
 
     return interaction.editReply({
-      content: '',
-      embeds: await generateApplicationEmbed(app.first() as unknown as Application)
+      embeds: await showGenerateEmbed(app.first() as unknown as Application),
+      components: showGenerateComponents(app.first() as unknown as Application)
     })
   }
 
@@ -103,8 +103,8 @@ export class SlashCommand extends Subcommand {
     }
 
     return interaction.editReply({
-      embeds: generateEmbed(allApps.rowLength, state),
-      components: generateComponents(allApps.rows as unknown as Application[])
+      embeds: listGenerateEmbed(allApps.rowLength, state),
+      components: listGenerateComponents(allApps.rows as unknown as Application[])
     })
   }
 
