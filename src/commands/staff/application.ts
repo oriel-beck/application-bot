@@ -112,6 +112,7 @@ export class SlashCommand extends Subcommand {
       builder
         .setName(this.name)
         .setDescription(this.description)
+        .setDMPermission(false)
         .addSubcommand(this.denySubcommandBuilder())
         .addSubcommand(this.acceptSubcommandBuilder())
         .addSubcommand(this.deleteSubcommandBuilder())

@@ -60,7 +60,8 @@ export class SlashCommand extends Command {
     registry.registerChatInputCommand((builder) =>
       builder
         .setName(this.name)
-        .setDescription(this.description),
+        .setDescription(this.description)
+        .setDMPermission(false),
         {
           idHints: ['1098190026841538650']
         });

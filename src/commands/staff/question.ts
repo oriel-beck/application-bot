@@ -37,6 +37,7 @@ export class SlashCommand extends Subcommand {
     registry.registerChatInputCommand((builder) =>
       builder
         .setName(this.name)
+        .setDMPermission(false)
         .setDescription(this.description));
   }
 }
