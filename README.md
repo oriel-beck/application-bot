@@ -6,12 +6,28 @@ Hopefully v5 will be stateless....
 - Docker compose
 
 ## Bot setup
-1) Create a .env file.
-```
+1) Create a .env file, all values are required.
+```env
 BOT_TOKEN=TOKEN_HERE
+OWNER=USER_ID
 
 DB_USER=cassandra
 DB_PASS=cassandra
+```
+2) Create a config file named `config.json` in the main directory, all values are required.
+```json
+{
+    "channels": {
+        "pending": "",
+        "denied": "",
+        "accepted": "",
+        "report": ""
+    },
+    "roles": {
+        "mod": "",
+        "trial_support": ""
+    }
+}
 ```
 
 ## DB setup

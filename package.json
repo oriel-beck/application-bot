@@ -5,7 +5,13 @@
   "main": "src/index.js",
   "scripts": {
     "build": "yarn tsc",
-    "start": "docker compose up --build"
+    "start": "node src/index.js",
+    "pull:docker": "docker compose pull",
+    "build:docker": "docker compose build",
+    "start:docker": "docker compose up --build",
+    "stop:docker": "docker compose stop",
+    "down:docker": "docker compose down",
+    "rm:docker": "docker compose rm"
   },
   "keywords": [],
   "author": "oriel beck",

@@ -1,6 +1,12 @@
+# output
 dist
+
+# packages
 node_modules
-.env
 
 # secret questions
 json/rand-questions.json
+
+# configs
+.env
+src/config/config.json

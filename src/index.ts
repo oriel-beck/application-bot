@@ -1,6 +1,9 @@
 import { SapphireClient } from '@sapphire/framework';
 import { GatewayIntentBits } from 'discord.js';
 
+// register config
+import './config/register.js';
+
 // register subcommand plugin
 import '@sapphire/plugin-subcommands/register';
 
