@@ -8,9 +8,9 @@ export class ApplicationManager extends BaseManager {
         super('applications')
     }
 
-    public create(userid: string, questions: string[]) {
+    public create(userid: string, questions: string[], message: string) {
         // TODO: add max to settings
-        return this.driver.execute(this.genInsert('user', 'questions', 'answers', 'message', 'state'), [userid, questions, [], null, 'active'], { prepare: true });
+        return this.driver.execute(this.genInsert('user', 'questions', 'answers', 'message', 'state'), [userid, questions, [], message, 'active'], { prepare: true });
     }
 
     public get(userid: string) {

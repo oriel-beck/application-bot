@@ -24,7 +24,7 @@ export class SlashCommand extends Command {
     }
 
     const questions = this.container.questions.getRand(25);
-    const create = await this.container.applications.create(interaction.user.id, questions).catch((err) => console.log(err));
+    const create = await this.container.applications.create(interaction.user.id, questions, msg.id).catch((err) => console.log(err));
 
     if(!create) {
       msg.delete().catch(() => null);
