@@ -1,12 +1,16 @@
-# output
+# Output
 dist
 
-# packages
+# Packages
 node_modules
 
-# secret questions
+# Secret questions
 json/rand-questions.json
 
-# configs
+# Configs
 .env
 src/config/config.json
+
+# Yarn files
+.yarn/install-state.gz
+.yarn/build-state.yml
