@@ -1,4 +1,6 @@
 import { access, readFile } from "fs/promises";
+import { ApplicationState } from "../constants/application";
+import type { Application } from "../types";
 
 export const canAccessFile = (path: string) => access(path).then(() => true).catch(() => false);
 
@@ -7,3 +9,5 @@ export async function readFileToJson<T>(path: string, defaultValue: string): Pro
     return JSON.parse(jsonString);
 }
 
+export const isCurrentApplicationMessage = (application: Application | null, msgid: string, state = ApplicationState.active) => !!application  && application.message === msgid && application.state === state;
+export const isApplicationExist = (application: Application | null) => !!application

@@ -3,6 +3,7 @@ import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework
 import type { StringSelectMenuInteraction } from "discord.js";
 import { generateComponents, generateEmbed } from "../../../util/command-utils/application/embeds/utils";
 import type { Application } from "../../../types";
+import { isApplicationExist } from "../../../util/util";
 
 
 @ApplyOptions<InteractionHandler.Options>({
@@ -12,9 +13,9 @@ export class DecisionButtonsHandler extends InteractionHandler {
     public async run(interaction: StringSelectMenuInteraction) {
         const user = interaction.values[0]!;
 
-        const get = await this.container.applications.get(user).catch(() => null);
+        const app = await this.container.applications.get(user).then((res) => res.first() as unknown as Application).catch(() => null);
 
-        if (!get || !get.rowLength) {
+        if (!isApplicationExist(app)) {
             return interaction.reply({
                 content: 'This user does not have an application.',
                 ephemeral: true
@@ -22,8 +23,8 @@ export class DecisionButtonsHandler extends InteractionHandler {
         }
 
         return interaction.reply({
-            embeds: await generateEmbed(get.first() as unknown as Application),
-            components: generateComponents(get.first() as unknown as Application)
+            embeds: await generateEmbed(app!),
+            components: generateComponents(app!)
         });
     }
 

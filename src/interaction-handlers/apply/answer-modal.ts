@@ -2,6 +2,9 @@ import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import type { ModalSubmitInteraction } from "discord.js";
 import { ComponentType } from "discord.js";
+import type { Application } from "../../types";
+import { generateEmbed } from "../../util/command-utils/apply/utils";
+import { isApplicationExist } from "../../util/util";
 
 
 @ApplyOptions<InteractionHandler.Options>({
@@ -9,14 +12,16 @@ import { ComponentType } from "discord.js";
 })
 export class DecisionButtonsHandler extends InteractionHandler {
     public async run(interaction: ModalSubmitInteraction) {
+        await interaction.deferUpdate();
+
         const questionNum = Number(interaction.customId.split('-').at(2));
         const field = interaction.fields.getField('answer')
         const answer = field.type === ComponentType.TextInput ? field.value : '';
 
-        const get = await this.container.applications.get(interaction.user.id).catch(() => null);
+        const app = await this.container.applications.get(interaction.user.id).then((res) => res.first() as unknown as Application).catch(() => null);
 
-        if(!get || !get.rowLength) {
-            return interaction.reply({
+        if (!isApplicationExist(app)) {
+            return interaction.followUp({
                 content: 'The application no longer exist.',
                 ephemeral: true
             });
@@ -25,23 +30,27 @@ export class DecisionButtonsHandler extends InteractionHandler {
         const update = await this.container.applications.addAnswer(interaction.user.id, questionNum, answer).catch(() => null);
 
         if (!update || !update.rowLength) {
-            return interaction.reply({
+            return interaction.followUp({
                 content: 'Failed to update the application.',
                 ephemeral: true
             });
         }
 
-        await interaction.deferUpdate();
 
-        if (questionNum === get.first().get('answers').length) {
-            // TODO: edit to the next question and answer
+        if (questionNum === app!.answers.length) {
+            // edit to the next question and answer
+            return interaction.message?.edit({
+                embeds: generateEmbed(app!.questions[questionNum + 1], app!.answers[questionNum + 1], questionNum + 1),
+            });
         } else {
-            // TODO: edit to the current question and answer
+            // edit to the current question and answer
+            return interaction.message?.edit({
+                embeds: generateEmbed(app!.questions[questionNum], answer, questionNum),
+            });
         }
-        return
     }
 
     public parse(interaction: ModalSubmitInteraction) {
-        return interaction.customId.startsWith('application-list') ? this.some() : this.none()
+        return interaction.customId.startsWith('application-answer') ? this.some() : this.none()
     }
 }

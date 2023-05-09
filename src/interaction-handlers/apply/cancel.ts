@@ -1,19 +1,37 @@
 
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ButtonInteraction } from "discord.js";
+import { Colors, type ButtonInteraction } from "discord.js";
+import { isApplicationExist } from "../../util/util";
+import type { Application } from "../../types";
 
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
 })
 export class DecisionButtonsHandler extends InteractionHandler {
-    public run(interaction: ButtonInteraction) {
-        // TODO
-        return interaction;
+    public async run(interaction: ButtonInteraction) {
+        await interaction.deferReply({ ephemeral: true });
+        
+        const deleted = await this.container.applications.delete(interaction.user.id).then((res) => res.first() as unknown as Application).catch(() => null);
+
+        if (!isApplicationExist(deleted)) {
+            return interaction.editReply('Failed to delete application.');
+        }
+
+        interaction.editReply('Cancelled application process.');
+        return interaction.message.edit({
+            embeds: [
+                {
+                    title: 'Application cancelled.',
+                    color: Colors.Red
+                }
+            ],
+            components: []
+        });
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith('application-list') ? this.some() : this.none()
+        return interaction.customId.startsWith('application-cancel') ? this.some() : this.none()
     }
 }

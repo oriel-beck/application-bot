@@ -1,5 +1,6 @@
 import { ActionRowBuilder, Colors, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import type { Application, ApplicationState } from "../../../../types";
+import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
 
 // TODO: pagination
 export function generateEmbed(count: number, state: ApplicationState) {
@@ -19,7 +20,7 @@ export function generateComponents(applications: Application[]) {
 
 function generateStringSelectMenu(index: number, applications: Application[]) {
     return new StringSelectMenuBuilder()
-        .setCustomId(`application-list-${index}`)
+        .setCustomId(`${ApplicationCustomIDs.selects!.list}-${index}`)
         .setMaxValues(1)
         .setMinValues(1)
         .setPlaceholder('Select an application to view')

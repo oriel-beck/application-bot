@@ -1,11 +1,12 @@
 import { ActionRowBuilder, TextInputBuilder } from "@discordjs/builders";
 import { ModalBuilder, TextInputStyle } from "discord.js";
 import type { DecisionType } from "./types";
+import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
 
 export function generateModal(type: DecisionType, user: string) {
     return new ModalBuilder()
-        .setCustomId(`decision-${type}-${user}`)
-        .setTitle(typeToTitle(type))
+        .setCustomId(`${ApplicationCustomIDs.modals!.decide}-${type}-${user}`)
+        .setTitle(Titles[type])
         .addComponents(
             new ActionRowBuilder<TextInputBuilder>()
                 .addComponents(
@@ -17,13 +18,8 @@ export function generateModal(type: DecisionType, user: string) {
         )
 }
 
-function typeToTitle(type: DecisionType) {
-    switch(type) {
-        case "deny":
-            return 'Denying Application'
-        case "accept":
-            return 'Accepting Application'
-        case "delete":
-            return 'Deleting Application'
-    }
-}
+export const Titles: Readonly<Record<DecisionType, string>> = Object.freeze({
+    "deny": "Denying Application",
+    "accept": "Accepting Application",
+    "delete": "Deleting Application"
+})

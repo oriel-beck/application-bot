@@ -1,11 +1,11 @@
-export type ApplicationState = 'active' | 'pending' | 'denied' | 'accepted';
+import type { ApplicationStateKeys } from "./constants/application";
 
 export interface Application {
     user: string;
     questions: string[];
     answers: string[];
     message: string;
-    state: ApplicationState;
+    state: ApplicationStateKeys;
 }
 
 export interface Blacklist {

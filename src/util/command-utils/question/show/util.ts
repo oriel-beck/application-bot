@@ -1,5 +1,6 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import type { Question } from "../../../../types";
+import { QuestionCustomIDs } from "../../../../constants/custom-ids";
 
 export function generateEmbed(question: Question) {
     return [
@@ -17,11 +18,28 @@ export function generateComponents(question: Question) {
                 new ButtonBuilder()
                     .setLabel('Delete')
                     .setStyle(ButtonStyle.Danger)
-                    .setCustomId(`question-delete-${question.id}`),
+                    .setCustomId(`${QuestionCustomIDs.buttons!.delete}-${question.id}`),
                 new ButtonBuilder()
                     .setLabel('Edit')
                     .setStyle(ButtonStyle.Secondary)
-                    .setCustomId(`question-edit-${question.id}`)
+                    .setCustomId(`${QuestionCustomIDs.buttons!.edit}-${question.id}`)
             )
     ]
+}
+
+export function generateModal(id: string, question: string) {
+    return new ModalBuilder()
+    .setCustomId(`${QuestionCustomIDs.modals!.edit}-${id}`)
+    .setTitle('Editing question')
+        .addComponents(
+            new ActionRowBuilder<TextInputBuilder>()
+                .addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('question')
+                        .setLabel('Edit question')
+                        .setValue(question)
+                        .setStyle(TextInputStyle.Paragraph)
+                        .setRequired(true)
+                )
+        )
 }

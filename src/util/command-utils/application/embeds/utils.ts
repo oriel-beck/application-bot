@@ -1,6 +1,7 @@
 import { EmbedBuilder, type APIEmbedField, Colors, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import type { Application, ApplicationState } from "../../../../types";
 import { container } from "@sapphire/framework";
+import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
 
 export async function generateEmbed(application: Application, page = 0) {
     const user = await container.client.users.fetch(application.user).catch(() => null);
@@ -21,25 +22,25 @@ export function generateComponents(application: Application, page = 0) {
             new ButtonBuilder()
             .setLabel('Prev')
             .setDisabled(page === 0)
-            .setCustomId(`paginate-${page - 1}`)
+            .setCustomId(`${ApplicationCustomIDs.buttons!.paginate}-${page - 1}`)
             .setStyle(ButtonStyle.Primary),
             new ButtonBuilder()
             .setLabel('Deny')
-            .setCustomId(`decide-deny-${application.user}`)
+            .setCustomId(`${ApplicationCustomIDs.buttons!.deny}-${application.user}`)
             .setStyle(ButtonStyle.Danger),
             new ButtonBuilder()
             .setLabel(`${page + 1}`)
             .setDisabled(true)
-            .setCustomId(`page_num`)
+            .setCustomId(ApplicationCustomIDs.buttons!.page)
             .setStyle(ButtonStyle.Secondary),
             new ButtonBuilder()
             .setLabel('Accept')
-            .setCustomId(`decide-accept-${application.user}`)
+            .setCustomId(`${ApplicationCustomIDs.buttons!.accept}-${application.user}`)
             .setStyle(ButtonStyle.Primary),
             new ButtonBuilder()
             .setLabel('Next')
             .setDisabled(Math.ceil(application.answers.length / 7) === page + 1)
-            .setCustomId(`paginate-${page + 1}`)
+            .setCustomId(`${ApplicationCustomIDs.buttons!.paginate}-${page + 1}`)
             .setStyle(ButtonStyle.Primary)
         )
     ]
@@ -52,7 +53,6 @@ function applicaionEmbedColorFromState(state: ApplicationState) {
         case "active":
         case "pending":
             return Colors.Aqua
-
         case "denied":
             return Colors.Red
         case "accepted":

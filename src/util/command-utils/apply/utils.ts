@@ -1,4 +1,5 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, StringSelectMenuBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ApplyCustomIDs } from "../../../constants/custom-ids";
 
 export function generateEmbed(question: string, answer = 'N/A', questionNum = 1) {
     return [
@@ -23,15 +24,15 @@ export function generateComponents(answers: string[], currentAnswer = 0): Action
             new ButtonBuilder()
                 .setLabel('Cancel')
                 .setStyle(ButtonStyle.Danger)
-                .setCustomId('application-cancel'),
+                .setCustomId(ApplyCustomIDs.buttons!.cancel),
             new ButtonBuilder()
                 .setLabel('Answer')
                 .setStyle(ButtonStyle.Success)
-                .setCustomId(`application-answer-${currentAnswer}`),
+                .setCustomId(`${ApplyCustomIDs.buttons!.answer}-${currentAnswer}`),
             new ButtonBuilder()
                 .setLabel('Done')
                 .setStyle(answers && answers.length === 25 ? ButtonStyle.Primary : ButtonStyle.Secondary)
-                .setCustomId('application-done')
+                .setCustomId(ApplyCustomIDs.buttons!.done)
                 .setDisabled((!answers || answers.length < 25)));
 
     if (!answers) return [row1];
@@ -39,7 +40,7 @@ export function generateComponents(answers: string[], currentAnswer = 0): Action
     const row2 = new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(
             new StringSelectMenuBuilder()
-                .setCustomId('application-question-select')
+                .setCustomId(ApplyCustomIDs.selects!.edit)
                 .setPlaceholder('Select a question to answer')
                 .setMinValues(1)
                 .setMaxValues(1)
@@ -50,4 +51,22 @@ export function generateComponents(answers: string[], currentAnswer = 0): Action
                 }))));
 
     return [row1, row2]
+}
+
+export function generateModal(question: string, questionNum: number, answer = '') {
+    return new ModalBuilder()
+    .setTitle(`Question ${questionNum + 1}`)
+    .setCustomId(`${ApplyCustomIDs.modals!.answer}-${questionNum}`)
+    .addComponents(
+        new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(
+            new TextInputBuilder()
+            .setCustomId('answer')
+            .setLabel(question.length > 45 ? question.substring(0,42) + '...' : question)
+            .setMaxLength(400)
+            .setRequired(true)
+            .setStyle(TextInputStyle.Paragraph)
+            .setValue(answer)
+        )
+    )
 }

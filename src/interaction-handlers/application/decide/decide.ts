@@ -3,6 +3,8 @@ import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework
 import type { ButtonInteraction } from "discord.js";
 import { generateModal } from "../../../util/command-utils/application/modals/utils";
 import type { DecisionType } from "../../../util/command-utils/application/modals/types";
+import type { Application } from "../../../types";
+import { isCurrentApplicationMessage } from "../../../util/util";
 
 
 @ApplyOptions<InteractionHandler.Options>({
@@ -13,16 +15,16 @@ export class DecisionButtonsHandler extends InteractionHandler {
         const split = interaction.customId.split('-')
         const decisionType = split.at(1) as DecisionType;
 
-        const get = await this.container.applications.get(split.at(2)!).catch(() => null);
+        const app = await this.container.applications.get(split.at(2)!).then((res) => res.first() as unknown as Application).catch(() => null);
 
-        if (!get || !get.rowLength || get.first().get('message') != interaction.message.id) {
+        if (!isCurrentApplicationMessage(app, interaction.message.id)) {
             return interaction.reply({
                 content: 'This application does not exist in the database.',
                 ephemeral: true
-            })
+            });
         }
 
-        return interaction.showModal(generateModal(decisionType, get.first().get('user')))
+        return interaction.showModal(generateModal(decisionType, app!.user));
     }
 
     public parse(interaction: ButtonInteraction) {
