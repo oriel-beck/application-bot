@@ -5,6 +5,7 @@ import { generateModal } from "../../../util/command-utils/application/modals/ut
 import type { DecisionType } from "../../../util/command-utils/application/modals/types";
 import type { Application } from "../../../types";
 import { isCurrentApplicationMessage } from "../../../util/util";
+import { isMod } from "../../../preconditions/util";
 
 
 @ApplyOptions<InteractionHandler.Options>({
@@ -12,6 +13,13 @@ import { isCurrentApplicationMessage } from "../../../util/util";
 })
 export class DecisionButtonsHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
+        if (!isMod(interaction.member!)) {
+            return interaction.reply({
+                content: 'You are missing permissions to use this.',
+                ephemeral: true
+            });
+        }
+
         const split = interaction.customId.split('-')
         const decisionType = split.at(1) as DecisionType;
 

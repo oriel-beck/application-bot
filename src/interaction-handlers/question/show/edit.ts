@@ -3,6 +3,7 @@ import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework
 import type { ButtonInteraction } from "discord.js";
 import { generateModal } from "../../../util/command-utils/question/show/util";
 import type { Question } from "../../../types";
+import { isMod } from "../../../preconditions/util";
 
 
 @ApplyOptions<InteractionHandler.Options>({
@@ -10,6 +11,12 @@ import type { Question } from "../../../types";
 })
 export class DecisionButtonsHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
+        if (!isMod(interaction.member!)) {
+            return interaction.reply({
+                content: 'You are missing permissions to use this.',
+                ephemeral: true
+            });
+        }
 
         const question = await this.container.questions.get(interaction.customId.split('-').at(2)!).then((res) => res.first() as unknown as Question).catch(() => null);
 

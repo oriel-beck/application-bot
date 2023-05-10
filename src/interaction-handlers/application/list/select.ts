@@ -4,6 +4,7 @@ import type { StringSelectMenuInteraction } from "discord.js";
 import { generateComponents, generateEmbed } from "../../../util/command-utils/application/embeds/utils";
 import type { Application } from "../../../types";
 import { isApplicationExist } from "../../../util/util";
+import { isMod } from "../../../preconditions/util";
 
 
 @ApplyOptions<InteractionHandler.Options>({
@@ -11,6 +12,13 @@ import { isApplicationExist } from "../../../util/util";
 })
 export class DecisionButtonsHandler extends InteractionHandler {
     public async run(interaction: StringSelectMenuInteraction) {
+        if (!isMod(interaction.member!)) {
+            return interaction.reply({
+                content: 'You are missing permissions to use this.',
+                ephemeral: true
+            });
+        }
+        
         const user = interaction.values[0]!;
 
         const app = await this.container.applications.get(user).then((res) => res.first() as unknown as Application).catch(() => null);

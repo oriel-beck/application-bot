@@ -1,6 +1,7 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import type { ButtonInteraction } from "discord.js";
+import { isMod } from "../../../preconditions/util";
 
 
 @ApplyOptions<InteractionHandler.Options>({
@@ -8,6 +9,13 @@ import type { ButtonInteraction } from "discord.js";
 })
 export class DecisionButtonsHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
+        if (!isMod(interaction.member!)) {
+            return interaction.reply({
+                content: 'You are missing permissions to use this.',
+                ephemeral: true
+            });
+        }
+        
         const question = interaction.customId.split('-').at(2);
 
         const deleted = await this.container.questions.delete(question!).catch(() => null);

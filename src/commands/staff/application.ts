@@ -3,8 +3,9 @@ import { Subcommand } from '@sapphire/plugin-subcommands';
 import { SlashCommandSubcommandBuilder } from 'discord.js';
 import { generateModal } from '../../util/command-utils/application/modals/utils';
 import { generateEmbed as showGenerateEmbed, generateComponents as showGenerateComponents } from '../../util/command-utils/application/embeds/utils';
-import type { Application, ApplicationState } from '../../types';
+import type { Application } from '../../types';
 import { generateComponents as listGenerateComponents, generateEmbed as listGenerateEmbed } from '../../util/command-utils/application/list/util';
+import { ApplicationState, type ApplicationStateKeys } from '../../constants/application';
 
 @ApplyOptions<Subcommand.Options>({
   name: 'application',
@@ -95,7 +96,7 @@ export class SlashCommand extends Subcommand {
   public async list(interaction: Subcommand.ChatInputCommandInteraction) {
     interaction.deferReply();
 
-    const state: ApplicationState = interaction.options.getString('state', false) as ApplicationState || 'pending'
+    const state: ApplicationStateKeys = interaction.options.getString('state', false) as ApplicationStateKeys || ApplicationState.pending;
 
     const allApps = await this.container.applications.getAll(state).catch(console.log);
     if (!allApps) {
