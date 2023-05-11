@@ -4,12 +4,13 @@ import type { ButtonInteraction } from "discord.js";
 import { generateModal } from "../../util/command-utils/apply/utils";
 import { isCurrentApplicationMessage } from "../../util/util";
 import type { Application } from "../../types";
+import { ApplyCustomIDs } from "../../constants/custom-ids";
 
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
 })
-export class DecisionButtonsHandler extends InteractionHandler {
+export class AnswerButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
         const questionNum = Number(interaction.customId.split('-').at(2))!;
 
@@ -22,10 +23,10 @@ export class DecisionButtonsHandler extends InteractionHandler {
             });
         }
         
-        return interaction.showModal(generateModal(application!.questions[questionNum]!, questionNum, application!.questions[questionNum]!));
+        return interaction.showModal(generateModal(application!.questions, application!.answers || [], questionNum));
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith('application-answer') ? this.some() : this.none()
+        return interaction.customId.startsWith(ApplyCustomIDs.buttons.answer) ? this.some() : this.none()
     }
 }

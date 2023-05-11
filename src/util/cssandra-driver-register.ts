@@ -8,7 +8,8 @@ export class CustomCassandraClient extends Client {
         this.connect()
             .then(() => {
                 console.log('Connected tp cylla, took', this.attempt, 'attempts');
-                container.questions.initQuestions();
+                container.questions.initBaseQuestion();
+                container.settings.init()
             })
             .catch((_) => {
                 this.attempt++

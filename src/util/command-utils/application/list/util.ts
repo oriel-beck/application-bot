@@ -1,9 +1,10 @@
 import { ActionRowBuilder, Colors, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
-import type { Application, ApplicationState } from "../../../../types";
+import type { Application } from "../../../../types";
 import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
+import type { ApplicationStateKeys } from "../../../../constants/application";
 
 // TODO: pagination
-export function generateEmbed(count: number, state: ApplicationState) {
+export function generateEmbed(count: number, state: ApplicationStateKeys) {
     return [
         new EmbedBuilder()
             .setTitle('Application list')

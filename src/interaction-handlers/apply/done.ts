@@ -5,12 +5,13 @@ import { ApplicationState } from "../../constants/application";
 import { isApplicationExist, isCurrentApplicationMessage } from "../../util/util";
 import { generateComponents, generateEmbed } from "../../util/command-utils/application/embeds/utils";
 import type { Application } from "../../types";
+import { ApplyCustomIDs } from "../../constants/custom-ids";
 
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
 })
-export class DecisionButtonsHandler extends InteractionHandler {
+export class DoneButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
         await interaction.deferReply({
             ephemeral: true
@@ -65,6 +66,6 @@ export class DecisionButtonsHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith('application-list') ? this.some() : this.none()
+        return interaction.customId === ApplyCustomIDs.buttons.done ? this.some() : this.none()
     }
 }

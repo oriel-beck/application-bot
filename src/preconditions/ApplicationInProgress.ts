@@ -4,12 +4,13 @@ import type { CommandInteraction } from "discord.js";
 export class ModOnlyPrecondition extends Precondition {
     #message = 'You already have an application in progress.';
 
-    public override async chatInputRun(interaction: CommandInteraction) {
+    public chatInputRun(interaction: CommandInteraction) {
         return this.checkApplicationInProgress(interaction.user.id)
     }
 
-    private checkApplicationInProgress(user: string) {
-        return this.container.applications.get(user).then((result) => result.rowLength ? this.ok() : this.error({ message: this.#message }))
+    private async checkApplicationInProgress(user: string) {
+        const result = await this.container.applications.get(user);
+        return result.rowLength ? this.error({ message: this.#message }) : this.ok();
     }
 }
 

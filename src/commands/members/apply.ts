@@ -5,7 +5,7 @@ import { generateComponents, generateEmbed } from '../../util/command-utils/appl
 @ApplyOptions<Command.Options>({
   name: 'apply',
   description: 'Start a staff application.',
-  preconditions: ['ApplicationEnabled', 'ApplicationInProgress']
+  preconditions: ['ApplicationsEnabled', 'ApplicationInProgress']
 })
 export class SlashCommand extends Command {
   public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {

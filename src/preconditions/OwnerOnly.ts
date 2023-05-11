@@ -4,7 +4,7 @@ import type { CommandInteraction } from "discord.js";
 export class ModOnlyPrecondition extends Precondition {
     #message = 'You are missing permissions to use this command.';
 
-    public override async chatInputRun(interaction: CommandInteraction) {
+    public chatInputRun(interaction: CommandInteraction) {
         return this.checkOwner(interaction.user.id)
     }
 

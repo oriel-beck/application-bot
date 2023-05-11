@@ -1,5 +1,5 @@
 import { SapphireClient } from '@sapphire/framework';
-import { GatewayIntentBits } from 'discord.js';
+import { GatewayIntentBits, Partials } from 'discord.js';
 
 // register config
 import './config/register.js';
@@ -14,7 +14,8 @@ import './util/cssandra-driver-register.js';
 import './structures/managers/register.js';
 
 const client = new SapphireClient({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages],
+  partials: [Partials.Channel, Partials.Message, Partials.User]
 });
 
 client.login(process.env.BOT_TOKEN).catch((err) => console.error('Failed to start tht bot', err));

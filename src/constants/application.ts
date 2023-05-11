@@ -1,4 +1,4 @@
-export const ApplicationState: Readonly<Record<ApplicationStateKeys, string>> = Object.freeze({
+export const ApplicationState: Readonly<Record<ApplicationStateKeys, ApplicationStateKeys>> = Object.freeze({
     "active": "active",
     "pending": "pending",
     "denied": "denied",

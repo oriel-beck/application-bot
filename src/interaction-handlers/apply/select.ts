@@ -4,12 +4,13 @@ import type { StringSelectMenuInteraction } from "discord.js";
 import { generateComponents, generateEmbed } from "../../util/command-utils/apply/utils";
 import { isApplicationExist } from "../../util/util";
 import type { Application } from "../../types";
+import { ApplyCustomIDs } from "../../constants/custom-ids";
 
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.SelectMenu
 })
-export class DecisionButtonsHandler extends InteractionHandler {
+export class SelectSelectHandler extends InteractionHandler {
     public async run(interaction: StringSelectMenuInteraction) {
         const questionNum = Number(interaction.values[0]);
         const app = await this.container.applications.get(interaction.user.id).then((res) => res.first() as unknown as Application).catch(() => null);
@@ -28,6 +29,6 @@ export class DecisionButtonsHandler extends InteractionHandler {
     }
 
     public parse(interaction: StringSelectMenuInteraction) {
-        return interaction.customId.startsWith('application-list') ? this.some() : this.none()
+        return interaction.customId === ApplyCustomIDs.selects.edit ? this.some() : this.none()
     }
 }

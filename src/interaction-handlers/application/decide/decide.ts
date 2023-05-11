@@ -5,13 +5,14 @@ import { generateModal } from "../../../util/command-utils/application/modals/ut
 import type { DecisionType } from "../../../util/command-utils/application/modals/types";
 import type { Application } from "../../../types";
 import { isCurrentApplicationMessage } from "../../../util/util";
-import { isMod } from "../../../preconditions/util";
+import { isMod } from "../../../util/precondition-util";
+import { ApplicationCustomIDs } from "../../../constants/custom-ids";
 
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
 })
-export class DecisionButtonsHandler extends InteractionHandler {
+export class DecisionButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
         if (!isMod(interaction.member!)) {
             return interaction.reply({
@@ -36,6 +37,6 @@ export class DecisionButtonsHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith('decide') ? this.some() : this.none()
+        return interaction.customId.startsWith(ApplicationCustomIDs.buttons.decide) ? this.some() : this.none()
     }
 }

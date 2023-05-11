@@ -1,6 +1,7 @@
 import { container } from "@sapphire/framework";
 import { BaseManager } from "./base-manager";
-import type { Application, ApplicationState } from "../../types";
+import type { Application } from "../../types";
+import { ApplicationState, type ApplicationStateKeys } from "../../constants/application";
 
 export class ApplicationManager extends BaseManager {
     max = 25;
@@ -10,14 +11,14 @@ export class ApplicationManager extends BaseManager {
 
     public create(userid: string, questions: string[], message: string) {
         // TODO: add max to settings
-        return this.driver.execute(this.genInsert('user', 'questions', 'answers', 'message', 'state'), [userid, questions, [], message, 'active'], { prepare: true });
+        return this.driver.execute(this.genInsert('user', 'questions', 'answers', 'message', 'state'), [userid, questions, ['N/A'], message, 'active'], { prepare: true });
     }
 
     public get(userid: string) {
         return this.driver.execute(this.genSelect('*', 'user'), [userid], { prepare: true });
     }
 
-    public getAll(state: ApplicationState = 'pending') {
+    public getAll(state: ApplicationStateKeys = ApplicationState.pending) {
         return this.driver.execute(`SELECT * FROM ${this.name} WHERE state = ?`, [state], { prepare: true });
     }
 

@@ -1,7 +1,8 @@
 import { EmbedBuilder, type APIEmbedField, Colors, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
-import type { Application, ApplicationState } from "../../../../types";
+import type { Application } from "../../../../types";
 import { container } from "@sapphire/framework";
 import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
+import type { ApplicationStateKeys } from "../../../../constants/application";
 
 export async function generateEmbed(application: Application, page = 0) {
     const user = await container.client.users.fetch(application.user).catch(() => null);
@@ -48,7 +49,7 @@ export function generateComponents(application: Application, page = 0) {
 
 const mapQuestionsAndAnswersToFields = (questions: string[], answers: string[]): APIEmbedField[] => questions.map((q, i) => ({ name: `Q) ${q}`, value: `A) ${answers[i]}` }));
 
-function applicaionEmbedColorFromState(state: ApplicationState) {
+function applicaionEmbedColorFromState(state: ApplicationStateKeys) {
     switch (state) {
         case "active":
         case "pending":

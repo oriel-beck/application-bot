@@ -7,6 +7,11 @@ export class SettingManager extends BaseManager {
         super('settings')
     }
 
+    public init() {
+        // TODO: change to bdfd guild and false
+        this.driver.execute(this.genInsert('guild', 'enabled'), ['813707403056119808', true], {prepare: true});
+    }
+
     public create(guildid: string) {
         return this.driver.execute(this.genInsert('guild', 'enabled'), [guildid, false], { prepare: true });
     }

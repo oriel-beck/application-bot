@@ -1,13 +1,14 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import type { ButtonInteraction } from "discord.js";
-import { isMod } from "../../../preconditions/util";
+import { isMod } from "../../../util/precondition-util";
+import { QuestionCustomIDs } from "../../../constants/custom-ids";
 
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
 })
-export class DecisionButtonsHandler extends InteractionHandler {
+export class DeleteButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
         if (!isMod(interaction.member!)) {
             return interaction.reply({
@@ -38,6 +39,6 @@ export class DecisionButtonsHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith('application-list') ? this.some() : this.none()
+        return interaction.customId.startsWith(QuestionCustomIDs.buttons.delete) ? this.some() : this.none()
     }
 }

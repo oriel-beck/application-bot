@@ -5,12 +5,13 @@ import { ComponentType } from "discord.js";
 import type { Application } from "../../types";
 import { generateEmbed } from "../../util/command-utils/apply/utils";
 import { isApplicationExist } from "../../util/util";
+import { ApplyCustomIDs } from "../../constants/custom-ids";
 
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.ModalSubmit
 })
-export class DecisionButtonsHandler extends InteractionHandler {
+export class AnswerModalHandler extends InteractionHandler {
     public async run(interaction: ModalSubmitInteraction) {
         await interaction.deferUpdate();
 
@@ -29,7 +30,7 @@ export class DecisionButtonsHandler extends InteractionHandler {
 
         const update = await this.container.applications.addAnswer(interaction.user.id, questionNum, answer).catch(() => null);
 
-        if (!update || !update.rowLength) {
+        if (!update) {
             return interaction.followUp({
                 content: 'Failed to update the application.',
                 ephemeral: true
@@ -51,6 +52,6 @@ export class DecisionButtonsHandler extends InteractionHandler {
     }
 
     public parse(interaction: ModalSubmitInteraction) {
-        return interaction.customId.startsWith('application-answer') ? this.some() : this.none()
+        return interaction.customId.startsWith(ApplyCustomIDs.modals.answer) ? this.some() : this.none()
     }
 }

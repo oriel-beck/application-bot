@@ -1,6 +1,5 @@
-import type { CustomIDsConstant } from "./types";
 
-export const ApplyCustomIDs: CustomIDsConstant = Object.freeze({
+export const ApplyCustomIDs = Object.freeze({
     buttons: {
         cancel: 'application-cancel',
         done: 'application-done',
@@ -14,7 +13,7 @@ export const ApplyCustomIDs: CustomIDsConstant = Object.freeze({
     }
 });
 
-export const ApplicationCustomIDs: CustomIDsConstant  = Object.freeze({
+export const ApplicationCustomIDs  = Object.freeze({
     buttons: {
         deny: 'decide-deny',
         accept: 'decide-accept',
@@ -30,7 +29,7 @@ export const ApplicationCustomIDs: CustomIDsConstant  = Object.freeze({
     }
 });
 
-export const QuestionCustomIDs: CustomIDsConstant  = Object.freeze({
+export const QuestionCustomIDs  = Object.freeze({
     buttons: {
         edit: 'question-edit',
         delete: 'question-delete',

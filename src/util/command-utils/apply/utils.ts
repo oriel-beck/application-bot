@@ -4,7 +4,7 @@ import { ApplyCustomIDs } from "../../../constants/custom-ids";
 export function generateEmbed(question: string, answer = 'N/A', questionNum = 1) {
     return [
         new EmbedBuilder()
-            .setTitle(`Question ${questionNum}`)
+            .setTitle(`Question ${questionNum + 1}`)
             .setFields([
                 {
                     name: `Q) ${question}`,
@@ -53,20 +53,23 @@ export function generateComponents(answers: string[], currentAnswer = 0): Action
     return [row1, row2]
 }
 
-export function generateModal(question: string, questionNum: number, answer = '') {
+export function generateModal(questions: string[], answers: string[], questionNum: number) {
+    const textInput = new TextInputBuilder()
+        .setCustomId('answer')
+        .setLabel(questions[questionNum].length > 45 ? questions[questionNum].substring(0, 42) + '...' : questions[questionNum])
+        .setMaxLength(400)
+        .setRequired(true)
+        .setStyle(TextInputStyle.Paragraph);
+
+    if (answers[questionNum]) {
+        textInput.setValue(answers[questionNum]);
+    }
+
     return new ModalBuilder()
-    .setTitle(`Question ${questionNum + 1}`)
-    .setCustomId(`${ApplyCustomIDs.modals!.answer}-${questionNum}`)
-    .addComponents(
-        new ActionRowBuilder<TextInputBuilder>()
+        .setTitle(`Question ${questionNum + 1}`)
+        .setCustomId(`${ApplyCustomIDs.modals!.answer}-${questionNum}`)
         .addComponents(
-            new TextInputBuilder()
-            .setCustomId('answer')
-            .setLabel(question.length > 45 ? question.substring(0,42) + '...' : question)
-            .setMaxLength(400)
-            .setRequired(true)
-            .setStyle(TextInputStyle.Paragraph)
-            .setValue(answer)
-        )
-    )
+            new ActionRowBuilder<TextInputBuilder>()
+                .addComponents(textInput)
+        );
 }

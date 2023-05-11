@@ -4,12 +4,13 @@ import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework
 import { Colors, type ButtonInteraction } from "discord.js";
 import { isApplicationExist } from "../../util/util";
 import type { Application } from "../../types";
+import { ApplyCustomIDs } from "../../constants/custom-ids";
 
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
 })
-export class DecisionButtonsHandler extends InteractionHandler {
+export class CancelButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
         await interaction.deferReply({ ephemeral: true });
         
@@ -32,6 +33,6 @@ export class DecisionButtonsHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith('application-cancel') ? this.some() : this.none()
+        return interaction.customId === ApplyCustomIDs.buttons.cancel ? this.some() : this.none()
     }
 }

@@ -62,12 +62,12 @@ export class QuestionManager extends BaseManager {
         return array;
     }
 
-    // private async getRandomQuestionsFromFile() {
-    //     if (await canAccessFile(jsonPaths.rand)) {
-    //         return readFileToJson<Question[]>(jsonPaths.rand, '[]');
-    //     }
-    //     return [];
-    // }
+    private async getRandomQuestionsFromFile() {
+        if (await canAccessFile(jsonPaths.rand)) {
+            return readFileToJson<Question[]>(jsonPaths.rand, '[]');
+        }
+        return [];
+    }
 
     private getAllQuestions() {
         return this.driver.execute(this.genSelect(), [], { prepare: true })
@@ -80,29 +80,22 @@ export class QuestionManager extends BaseManager {
         return [];
     }
 
-    public async initQuestions() {
-        // TODO: insert only missing questions
-        //const randQuestions = await this.getRandomQuestionsFromFile();
-        //await Promise.all(randQuestions.map((q) => this.driver.execute('INSERT INTO appbot.questions (id, question) VALUES (?, ?) IF NOT EXISTS', [q.id, q.question])));
 
+    public async initRandomQuestions() {
+        const randQuestions = await this.getRandomQuestionsFromFile();
+        await Promise.all(randQuestions.map((q) => this.driver.execute('INSERT INTO appbot.questions (id, question) VALUES (?, ?) IF NOT EXISTS', [q.id, q.question])));
 
-        // TODO: BATCH seems to error due to multi partition, not sure how to fix as this is targeting only 1 table so it shouldn't even care
-        // await this.driver.batch(randQuestions.map((q) => ({
-        //     query: 'INSERT INTO appbot.questions (id, question) VALUES (?, ?) IF NOT EXISTS',
-        //     params: [q.id, q.question]
-        // })));
-
-        // TODO: make a function that checks the IDs of the stored questions, compares it to the random questions file and upload any missing (don't delete)
         const storedQuestions = await this.getAllQuestions();
-
-        // get default questions (if any)
-        const jsonQuestios = await this.getJsonQuestionsFromFile();
-
-        this.defaultQuestions = jsonQuestios;
         this.questions = storedQuestions.rows.map((row) => ({
             id: row.get('id'),
             question: row.get('question')
         }));
+    }
+
+    public async initBaseQuestion() {
+        const jsonQuestios = await this.getJsonQuestionsFromFile();
+
+        this.defaultQuestions = jsonQuestios;
     }
 }
 

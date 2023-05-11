@@ -4,13 +4,14 @@ import type { StringSelectMenuInteraction } from "discord.js";
 import { generateComponents, generateEmbed } from "../../../util/command-utils/application/embeds/utils";
 import type { Application } from "../../../types";
 import { isApplicationExist } from "../../../util/util";
-import { isMod } from "../../../preconditions/util";
+import { isMod } from "../../../util/precondition-util";
+import { ApplicationCustomIDs } from "../../../constants/custom-ids";
 
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.SelectMenu
 })
-export class DecisionButtonsHandler extends InteractionHandler {
+export class ListSelectHandler extends InteractionHandler {
     public async run(interaction: StringSelectMenuInteraction) {
         if (!isMod(interaction.member!)) {
             return interaction.reply({
@@ -37,6 +38,6 @@ export class DecisionButtonsHandler extends InteractionHandler {
     }
 
     public parse(interaction: StringSelectMenuInteraction) {
-        return interaction.customId.startsWith('application-list') ? this.some() : this.none()
+        return interaction.customId.startsWith(ApplicationCustomIDs.selects.list) ? this.some() : this.none()
     }
 }
