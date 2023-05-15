@@ -3,9 +3,9 @@ import { ModalBuilder, TextInputStyle } from "discord.js";
 import type { DecisionType } from "./types";
 import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
 
-export function generateModal(type: DecisionType, user: string) {
+export function generateModal(type: DecisionType, user: string, msg?: string) {
     return new ModalBuilder()
-        .setCustomId(`${ApplicationCustomIDs.modals!.decide}-${type}-${user}`)
+        .setCustomId(`${ApplicationCustomIDs.modals!.decide}-${type}-${user}-${msg}`)
         .setTitle(Titles[type])
         .addComponents(
             new ActionRowBuilder<TextInputBuilder>()

@@ -29,6 +29,6 @@ export class SelectSelectHandler extends InteractionHandler {
     }
 
     public parse(interaction: StringSelectMenuInteraction) {
-        return interaction.customId === ApplyCustomIDs.selects.edit ? this.some() : this.none()
+        return interaction.customId === ApplyCustomIDs.selects.edit ? this.some() : this.none();
     }
 }

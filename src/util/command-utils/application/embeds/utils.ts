@@ -5,7 +5,7 @@ import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
 import type { ApplicationStateKeys } from "../../../../constants/application";
 
 export async function generateEmbed(application: Application, page = 0) {
-    const user = await container.client.users.fetch(application.user).catch(() => null);
+    const user = await container.client.users.fetch(application.user.toString()).catch(() => null);
     const questions = application.questions.splice(page * 7, page * 7 + 7);
     const answers = application.answers.splice(page * 7, page * 7 + 7);
     return [
@@ -13,7 +13,7 @@ export async function generateEmbed(application: Application, page = 0) {
             .setTitle(`Application from ${user ? user.tag : application.user}`)
             .addFields(mapQuestionsAndAnswersToFields(questions, answers))
             .setColor(applicaionEmbedColorFromState(application.state))
-    ]
+    ];
 }
 
 export function generateComponents(application: Application, page = 0) {
@@ -44,7 +44,7 @@ export function generateComponents(application: Application, page = 0) {
             .setCustomId(`${ApplicationCustomIDs.buttons!.paginate}-${page + 1}`)
             .setStyle(ButtonStyle.Primary)
         )
-    ]
+    ];
 }
 
 const mapQuestionsAndAnswersToFields = (questions: string[], answers: string[]): APIEmbedField[] => questions.map((q, i) => ({ name: `Q) ${q}`, value: `A) ${answers[i]}` }));
@@ -53,10 +53,10 @@ function applicaionEmbedColorFromState(state: ApplicationStateKeys) {
     switch (state) {
         case "active":
         case "pending":
-            return Colors.Aqua
+            return Colors.Aqua;
         case "denied":
-            return Colors.Red
+            return Colors.Red;
         case "accepted":
-            return Colors.Green
+            return Colors.Green;
     }
 }

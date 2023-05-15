@@ -46,7 +46,7 @@ export class SlashCommand extends Subcommand {
       });
     }
 
-    return interaction.showModal(generateModal('deny', user))
+    return interaction.showModal(generateModal('deny', user));
   }
 
   public async accept(interaction: Subcommand.ChatInputCommandInteraction) {
@@ -60,7 +60,7 @@ export class SlashCommand extends Subcommand {
       });
     }
 
-    return interaction.showModal(generateModal('accept', user))
+    return interaction.showModal(generateModal('accept', user));
   }
 
   public async delete(interaction: Subcommand.ChatInputCommandInteraction) {
@@ -90,7 +90,7 @@ export class SlashCommand extends Subcommand {
     return interaction.editReply({
       embeds: await showGenerateEmbed(app.first() as unknown as Application),
       components: showGenerateComponents(app.first() as unknown as Application)
-    })
+    });
   }
 
   public async list(interaction: Subcommand.ChatInputCommandInteraction) {
@@ -106,7 +106,7 @@ export class SlashCommand extends Subcommand {
     return interaction.editReply({
       embeds: listGenerateEmbed(allApps.rowLength, state),
       components: listGenerateComponents(allApps.rows as unknown as Application[])
-    })
+    });
   }
 
   public registerApplicationCommands(registry: Subcommand.Registry) {

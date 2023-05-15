@@ -21,7 +21,7 @@ export class DecisionButtonHandler extends InteractionHandler {
             });
         }
 
-        const split = interaction.customId.split('-')
+        const split = interaction.customId.split('-');
         const decisionType = split.at(1) as DecisionType;
 
         const app = await this.container.applications.get(split.at(2)!).then((res) => res.first() as unknown as Application).catch(() => null);
@@ -33,7 +33,7 @@ export class DecisionButtonHandler extends InteractionHandler {
             });
         }
 
-        return interaction.showModal(generateModal(decisionType, app!.user));
+        return interaction.showModal(generateModal(decisionType, app!.user.toString()));
     }
 
     public parse(interaction: ButtonInteraction) {

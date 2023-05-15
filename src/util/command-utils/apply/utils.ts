@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { ApplyCustomIDs } from "../../../constants/custom-ids";
 
-export function generateEmbed(question: string, answer = 'N/A', questionNum = 1) {
+export function generateEmbed(question: string, answer = 'N/A', questionNum = 0) {
     return [
         new EmbedBuilder()
             .setTitle(`Question ${questionNum + 1}`)
@@ -35,7 +35,7 @@ export function generateComponents(answers: string[], currentAnswer = 0): Action
                 .setCustomId(ApplyCustomIDs.buttons!.done)
                 .setDisabled((!answers || answers.length < 25)));
 
-    if (!answers) return [row1];
+    if (answers.length <= 1) return [row1];
 
     const row2 = new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(

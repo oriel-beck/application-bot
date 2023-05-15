@@ -1,7 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import type { ModalSubmitInteraction } from "discord.js";
-import { ComponentType } from "discord.js";
 import type { Application } from "../../types";
 import { generateEmbed } from "../../util/command-utils/apply/utils";
 import { isApplicationExist } from "../../util/util";
@@ -16,8 +15,7 @@ export class AnswerModalHandler extends InteractionHandler {
         await interaction.deferUpdate();
 
         const questionNum = Number(interaction.customId.split('-').at(2));
-        const field = interaction.fields.getField('answer')
-        const answer = field.type === ComponentType.TextInput ? field.value : '';
+        const answer = interaction.fields.getTextInputValue('answer');
 
         const app = await this.container.applications.get(interaction.user.id).then((res) => res.first() as unknown as Application).catch(() => null);
 

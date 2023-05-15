@@ -1,21 +1,22 @@
+import type { types } from "cassandra-driver";
 import type { ApplicationStateKeys } from "./constants/application";
 
 export interface Application {
-    user: string;
+    user: types.Long;
     questions: string[];
     answers: string[];
-    message: string;
+    message: types.Long;
     state: ApplicationStateKeys;
 }
 
 export interface Blacklist {
-    user: string;
+    user: types.Long;
     reason: string;
-    mod: string;
+    mod: types.Long;
 }
 
 export interface Setting {
-    guild: string;
+    guild: types.Long;
     enabled: boolean;
 }
 
