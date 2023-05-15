@@ -42,14 +42,14 @@ To start, run in the main directory `docker compose up --build` and wait for the
 
 ## Todo
 - [ ] Apply command
-    - [ ] DM Embed
+    - [x] DM Embed
     - [ ] DM Buttons
-    - [ ] DM Select
+    - [x] DM Select
 
 - [ ] Application command
     - [ ] Reset
     - [ ] Togggle
-    - [ ] Delete
+    - [x] Delete
     - [ ] Deny
         - [ ] Deny embed
     - [ ] Accept
