@@ -1,5 +1,5 @@
 import { container } from "@sapphire/framework";
-import { BaseManager } from "./base-manager";
+import { BaseManager } from "./base.manager";
 import type { Blacklist } from "../../types";
 
 export class BlacklistManager extends BaseManager {

@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { generateComponents, generateEmbed } from '../../util/command-utils/apply/utils';
+import { generateComponents, generateEmbed } from '../../util/command-utils/apply/apply.utils';
 
 @ApplyOptions<Command.Options>({
   name: 'apply',

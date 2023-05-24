@@ -1,13 +1,12 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ButtonInteraction } from "discord.js";
-import { generateModal } from "../../../util/command-utils/application/modals/utils";
-import type { DecisionType } from "../../../util/command-utils/application/modals/types";
-import type { Application } from "../../../types";
+import { generateModal } from "../../../util/command-utils/application/modals/application-modals.utils";
 import { isCurrentApplicationMessage } from "../../../util/util";
 import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
-
+import type { DecisionType } from "../../../util/command-utils/application/modals/application-modals.types";
+import type { Application } from "../../../types";
+import type { ButtonInteraction } from "discord.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button

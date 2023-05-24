@@ -1,9 +1,8 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ButtonInteraction } from "discord.js";
 import { isMod } from "../../../util/precondition-util";
 import { QuestionCustomIDs } from "../../../constants/custom-ids";
-
+import type { ButtonInteraction } from "discord.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button

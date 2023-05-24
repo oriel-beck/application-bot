@@ -3,9 +3,8 @@ import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { Colors, type ButtonInteraction } from "discord.js";
 import { isApplicationExist } from "../../util/util";
-import type { Application } from "../../types";
 import { ApplyCustomIDs } from "../../constants/custom-ids";
-
+import type { Application } from "../../types";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button

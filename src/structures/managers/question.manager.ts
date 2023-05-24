@@ -1,9 +1,9 @@
-import type { Question } from '../../types';
 import { join } from "path";
-import { BaseManager } from "./base-manager";
+import { BaseManager } from "./base.manager";
 import { container } from '@sapphire/framework';
 import { canAccessFile, readFileToJson } from '../../util/util';
 import { randomUUID } from 'crypto'
+import type { Question } from '../../types';
 
 const jsonPaths = Object.freeze({
     rand: join(process.cwd(), 'json', 'rand-questions.json'),

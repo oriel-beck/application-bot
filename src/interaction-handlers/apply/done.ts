@@ -3,10 +3,9 @@ import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework
 import { Colors, type ButtonInteraction } from "discord.js";
 import { ApplicationState } from "../../constants/application";
 import { isApplicationExist, isCurrentApplicationMessage } from "../../util/util";
-import { generateComponents, generateEmbed } from "../../util/command-utils/application/embeds/utils";
-import type { Application } from "../../types";
+import { generateComponents, generateEmbed } from "../../util/command-utils/application/embeds/application-embed.utils";
 import { ApplyCustomIDs } from "../../constants/custom-ids";
-
+import type { Application } from "../../types";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button

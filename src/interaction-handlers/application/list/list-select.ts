@@ -1,12 +1,11 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { StringSelectMenuInteraction } from "discord.js";
-import { generateComponents, generateEmbed } from "../../../util/command-utils/application/embeds/utils";
-import type { Application } from "../../../types";
+import { generateComponents, generateEmbed } from "../../../util/command-utils/application/embeds/application-embed.utils";
 import { isApplicationExist } from "../../../util/util";
 import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
-
+import type { StringSelectMenuInteraction } from "discord.js";
+import type { Application } from "../../../types";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.SelectMenu

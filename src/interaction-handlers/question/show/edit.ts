@@ -1,11 +1,10 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ButtonInteraction } from "discord.js";
-import { generateModal } from "../../../util/command-utils/question/show/util";
-import type { Question } from "../../../types";
+import { generateModal } from "../../../util/command-utils/question/show/question-show.utils";
 import { isMod } from "../../../util/precondition-util";
 import { QuestionCustomIDs } from "../../../constants/custom-ids";
-
+import type { ButtonInteraction } from "discord.js";
+import type { Question } from "../../../types";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button

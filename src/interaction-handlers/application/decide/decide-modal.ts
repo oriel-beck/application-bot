@@ -1,13 +1,12 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ModalSubmitInteraction } from "discord.js";
-import type { DecisionType } from "../../../util/command-utils/application/modals/types";
-import type { Application } from "../../../types";
 import { isCurrentApplicationMessage } from "../../../util/util";
 import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
-import { generateComponents, generateEmbed } from "../../../util/command-utils/application/embeds/utils";
-
+import { generateComponents, generateEmbed } from "../../../util/command-utils/application/embeds/application-embed.utils";
+import type { ModalSubmitInteraction } from "discord.js";
+import type { DecisionType } from "../../../util/command-utils/application/modals/application-modals.types";
+import type { Application } from "../../../types";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.ModalSubmit

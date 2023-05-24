@@ -1,8 +1,8 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { SlashCommandSubcommandBuilder } from 'discord.js';
-import { generateEmbed as listGenerateEmbed } from '../../util/command-utils/question/list/util';
-import { generateEmbed as showGenerateEmbed, generateComponents as showGenerateComponents } from '../../util/command-utils/question/show/util';
+import { generateEmbed as listGenerateEmbed } from '../../util/command-utils/question/list/question-list.util';
+import { generateEmbed as showGenerateEmbed, generateComponents as showGenerateComponents } from '../../util/command-utils/question/show/question-show.utils';
 import type { Question } from '../../types';
 
 @ApplyOptions<Subcommand.Options>({

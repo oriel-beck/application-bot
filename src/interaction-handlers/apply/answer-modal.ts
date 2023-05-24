@@ -1,11 +1,10 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ModalSubmitInteraction } from "discord.js";
-import type { Application } from "../../types";
-import { generateEmbed } from "../../util/command-utils/apply/utils";
+import { generateEmbed } from "../../util/command-utils/apply/apply.utils";
 import { isApplicationExist } from "../../util/util";
 import { ApplyCustomIDs } from "../../constants/custom-ids";
-
+import type { ModalSubmitInteraction } from "discord.js";
+import type { Application } from "../../types";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.ModalSubmit

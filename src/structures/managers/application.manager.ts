@@ -1,7 +1,7 @@
 import { container } from "@sapphire/framework";
-import { BaseManager } from "./base-manager";
-import type { Application } from "../../types";
+import { BaseManager } from "./base.manager";
 import { ApplicationState, type ApplicationStateKeys } from "../../constants/application";
+import type { Application } from "../../types";
 
 export class ApplicationManager extends BaseManager {
     max = 25;

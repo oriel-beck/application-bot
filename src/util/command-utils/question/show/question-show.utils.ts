@@ -1,6 +1,6 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
-import type { Question } from "../../../../types";
 import { QuestionCustomIDs } from "../../../../constants/custom-ids";
+import type { Question } from "../../../../types";
 
 export function generateEmbed(question: Question) {
     return [

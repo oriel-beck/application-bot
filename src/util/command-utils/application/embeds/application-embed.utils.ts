@@ -1,8 +1,8 @@
 import { EmbedBuilder, type APIEmbedField, Colors, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
-import type { Application } from "../../../../types";
 import { container } from "@sapphire/framework";
 import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
 import type { ApplicationStateKeys } from "../../../../constants/application";
+import type { Application } from "../../../../types";
 
 export async function generateEmbed(application: Application, page = 0) {
     const user = await container.client.users.fetch(application.user.toString()).catch(() => null);

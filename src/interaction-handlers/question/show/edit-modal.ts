@@ -1,8 +1,7 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ModalSubmitInteraction } from "discord.js";
 import { QuestionCustomIDs } from "../../../constants/custom-ids";
-
+import type { ModalSubmitInteraction } from "discord.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.ModalSubmit
