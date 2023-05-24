@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { ApplyCustomIDs } from "../../../constants/custom-ids";
 
-export function generateEmbed(question: string, answer = 'N/A', questionNum = 0) {
+export function generateApplyEmbed(question: string, answer = 'N/A', questionNum = 0) {
     return [
         new EmbedBuilder()
             .setTitle(`Question ${questionNum + 1}`)
@@ -18,7 +18,7 @@ export function generateEmbed(question: string, answer = 'N/A', questionNum = 0)
     ]
 }
 
-export function generateComponents(answers: string[], currentAnswer = 0): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {
+export function generateApplyComponents(answers: string[], currentAnswer = 0): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {
     const row1 = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
             new ButtonBuilder()
@@ -53,7 +53,7 @@ export function generateComponents(answers: string[], currentAnswer = 0): Action
     return [row1, row2]
 }
 
-export function generateModal(questions: string[], answers: string[], questionNum: number) {
+export function generateApplyAnswerModal(questions: string[], answers: string[], questionNum: number) {
     const textInput = new TextInputBuilder()
         .setCustomId('answer')
         .setLabel(questions[questionNum].length > 45 ? questions[questionNum].substring(0, 42) + '...' : questions[questionNum])

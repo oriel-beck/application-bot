@@ -3,7 +3,7 @@ import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework
 import { Colors, type ButtonInteraction } from "discord.js";
 import { ApplicationState } from "../../constants/application";
 import { isApplicationExist, isCurrentApplicationMessage } from "../../util/util";
-import { generateComponents, generateEmbed } from "../../util/command-utils/application/embeds/application-embed.utils";
+import { generateApplicationComponents, generateApplicationEmbed } from "../../util/command-utils/application/embeds/application-embed.utils";
 import { ApplyCustomIDs } from "../../constants/custom-ids";
 import type { Application } from "../../types";
 
@@ -41,8 +41,8 @@ export class DoneButtonHandler extends InteractionHandler {
 
         const pendingApp = await pendingChannel.send({
             content: `Application from ${interaction.user}`,
-            embeds: await generateEmbed(getApp!),
-            components: generateComponents(getApp!)
+            embeds: await generateApplicationEmbed(getApp!),
+            components: generateApplicationComponents(getApp!)
         });
 
         if (!pendingApp) {

@@ -1,7 +1,7 @@
 import { Colors, EmbedBuilder } from "discord.js";
 import type { Blacklist } from "../../../../types";
 
-export function generateEmbed(blacklist: Blacklist) {
+export function generateBlacklistShowEmbed(blacklist: Blacklist) {
     return [
         new EmbedBuilder()
         .setTitle('Blacklist info')

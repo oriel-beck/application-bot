@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { generateComponents, generateEmbed } from '../../util/command-utils/apply/apply.utils';
+import { generateApplyComponents, generateApplyEmbed } from '../../util/command-utils/apply/apply.utils';
 
 @ApplyOptions<Command.Options>({
   name: 'apply',
@@ -33,8 +33,8 @@ export class SlashCommand extends Command {
 
     const edit = await msg.edit({
       content: '',
-      embeds: generateEmbed(questions[0]!),
-      components: generateComponents([])
+      embeds: generateApplyEmbed(questions[0]!),
+      components: generateApplyComponents([])
     }).catch((err) => console.log(err));
 
     if (!edit) {

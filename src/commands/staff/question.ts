@@ -1,8 +1,8 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { SlashCommandSubcommandBuilder } from 'discord.js';
-import { generateEmbed as listGenerateEmbed } from '../../util/command-utils/question/list/question-list.util';
-import { generateEmbed as showGenerateEmbed, generateComponents as showGenerateComponents } from '../../util/command-utils/question/show/question-show.utils';
+import { generateQuestionListEmbed } from '../../util/command-utils/question/list/question-list.utils';
+import { generateQuestionShowEmbed, generateQuestionShowComponents } from '../../util/command-utils/question/show/question-show.utils';
 import type { Question } from '../../types';
 
 @ApplyOptions<Subcommand.Options>({
@@ -69,7 +69,7 @@ export class SlashCommand extends Subcommand {
     }
 
     return interaction.editReply({
-      embeds: listGenerateEmbed(questions.rows as unknown as Question[])
+      embeds: generateQuestionListEmbed(questions.rows as unknown as Question[])
     })
   }
 
@@ -100,8 +100,8 @@ export class SlashCommand extends Subcommand {
     }
 
     return interaction.editReply({
-      embeds: showGenerateEmbed(question.first() as unknown as Question),
-      components: showGenerateComponents(question.first() as unknown as Question)
+      embeds: generateQuestionShowEmbed(question.first() as unknown as Question),
+      components: generateQuestionShowComponents(question.first() as unknown as Question)
     })
   }
 

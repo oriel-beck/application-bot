@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { generateEmbed } from "../../util/command-utils/apply/apply.utils";
+import { generateApplyEmbed } from "../../util/command-utils/apply/apply.utils";
 import { isApplicationExist } from "../../util/util";
 import { ApplyCustomIDs } from "../../constants/custom-ids";
 import type { ModalSubmitInteraction } from "discord.js";
@@ -38,12 +38,12 @@ export class AnswerModalHandler extends InteractionHandler {
         if (questionNum === app!.answers.length) {
             // edit to the next question and answer
             return interaction.message?.edit({
-                embeds: generateEmbed(app!.questions[questionNum + 1], app!.answers[questionNum + 1], questionNum + 1),
+                embeds: generateApplyEmbed(app!.questions[questionNum + 1], app!.answers[questionNum + 1], questionNum + 1),
             });
         } else {
             // edit to the current question and answer
             return interaction.message?.edit({
-                embeds: generateEmbed(app!.questions[questionNum], answer, questionNum),
+                embeds: generateApplyEmbed(app!.questions[questionNum], answer, questionNum),
             });
         }
     }

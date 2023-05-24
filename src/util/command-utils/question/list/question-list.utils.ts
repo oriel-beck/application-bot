@@ -1,7 +1,7 @@
 import { Colors, EmbedBuilder } from "discord.js";
 import type { Question } from "../../../../types";
 
-export function generateEmbed(questions: Question[]) {
+export function generateQuestionListEmbed(questions: Question[]) {
     return [
         new EmbedBuilder()
             .setTitle(`Listing ${questions.length} questions`)

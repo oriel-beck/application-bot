@@ -4,7 +4,7 @@ import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
 import type { ApplicationStateKeys } from "../../../../constants/application";
 import type { Application } from "../../../../types";
 
-export async function generateEmbed(application: Application, page = 0) {
+export async function generateApplicationEmbed(application: Application, page = 0) {
     const user = await container.client.users.fetch(application.user.toString()).catch(() => null);
     const questions = application.questions.splice(page * 7, page * 7 + 7);
     const answers = application.answers.splice(page * 7, page * 7 + 7);
@@ -16,7 +16,7 @@ export async function generateEmbed(application: Application, page = 0) {
     ];
 }
 
-export function generateComponents(application: Application, page = 0) {
+export function generateApplicationComponents(application: Application, page = 0) {
     return [
         new ActionRowBuilder<ButtonBuilder>()
         .addComponents(

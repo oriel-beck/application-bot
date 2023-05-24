@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { generateComponents, generateEmbed } from "../../../util/command-utils/application/embeds/application-embed.utils";
+import { generateApplicationComponents, generateApplicationEmbed } from "../../../util/command-utils/application/embeds/application-embed.utils";
 import { isApplicationExist } from "../../../util/util";
 import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
@@ -31,8 +31,8 @@ export class ListSelectHandler extends InteractionHandler {
         }
 
         return interaction.reply({
-            embeds: await generateEmbed(app!),
-            components: generateComponents(app!)
+            embeds: await generateApplicationEmbed(app!),
+            components: generateApplicationComponents(app!)
         });
     }
 

@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { generateModal } from "../../../util/command-utils/application/modals/application-modals.utils";
+import { generateApplicationDecisionModal } from "../../../util/command-utils/application/modals/application-modals.utils";
 import { isCurrentApplicationMessage } from "../../../util/util";
 import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
@@ -32,7 +32,7 @@ export class DecisionButtonHandler extends InteractionHandler {
             });
         }
 
-        return interaction.showModal(generateModal(decisionType, app!.user.toString()));
+        return interaction.showModal(generateApplicationDecisionModal(decisionType, app!.user.toString()));
     }
 
     public parse(interaction: ButtonInteraction) {

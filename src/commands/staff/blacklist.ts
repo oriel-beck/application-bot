@@ -1,7 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { SlashCommandSubcommandBuilder } from 'discord.js';
-import { generateEmbed } from '../../util/command-utils/blacklist/show/util';
+import { generateBlacklistShowEmbed } from '../../util/command-utils/blacklist/show/blacklist-show.util';
 import type { Blacklist } from '../../types';
 
 @ApplyOptions<Subcommand.Options>({
@@ -79,7 +79,7 @@ export class SlashCommand extends Subcommand {
     }
 
     return interaction.editReply({
-      embeds: generateEmbed(select.first() as unknown as Blacklist)
+      embeds: generateBlacklistShowEmbed(select.first() as unknown as Blacklist)
     });
   }
 

@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { generateModal } from "../../../util/command-utils/question/show/question-show.utils";
+import { generateQuestionShowEditModal } from "../../../util/command-utils/question/show/question-show.utils";
 import { isMod } from "../../../util/precondition-util";
 import { QuestionCustomIDs } from "../../../constants/custom-ids";
 import type { ButtonInteraction } from "discord.js";
@@ -27,7 +27,7 @@ export class EditButtonHandler extends InteractionHandler {
             });
         }
 
-        return interaction.showModal(generateModal(question.id, question.question));
+        return interaction.showModal(generateQuestionShowEditModal(question.id, question.question));
     }
 
     public parse(interaction: ButtonInteraction) {

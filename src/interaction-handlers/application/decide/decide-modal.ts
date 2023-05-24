@@ -3,7 +3,7 @@ import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework
 import { isCurrentApplicationMessage } from "../../../util/util";
 import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
-import { generateComponents, generateEmbed } from "../../../util/command-utils/application/embeds/application-embed.utils";
+import { generateApplicationComponents, generateApplicationEmbed } from "../../../util/command-utils/application/embeds/application-embed.utils";
 import type { ModalSubmitInteraction } from "discord.js";
 import type { DecisionType } from "../../../util/command-utils/application/modals/application-modals.types";
 import type { Application } from "../../../types";
@@ -116,8 +116,8 @@ export class DecisionButtonHandler extends InteractionHandler {
         const channel = this.container.client.channels.cache.get(type === 'deny' ? this.container.config.channels.denied : this.container.config.channels.accepted);
         if (channel?.isTextBased()) {
             const denyMessage = await channel.send({
-                embeds: await generateEmbed(application),
-                components: generateComponents(application)
+                embeds: await generateApplicationEmbed(application),
+                components: generateApplicationComponents(application)
             }).catch(() => null);
 
             if (denyMessage) {

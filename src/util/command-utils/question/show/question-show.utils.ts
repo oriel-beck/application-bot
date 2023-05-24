@@ -2,7 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, Mod
 import { QuestionCustomIDs } from "../../../../constants/custom-ids";
 import type { Question } from "../../../../types";
 
-export function generateEmbed(question: Question) {
+export function generateQuestionShowEmbed(question: Question) {
     return [
         new EmbedBuilder()
             .setTitle(`Question ${question.id}`)
@@ -11,7 +11,7 @@ export function generateEmbed(question: Question) {
     ]
 }
 
-export function generateComponents(question: Question) {
+export function generateQuestionShowComponents(question: Question) {
     return [
         new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
@@ -27,7 +27,7 @@ export function generateComponents(question: Question) {
     ]
 }
 
-export function generateModal(id: string, question: string) {
+export function generateQuestionShowEditModal(id: string, question: string) {
     return new ModalBuilder()
     .setCustomId(`${QuestionCustomIDs.modals!.edit}-${id}`)
     .setTitle('Editing question')

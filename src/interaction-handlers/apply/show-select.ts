@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { generateComponents, generateEmbed } from "../../util/command-utils/apply/apply.utils";
+import { generateApplyComponents, generateApplyEmbed } from "../../util/command-utils/apply/apply.utils";
 import { isApplicationExist } from "../../util/util";
 import { ApplyCustomIDs } from "../../constants/custom-ids";
 import type { StringSelectMenuInteraction } from "discord.js";
@@ -22,8 +22,8 @@ export class SelectSelectHandler extends InteractionHandler {
         }
 
         return interaction.update({
-            embeds: generateEmbed(app!.questions[questionNum], app!.answers[questionNum], questionNum),
-            components: generateComponents(app!.answers, questionNum)
+            embeds: generateApplyEmbed(app!.questions[questionNum], app!.answers[questionNum], questionNum),
+            components: generateApplyComponents(app!.answers, questionNum)
         });
     }
 

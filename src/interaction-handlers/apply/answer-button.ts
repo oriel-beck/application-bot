@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { generateModal } from "../../util/command-utils/apply/apply.utils";
+import { generateApplyAnswerModal } from "../../util/command-utils/apply/apply.utils";
 import { isCurrentApplicationMessage } from "../../util/util";
 import { ApplyCustomIDs } from "../../constants/custom-ids";
 import type { ButtonInteraction } from "discord.js";
@@ -22,7 +22,7 @@ export class AnswerButtonHandler extends InteractionHandler {
             });
         }
         
-        return interaction.showModal(generateModal(application!.questions, application!.answers || [], questionNum));
+        return interaction.showModal(generateApplyAnswerModal(application!.questions, application!.answers || [], questionNum));
     }
 
     public parse(interaction: ButtonInteraction) {

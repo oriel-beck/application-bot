@@ -4,7 +4,7 @@ import type { ApplicationStateKeys } from "../../../../constants/application";
 import type { Application } from "../../../../types";
 
 // TODO: pagination
-export function generateEmbed(count: number, state: ApplicationStateKeys) {
+export function generateApplicationListEmbed(count: number, state: ApplicationStateKeys) {
     return [
         new EmbedBuilder()
             .setTitle('Application list')
@@ -14,7 +14,7 @@ export function generateEmbed(count: number, state: ApplicationStateKeys) {
 }
 
 
-export function generateComponents(applications: Application[]) {
+export function generateApplicationListComponents(applications: Application[]) {
     const amount = Math.ceil(applications.length / 25);
     return Array.from({ length: amount }, (_, i) => new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(generateStringSelectMenu(i, applications.splice(i * 25, i * 25 + 25))));
 }
