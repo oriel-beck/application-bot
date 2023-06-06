@@ -11,4 +11,4 @@ export function generateQuestionListEmbed(questions: Question[]) {
 }
 
 // TODO: pagination
-export function generateComponents() { }
+export function generateQuestionListComponents() { }

@@ -3,7 +3,7 @@ import { ModalBuilder, TextInputStyle } from "discord.js";
 import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
 import type { DecisionType } from "./application-modals.types";
 
-export function generateApplicationDecisionModal(type: DecisionType, user: string, msg?: string) {
+export function generateModal(type: DecisionType, user: string, msg?: string) {
     return new ModalBuilder()
         .setCustomId(`${ApplicationCustomIDs.modals!.decide}-${type}-${user}-${msg}`)
         .setTitle(Titles[type])
@@ -14,6 +14,7 @@ export function generateApplicationDecisionModal(type: DecisionType, user: strin
                         .setCustomId('reason')
                         .setLabel(`Provide a reason to ${type}`)
                         .setStyle(TextInputStyle.Paragraph)
+                        .setRequired(false)
                 )
         )
 }

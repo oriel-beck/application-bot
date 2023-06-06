@@ -11,7 +11,7 @@ export class ApplicationManager extends BaseManager {
 
     public create(userid: string, questions: string[], message: string) {
         // TODO: add max to settings
-        return this.driver.execute(this.genInsert('user', 'questions', 'answers', 'message', 'state'), [userid, questions, ['N/A'], message, 'active'], { prepare: true });
+        return this.driver.execute(this.genInsert('user', 'questions', 'answers', 'message', 'state'), [userid, questions, [], message, 'active'], { prepare: true });
     }
 
     public get(userid: string) {
@@ -30,8 +30,12 @@ export class ApplicationManager extends BaseManager {
         return this.driver.execute(this.genUpdate(field, 'user'), [value, userid], { prepare: true });
     }
 
-    public addAnswer(userid: string, question: number, answer: string) {
-        return this.driver.execute(this.genUpdate(`answers[${question}]`, 'user'), [answer, userid], { prepare: true });
+    public addAnswer(userid: string, answer: string) {
+        return this.driver.execute(`UPDATE applications SET answers = answers + ? WHERE user = ?`, [[answer], userid], { prepare: true });
+    }
+
+    public editAnswer(userid: string, question: number, answer: string) {
+        return this.driver.execute(`UPDATE applications SET answers[${question}] = ? WHERE user = ?`, [answer, userid], { prepare: true });
     }
 }
 

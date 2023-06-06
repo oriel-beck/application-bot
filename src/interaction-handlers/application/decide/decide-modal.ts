@@ -1,6 +1,5 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { isCurrentApplicationMessage } from "../../../util/util";
 import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
 import { generateApplicationComponents, generateApplicationEmbed } from "../../../util/command-utils/application/embeds/application-embed.utils";
@@ -23,12 +22,11 @@ export class DecisionButtonHandler extends InteractionHandler {
         const split = interaction.customId.split('-');
         const decisionType = split.at(1) as DecisionType;
         const user = split.at(2)!;
-        const msg = split.at(3)!;
         const reason = interaction.fields.getTextInputValue('reason');
 
         const app = await this.container.applications.get(user).then((res) => res.first() as unknown as Application).catch(() => null);
 
-        if (!isCurrentApplicationMessage(app, msg)) {
+        if (!app) {
             return interaction.reply({
                 content: 'This application does not exist in the database.',
                 ephemeral: true
@@ -38,13 +36,13 @@ export class DecisionButtonHandler extends InteractionHandler {
         switch (decisionType) {
             case "deny":
                 this.deny(interaction, app!, reason);
-                break
+                return interaction.reply('Denied the application');
             case "accept":
                 this.accept(interaction, app!, reason)
-                break
+                return interaction.reply('Accepted the application');
             case "delete":
                 this.delete(interaction, app!, reason);
-                break
+                return interaction.reply('Deleted the application');
         }
         return;
     }
@@ -108,7 +106,7 @@ export class DecisionButtonHandler extends InteractionHandler {
     deletePendingApplication(application: Application) {
         const pendingChannel = this.container.client.channels.cache.get(this.container.config.channels.pending);
         if (pendingChannel?.isTextBased()) {
-            pendingChannel.messages.delete(application.message.toString());
+            pendingChannel.messages.delete(application.message.toString()).catch(() => null);
         }
     }
 
@@ -131,7 +129,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         const user = await this.container.client.users.fetch(userid).catch(() => null);
         const channel = await user?.createDM().catch(() => null);
         channel?.send({
-            content: `Your application has been **${type === 'deny' ? 'DENIED' : type === 'accept' ? 'ACCEPTED' : 'DELETED'}${!!reason ?  `\nReason: ${reason}` : ''}`
+            content: `Your application has been **${type === 'deny' ? 'DENIED' : type === 'accept' ? 'ACCEPTED' : 'DELETED'}**${!!reason ?  `\nReason: ${reason}` : ''}`
         }).catch(() => null);
     }
 }

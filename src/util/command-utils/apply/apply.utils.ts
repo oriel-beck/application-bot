@@ -35,8 +35,6 @@ export function generateApplyComponents(answers: string[], currentAnswer = 0): A
                 .setCustomId(ApplyCustomIDs.buttons!.done)
                 .setDisabled((!answers || answers.length < 25)));
 
-    if (answers.length <= 1) return [row1];
-
     const row2 = new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(
             new StringSelectMenuBuilder()

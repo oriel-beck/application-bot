@@ -1,5 +1,5 @@
 import { container } from "@sapphire/framework";
-import { del, insert, select, update } from "../../util/db-utils";
+import { del, insert, select, update } from "../../util/db.utils";
 
 export abstract class BaseManager {
     driver = container.driver;
