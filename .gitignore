@@ -9,7 +9,7 @@ json/rand-questions.json
 
 # Configs
 .env
-src/config/config.json
+config.json
 
 # Yarn files
 .yarn/install-state.gz

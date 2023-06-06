@@ -3,7 +3,7 @@ import { readFile } from "fs/promises";
 import { canAccessFile } from "../util/util";
 import { join } from "path";
 
-const configPath = join(process.cwd(), 'src', 'config', 'config.json');
+const configPath = join(process.cwd(), 'config.json');
 
 async function registerConfig() {
     if (!await canAccessFile(configPath)) throw new Error(`[registerConfig]: Could not find configuration file at ${configPath}`);
