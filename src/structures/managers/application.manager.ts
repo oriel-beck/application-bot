@@ -19,7 +19,7 @@ export class ApplicationManager extends BaseManager {
     }
 
     public getAll(state: ApplicationStateKeys = ApplicationState.pending) {
-        return this.driver.execute(`SELECT * FROM ${this.name} WHERE state = ?`, [state], { prepare: true });
+        return this.driver.execute(`SELECT user FROM ${this.name} WHERE state = :state`, { state }, { prepare: true, autoPage: true });
     }
 
     public delete(userid: string) {
@@ -30,12 +30,16 @@ export class ApplicationManager extends BaseManager {
         return this.driver.execute(this.genUpdate(field, 'user'), [value, userid], { prepare: true });
     }
 
+    public done(userid: string) {
+        return this.driver.execute('UPDATE applications USING TTL 0 WHERE user = :userid', { userid }, { prepare: true });
+    }
+
     public addAnswer(userid: string, answer: string) {
-        return this.driver.execute(`UPDATE applications SET answers = answers + ? WHERE user = ?`, [[answer], userid], { prepare: true });
+        return this.driver.execute(`UPDATE applications SET answers = answers + :answer WHERE user = :userid; SELECT * FROM applications WHERE user = :userid;`, { answer, userid }, { prepare: true });
     }
 
     public editAnswer(userid: string, question: number, answer: string) {
-        return this.driver.execute(`UPDATE applications SET answers[${question}] = ? WHERE user = ?`, [answer, userid], { prepare: true });
+        return this.driver.execute(`UPDATE applications SET answers[${question}] = :answer WHERE user = :userid`, { answer, userid }, { prepare: true });
     }
 }
 
