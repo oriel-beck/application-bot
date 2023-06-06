@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS appbot.applications (
     state TEXT
 ) WITH default_time_to_live = 2400;
 
+CREATE INDEX state_idx ON appbot.applications (state);
+
 CREATE TABLE IF NOT EXISTS appbot.blacklists (
     user BIGINT PRIMARY KEY,
     reason TEXT,
