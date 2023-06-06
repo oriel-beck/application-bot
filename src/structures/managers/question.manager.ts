@@ -83,9 +83,15 @@ export class QuestionManager extends BaseManager {
 
     public async initRandomQuestions() {
         const randQuestions = await this.getRandomQuestionsFromFile();
-        await Promise.all(randQuestions.map((q) => this.driver.execute('INSERT INTO appbot.questions (id, question) VALUES (?, ?) IF NOT EXISTS', [q.id, q.question])));
+        const queries = randQuestions.map((q) => ({
+            query: 'INSERT INTO appbot.questions (id, question) VALUES (:id, :question) IF NOT EXISTS',
+            params: { id: q.id, question: q.question }
+        }));
+
+        await this.driver.batch(queries, { prepare: true });
 
         const storedQuestions = await this.getAllQuestions();
+
         this.questions = storedQuestions.rows.map((row) => ({
             id: row.get('id'),
             question: row.get('question')
