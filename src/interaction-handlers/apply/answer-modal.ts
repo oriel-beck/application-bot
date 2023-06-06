@@ -25,11 +25,8 @@ export class AnswerModalHandler extends InteractionHandler {
             });
         }
 
-        const answers = [...(app?.answers || [])];
-        answers[questionNum] = answer;
-
         let update;
-        if (questionNum + 1 === answers.length) {
+        if (!app?.answers || !app.answers[questionNum]) {
             update = await this.container.applications.addAnswer(interaction.user.id, answer).catch(console.log);
         } else {
             update = await this.container.applications.editAnswer(interaction.user.id, questionNum, answer).catch(console.log);
@@ -42,7 +39,10 @@ export class AnswerModalHandler extends InteractionHandler {
             });
         }
 
-        if (questionNum + 1 === answers.length) {
+        const answers = [...(app?.answers || [])];
+        answers[questionNum] = answer;
+
+        if (!app?.answers || !app.answers[questionNum]) {
             // edit to the next question and answer
             return interaction.message?.edit({
                 embeds: generateApplyEmbed(app!.questions[questionNum + 1], answers[questionNum + 1], questionNum + 1),

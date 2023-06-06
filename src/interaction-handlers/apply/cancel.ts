@@ -2,9 +2,7 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { Colors, type ButtonInteraction } from "discord.js";
-import { isApplicationExist } from "../../util/util";
 import { ApplyCustomIDs } from "../../constants/custom-ids";
-import type { Application } from "../../types";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -13,10 +11,10 @@ export class CancelButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
         await interaction.deferReply({ ephemeral: true });
         
-        const deleted = await this.container.applications.delete(interaction.user.id).then((res) => res.first() as unknown as Application).catch(() => null);
+        const deleted = await this.container.applications.delete(interaction.user.id).catch(() => null);
 
-        if (!isApplicationExist(deleted)) {
-            return interaction.editReply('Failed to delete application.');
+        if (!deleted) {
+            return interaction.editReply('Failed to cancel application.');
         }
 
         interaction.editReply('Cancelled application process.');

@@ -94,7 +94,7 @@ export class SlashCommand extends Subcommand {
   }
 
   public async list(interaction: Subcommand.ChatInputCommandInteraction) {
-    interaction.deferReply();
+    await interaction.deferReply();
 
     const state: ApplicationStateKeys = interaction.options.getString('state', false) as ApplicationStateKeys || ApplicationState.pending;
 

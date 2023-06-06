@@ -4,7 +4,7 @@ import { Events, Listener, type InteractionHandlerError } from "@sapphire/framew
 @ApplyOptions<Listener.Options>({
     event: Events.InteractionHandlerError
 })
-export class CommandErrorsListener extends Listener<typeof Events.InteractionHandlerError> {
+export class InteractionHandlerErrorsListener extends Listener<typeof Events.InteractionHandlerError> {
     run(error: unknown, payload: InteractionHandlerError) {
         console.error(`[InteractionHandlerError(${payload.handler.name})]`, error)
     }

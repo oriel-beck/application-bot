@@ -18,7 +18,7 @@ export class DoneButtonHandler extends InteractionHandler {
 
         const getApp = await this.container.applications.get(interaction.user.id).then((res) => res.first() as unknown as Application).catch(() => null);
 
-        if (isCurrentApplicationMessage(getApp, interaction.message.id)) {
+        if (!isCurrentApplicationMessage(getApp, interaction.message.id)) {
             return interaction.editReply({
                 content: 'This application does not exist.'
             });
@@ -31,6 +31,8 @@ export class DoneButtonHandler extends InteractionHandler {
                 content: 'Application update failed, please try again later.'
             });
         }
+
+        await this.container.applications.done(interaction.user.id);
 
         const pendingChannel = this.container.client.channels.cache.get(this.container.config.channels.pending);
         if (!pendingChannel?.isTextBased()) {
