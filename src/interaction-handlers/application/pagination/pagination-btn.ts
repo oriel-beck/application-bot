@@ -1,16 +1,16 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { generateModal } from "../../../util/command-utils/application/modals/application-modals.utils";
-import { isCurrentApplicationMessage } from "../../../util/util";
 import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
-import type { DecisionType } from "../../../util/command-utils/application/modals/application-modals.types";
 import type { ButtonInteraction } from "discord.js";
+import { isCurrentApplicationMessage } from "../../../util/util";
+import { generateApplicationComponents, generateApplicationEmbed } from "../../../util/command-utils/application/embeds/application-embed.utils";
+import { ApplicationState } from "../../../constants/application";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
 })
-export class DecisionButtonHandler extends InteractionHandler {
+export class PaginationButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
         if (!isMod(interaction.member!)) {
             return interaction.reply({
@@ -20,21 +20,25 @@ export class DecisionButtonHandler extends InteractionHandler {
         }
 
         const split = interaction.customId.split('-');
-        const decisionType = split.at(1) as DecisionType;
+        const page = Number(split.at(1));
+        const user = split.at(2);
 
-        const app = await this.container.applications.get(split.at(2)!).then((res) => res.first()).catch(() => null);
+        const app = await this.container.applications.get(user!).then((res) => res.first()).catch(() => null);
 
-        if (!isCurrentApplicationMessage(app, interaction.message.id)) {
+        if (!isCurrentApplicationMessage(app!, interaction.message.id, ApplicationState.pending)) {
             return interaction.reply({
                 content: 'This application does not exist in the database.',
                 ephemeral: true
             });
         }
 
-        return interaction.showModal(generateModal(decisionType, app!.user.toString()));
+        return interaction.update({
+            embeds: await generateApplicationEmbed(app!, page),
+            components: generateApplicationComponents(app!, page)
+        });
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith(ApplicationCustomIDs.buttons.decide) ? this.some() : this.none()
+        return interaction.customId.startsWith(ApplicationCustomIDs.buttons.paginate) ? this.some() : this.none()
     }
 }

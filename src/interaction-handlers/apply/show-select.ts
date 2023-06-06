@@ -4,7 +4,6 @@ import { generateApplyComponents, generateApplyEmbed } from "../../util/command-
 import { isApplicationExist } from "../../util/util";
 import { ApplyCustomIDs } from "../../constants/custom-ids";
 import type { StringSelectMenuInteraction } from "discord.js";
-import type { Application } from "../../types";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.SelectMenu
@@ -12,7 +11,7 @@ import type { Application } from "../../types";
 export class SelectSelectHandler extends InteractionHandler {
     public async run(interaction: StringSelectMenuInteraction) {
         const questionNum = Number(interaction.values[0]);
-        const app = await this.container.applications.get(interaction.user.id).then((res) => res.first() as unknown as Application).catch(() => null);
+        const app = await this.container.applications.get(interaction.user.id).then((res) => res.first()).catch(() => null);
 
         if (!isApplicationExist(app)) {
             return interaction.reply({
@@ -21,8 +20,10 @@ export class SelectSelectHandler extends InteractionHandler {
             });
         }
 
+        const ttl = await this.container.applications.getTTL(interaction.user.id).catch(() => null);
+
         return interaction.update({
-            embeds: generateApplyEmbed(app!.questions[questionNum], app!.answers[questionNum], questionNum),
+            embeds: generateApplyEmbed(app!.questions[questionNum], ttl?.first()?.get('ttl(state)'), app!.answers[questionNum], questionNum),
             components: generateApplyComponents(app!.answers, questionNum)
         });
     }

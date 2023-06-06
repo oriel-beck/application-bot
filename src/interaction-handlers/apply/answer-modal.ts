@@ -4,7 +4,6 @@ import { generateApplyComponents, generateApplyEmbed } from "../../util/command-
 import { isApplicationExist } from "../../util/util";
 import { ApplyCustomIDs } from "../../constants/custom-ids";
 import type { ModalSubmitInteraction } from "discord.js";
-import type { Application } from "../../types";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.ModalSubmit
@@ -16,7 +15,7 @@ export class AnswerModalHandler extends InteractionHandler {
         const questionNum = Number(interaction.customId.split('-').at(2));
         const answer = interaction.fields.getTextInputValue('answer');
 
-        const app = await this.container.applications.get(interaction.user.id).then((res) => res.first() as unknown as Application).catch(() => null);
+        const app = await this.container.applications.get(interaction.user.id).then((res) => res.first()).catch(() => null);
 
         if (!isApplicationExist(app)) {
             return interaction.followUp({
@@ -39,19 +38,21 @@ export class AnswerModalHandler extends InteractionHandler {
             });
         }
 
+        const ttl = await this.container.applications.getTTL(interaction.user.id).catch(() => null);
+
         const answers = [...(app?.answers || [])];
         answers[questionNum] = answer;
 
         if (!app?.answers || !app.answers[questionNum]) {
             // edit to the next question and answer
             return interaction.message?.edit({
-                embeds: generateApplyEmbed(app!.questions[questionNum + 1], answers[questionNum + 1], questionNum + 1),
+                embeds: generateApplyEmbed(app!.questions[questionNum + 1], ttl?.first().get('ttl(state)'), answers[questionNum + 1], questionNum + 1),
                 components: generateApplyComponents(answers, questionNum + 1)
             });
         } else {
             // edit to the current question and answer
             return interaction.message?.edit({
-                embeds: generateApplyEmbed(app!.questions[questionNum], answer, questionNum),
+                embeds: generateApplyEmbed(app!.questions[questionNum], ttl?.first().get('ttl(state)'), answer, questionNum),
                 components: generateApplyComponents(answers, questionNum)
             });
         }

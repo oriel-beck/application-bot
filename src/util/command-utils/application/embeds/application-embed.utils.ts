@@ -3,11 +3,12 @@ import { container } from "@sapphire/framework";
 import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
 import type { ApplicationStateKeys } from "../../../../constants/application";
 import type { Application } from "../../../../types";
+import type { types } from "cassandra-driver";
 
-export async function generateApplicationEmbed(application: Application, page = 0) {
+export async function generateApplicationEmbed(application: Application | types.Row, page = 0) {
     const user = await container.client.users.fetch(application.user.toString()).catch(() => null);
-    const questions = application.questions.splice(page * 7, page * 7 + 7);
-    const answers = application.answers?.splice(page * 7, page * 7 + 7) || [];
+    const questions = application.questions.splice(page * 7, 7);
+    const answers = application.answers?.splice(page * 7, 7) || [];
     return [
         new EmbedBuilder()
             .setTitle(`Application from ${user ? user.tag : application.user}`)
@@ -16,14 +17,14 @@ export async function generateApplicationEmbed(application: Application, page = 
     ];
 }
 
-export function generateApplicationComponents(application: Application, page = 0) {
+export function generateApplicationComponents(application: Application | types.Row, page = 0) {
     return [
         new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
             new ButtonBuilder()
             .setLabel('Prev')
             .setDisabled(page === 0)
-            .setCustomId(`${ApplicationCustomIDs.buttons!.paginate}-${page - 1}`)
+            .setCustomId(`${ApplicationCustomIDs.buttons!.paginate}-${page - 1}-${application.user}`)
             .setStyle(ButtonStyle.Primary),
             new ButtonBuilder()
             .setLabel('Deny')
@@ -37,11 +38,11 @@ export function generateApplicationComponents(application: Application, page = 0
             new ButtonBuilder()
             .setLabel('Accept')
             .setCustomId(`${ApplicationCustomIDs.buttons!.accept}-${application.user}`)
-            .setStyle(ButtonStyle.Primary),
+            .setStyle(ButtonStyle.Success),
             new ButtonBuilder()
             .setLabel('Next')
-            .setDisabled(Math.ceil(application.answers.length / 7) === page + 1)
-            .setCustomId(`${ApplicationCustomIDs.buttons!.paginate}-${page + 1}`)
+            .setDisabled(Math.ceil(application.answers.length / 7) === page)
+            .setCustomId(`${ApplicationCustomIDs.buttons!.paginate}-${page + 1}-${application.user}`)
             .setStyle(ButtonStyle.Primary)
         )
     ];

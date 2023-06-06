@@ -33,7 +33,7 @@ export class SlashCommand extends Command {
 
     const edit = await msg.edit({
       content: '',
-      embeds: generateApplyEmbed(questions[0]!),
+      embeds: generateApplyEmbed(questions[0]!, 2400),
       components: generateApplyComponents([])
     }).catch((err) => console.log(err));
 

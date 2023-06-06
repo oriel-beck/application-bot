@@ -5,7 +5,6 @@ import { isApplicationExist } from "../../../util/util";
 import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
 import type { StringSelectMenuInteraction } from "discord.js";
-import type { Application } from "../../../types";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.SelectMenu
@@ -21,7 +20,7 @@ export class ListSelectHandler extends InteractionHandler {
         
         const user = interaction.values[0]!;
 
-        const app = await this.container.applications.get(user).then((res) => res.first() as unknown as Application).catch(() => null);
+        const app = await this.container.applications.get(user).then((res) => res.first()).catch(() => null);
 
         if (!isApplicationExist(app)) {
             return interaction.reply({

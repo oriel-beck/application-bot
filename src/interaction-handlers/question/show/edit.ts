@@ -4,7 +4,6 @@ import { generateQuestionShowEditModal } from "../../../util/command-utils/quest
 import { isMod } from "../../../util/precondition-util";
 import { QuestionCustomIDs } from "../../../constants/custom-ids";
 import type { ButtonInteraction } from "discord.js";
-import type { Question } from "../../../types";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -18,7 +17,7 @@ export class EditButtonHandler extends InteractionHandler {
             });
         }
 
-        const question = await this.container.questions.get(interaction.customId.split('-').at(2)!).then((res) => res.first() as unknown as Question).catch(() => null);
+        const question = await this.container.questions.get(interaction.customId.split('-').at(2)!).then((res) => res.first()).catch(() => null);
 
         if (!question) {
             return interaction.reply({

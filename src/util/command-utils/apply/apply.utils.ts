@@ -1,7 +1,9 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { ApplyCustomIDs } from "../../../constants/custom-ids";
 
-export function generateApplyEmbed(question: string, answer = 'N/A', questionNum = 0) {
+export function generateApplyEmbed(question: string, expireIn: number, answer = 'N/A', questionNum = 0) {
+    questionNum = questionNum === 25 ? 24 : questionNum;
+
     return [
         new EmbedBuilder()
             .setTitle(`Question ${questionNum + 1}`)
@@ -13,12 +15,14 @@ export function generateApplyEmbed(question: string, answer = 'N/A', questionNum
             ])
             .setColor(Colors.Blurple)
             .setFooter({
-                text: 'Remember, this application expires after 40m.'
+                text: `Remember, this application expires in ${Math.floor(expireIn / 60)}m.`
             })
     ]
 }
 
 export function generateApplyComponents(answers: string[], currentAnswer = 0): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {
+    currentAnswer = currentAnswer === 25 ? 24 : currentAnswer;
+    
     const row1 = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
             new ButtonBuilder()
@@ -48,7 +52,7 @@ export function generateApplyComponents(answers: string[], currentAnswer = 0): A
                     value: `${i}`
                 }))));
 
-    return [row1, row2]
+    return [row1, row2];
 }
 
 export function generateApplyAnswerModal(questions: string[], answers: string[], questionNum: number) {

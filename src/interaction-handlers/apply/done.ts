@@ -1,11 +1,9 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { Colors, type ButtonInteraction } from "discord.js";
-import { ApplicationState } from "../../constants/application";
-import { isApplicationExist, isCurrentApplicationMessage } from "../../util/util";
+import { isCurrentApplicationMessage } from "../../util/util";
 import { generateApplicationComponents, generateApplicationEmbed } from "../../util/command-utils/application/embeds/application-embed.utils";
 import { ApplyCustomIDs } from "../../constants/custom-ids";
-import type { Application } from "../../types";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -16,7 +14,7 @@ export class DoneButtonHandler extends InteractionHandler {
             ephemeral: true
         });
 
-        const getApp = await this.container.applications.get(interaction.user.id).then((res) => res.first() as unknown as Application).catch(() => null);
+        const getApp = await this.container.applications.get(interaction.user.id).then((res) => res.first()).catch(() => null);
 
         if (!isCurrentApplicationMessage(getApp, interaction.message.id)) {
             return interaction.editReply({
@@ -24,15 +22,13 @@ export class DoneButtonHandler extends InteractionHandler {
             });
         }
 
-        const update = await this.container.applications.update(interaction.user.id, 'state', ApplicationState.pending).then((res) => res.first() as unknown as Application).catch(() => null);
+        const update = this.container.applications.done(interaction.user.id).catch(() => null);
 
-        if (!isApplicationExist(update)) {
+        if (!update) {
             return interaction.editReply({
                 content: 'Application update failed, please try again later.'
             });
         }
-
-        await this.container.applications.done(interaction.user.id);
 
         const pendingChannel = this.container.client.channels.cache.get(this.container.config.channels.pending);
         if (!pendingChannel?.isTextBased()) {
@@ -52,6 +48,8 @@ export class DoneButtonHandler extends InteractionHandler {
                 content: 'Failed to send pending application for review.'
             });
         }
+
+        this.container.applications.update(interaction.user.id, 'message', pendingApp.id).catch(() => null);
 
         interaction.editReply({
             content: 'Successfully sent application for review.'
