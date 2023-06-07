@@ -3,9 +3,7 @@ import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework
 import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
 import type { ButtonInteraction } from "discord.js";
-import { isCurrentApplicationMessage } from "../../../util/util";
 import { generateApplicationComponents, generateApplicationEmbed } from "../../../util/command-utils/application/embeds/application-embed.utils";
-import { ApplicationState } from "../../../constants/application";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -25,7 +23,7 @@ export class PaginationButtonHandler extends InteractionHandler {
 
         const app = await this.container.applications.get(user!).then((res) => res.first()).catch(() => null);
 
-        if (!isCurrentApplicationMessage(app!, interaction.message.id, ApplicationState.pending)) {
+        if (!app) {
             return interaction.reply({
                 content: 'This application does not exist in the database.',
                 ephemeral: true

@@ -1,8 +1,11 @@
-export const ApplicationState: Readonly<Record<ApplicationStateKeys, ApplicationStateKeys>> = Object.freeze({
-    "active": "active",
-    "pending": "pending",
-    "denied": "denied",
-    "accepted": "accepted"
-});
+export enum ApplicationState {
+    "active" = "active",
+    "pending" = "pending",
+    "denied" = "denied",
+    "accepted" = "accepted",
+    "deleted" = "deleted"
+}
+
+
 
 export type ApplicationStateKeys = 'active' | 'pending' | 'denied' | 'accepted';

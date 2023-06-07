@@ -2,8 +2,6 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, Mod
 import { ApplyCustomIDs } from "../../../constants/custom-ids";
 
 export function generateApplyEmbed(question: string, expireIn: number, answer = 'N/A', questionNum = 0) {
-    questionNum = questionNum === 25 ? 24 : questionNum;
-
     return [
         new EmbedBuilder()
             .setTitle(`Question ${questionNum + 1}`)
@@ -20,9 +18,7 @@ export function generateApplyEmbed(question: string, expireIn: number, answer = 
     ]
 }
 
-export function generateApplyComponents(answers: string[], currentAnswer = 0): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {
-    currentAnswer = currentAnswer === 25 ? 24 : currentAnswer;
-    
+export function generateApplyComponents(answers: string[], currentAnswer = 0): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {    
     const row1 = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
             new ButtonBuilder()

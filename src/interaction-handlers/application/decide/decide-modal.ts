@@ -4,8 +4,8 @@ import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
 import { generateApplicationComponents, generateApplicationEmbed } from "../../../util/command-utils/application/embeds/application-embed.utils";
 import type { ModalSubmitInteraction } from "discord.js";
-import type { DecisionType } from "../../../util/command-utils/application/modals/application-modals.types";
 import type { Application } from "../../../types";
+import { ApplicationState } from "../../../constants/application";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.ModalSubmit
@@ -20,7 +20,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         }
 
         const split = interaction.customId.split('-');
-        const decisionType = split.at(1) as DecisionType;
+        const decisionType = split.at(1) as ApplicationState;
         const user = split.at(2)!;
         const reason = interaction.fields.getTextInputValue('reason');
 
@@ -34,15 +34,12 @@ export class DecisionButtonHandler extends InteractionHandler {
         }
 
         switch (decisionType) {
-            case "deny":
-                this.deny(interaction, app!, reason);
-                return interaction.reply('Denied the application');
-            case "accept":
-                this.accept(interaction, app!, reason)
-                return interaction.reply('Accepted the application');
-            case "delete":
-                this.delete(interaction, app!, reason);
-                return interaction.reply('Deleted the application');
+            case "denied":
+                return this.deny(interaction, app!, reason);
+            case "accepted":
+                return this.accept(interaction, app!, reason);
+            case "deleted":
+                return this.delete(interaction, app!, reason);
         }
         return;
     }
@@ -64,9 +61,10 @@ export class DecisionButtonHandler extends InteractionHandler {
             content: `Denied application from <@${application.user.toString()}> ${!!reason ? `with the reason: ${reason}` : 'with no reason'}`
         });
 
-        this.deletePendingApplication(application);
-        this.sendDecidedApplication(application, 'deny');
-        this.sendDM('deny', application.user.toString(), reason);
+        // TODO: uncomment
+        // this.deletePendingApplication(application);
+        this.sendDecidedApplication(application, ApplicationState.denied);
+        this.sendDM(ApplicationState.denied, application.user.toString(), reason);
         return;
     }
 
@@ -83,9 +81,14 @@ export class DecisionButtonHandler extends InteractionHandler {
             content: `Accepted application from <@${application.user.toString()}> ${!!reason ? `with the reason: ${reason}` : 'with no reason'}`
         });
 
-        this.deletePendingApplication(application);
-        this.sendDecidedApplication(application, 'accept');
-        this.sendDM('accept', application.user.toString(), reason)
+        // TODO: uncomment
+        // this.deletePendingApplication(application);
+        this.sendDecidedApplication(application, ApplicationState.accepted);
+        this.sendDM(ApplicationState.accepted, application.user.toString(), reason);
+        const staffChannel = this.container.client.channels.cache.get(this.container.config.channels.staff);
+        if (staffChannel?.isTextBased()) {
+            staffChannel.send(`Welcome to the Support Team! as for now you can see you're a Trial Support, which means you're limited to some stuff Support can do, read <#594861601035649024> to know more about this.\n**__How do I get fully promoted to Support?__**\nYou just have to help people out in support channels and tickets. You will be promoted once higher ups (mods+) think you're ready to be a Support member!\nIf you have any questions, feel free to ask here.\n<@${application.user}>`).catch(() => null);
+        }
         return;
     }
 
@@ -99,7 +102,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         }
 
         this.deletePendingApplication(application);
-        this.sendDM('delete', application.user.toString(), reason);
+        this.sendDM(ApplicationState.deleted, application.user.toString(), reason);
         return;
     }
 
@@ -110,11 +113,11 @@ export class DecisionButtonHandler extends InteractionHandler {
         }
     }
 
-    async sendDecidedApplication(application: Application, type: DecisionType) {
-        const channel = this.container.client.channels.cache.get(type === 'deny' ? this.container.config.channels.denied : this.container.config.channels.accepted);
+    async sendDecidedApplication(application: Application, type: ApplicationState) {
+        const channel = this.container.client.channels.cache.get(type === ApplicationState.denied ? this.container.config.channels.denied : this.container.config.channels.accepted);
         if (channel?.isTextBased()) {
             const denyMessage = await channel.send({
-                embeds: await generateApplicationEmbed(application),
+                embeds: await generateApplicationEmbed(application, 0, type),
                 components: generateApplicationComponents(application)
             }).catch(() => null);
 
@@ -124,12 +127,12 @@ export class DecisionButtonHandler extends InteractionHandler {
         }
     }
 
-    async sendDM(type: DecisionType, userid: string, reason?: string) {
+    async sendDM(type: ApplicationState, userid: string, reason?: string) {
         if (!reason) return;
         const user = await this.container.client.users.fetch(userid).catch(() => null);
         const channel = await user?.createDM().catch(() => null);
         channel?.send({
-            content: `Your application has been **${type === 'deny' ? 'DENIED' : type === 'accept' ? 'ACCEPTED' : 'DELETED'}**${!!reason ?  `\nReason: ${reason}` : ''}`
+            content: `Your application has been **${type.toUpperCase()}**${!!reason ? `\nReason: ${reason}` : ''}`
         }).catch(() => null);
     }
 }

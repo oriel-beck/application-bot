@@ -8,6 +8,7 @@ export interface ChannelConfig {
     denied: string;
     accepted: string;
     report: string;
+    staff: string;
 }
 
 export interface RoleConfig {

@@ -1,11 +1,10 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { generateModal } from "../../../util/command-utils/application/modals/application-modals.utils";
-import { isCurrentApplicationMessage } from "../../../util/util";
 import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
-import type { DecisionType } from "../../../util/command-utils/application/modals/application-modals.types";
 import type { ButtonInteraction } from "discord.js";
+import type { ApplicationState } from "../../../constants/application";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -20,11 +19,11 @@ export class DecisionButtonHandler extends InteractionHandler {
         }
 
         const split = interaction.customId.split('-');
-        const decisionType = split.at(1) as DecisionType;
+        const decisionType = split.at(1) as ApplicationState;
 
         const app = await this.container.applications.get(split.at(2)!).then((res) => res.first()).catch(() => null);
 
-        if (!isCurrentApplicationMessage(app, interaction.message.id)) {
+        if (!app) {
             return interaction.reply({
                 content: 'This application does not exist in the database.',
                 ephemeral: true

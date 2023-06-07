@@ -21,7 +21,8 @@ DB_PASS=cassandra
         "pending": "",
         "denied": "",
         "accepted": "",
-        "report": ""
+        "report": "",
+        "staff": ""
     },
     "roles": {
         "mod": "",
@@ -51,11 +52,8 @@ To start, run in the main directory `docker compose up --build` and wait for the
     - [ ] Togggle
     - [x] Delete
     - [ ] Deny
-        - [ ] Deny embed
     - [ ] Accept
-        - [ ] Accept embed
     - [ ] Show
-        - [ ] Show embed
     - [ ] List
         - [x] List embed
         - [x] List select
@@ -83,4 +81,4 @@ To start, run in the main directory `docker compose up --build` and wait for the
 
 - [ ] About command
 - [x] Eval command
-- [x] Application embed
+- [x] Application embed (pending, accept, deny)

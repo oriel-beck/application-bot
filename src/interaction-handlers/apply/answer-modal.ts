@@ -43,7 +43,7 @@ export class AnswerModalHandler extends InteractionHandler {
         const answers = [...(app?.answers || [])];
         answers[questionNum] = answer;
 
-        if (!app?.answers || !app.answers[questionNum]) {
+        if ((!app?.answers || !app.answers[questionNum]) && questionNum + 1 !== app?.get('questions').length) {
             // edit to the next question and answer
             return interaction.message?.edit({
                 embeds: generateApplyEmbed(app!.questions[questionNum + 1], ttl?.first().get('ttl(state)'), answers[questionNum + 1], questionNum + 1),

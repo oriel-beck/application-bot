@@ -15,8 +15,8 @@ export const ApplyCustomIDs = Object.freeze({
 
 export const ApplicationCustomIDs  = Object.freeze({
     buttons: {
-        deny: 'decide-deny',
-        accept: 'decide-accept',
+        deny: 'decide-denied',
+        accept: 'decide-accepted',
         decide: 'decide',
         paginate: 'paginate',
         page: 'page_num'
