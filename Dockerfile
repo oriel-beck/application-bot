@@ -5,7 +5,7 @@ COPY yarn.lock .
 COPY .swcrc .
 COPY src src
 RUN curl --compressed -o- -L https://yarnpkg.com/install.sh | bash
-RUN yarn
+RUN yarn install --production=true
 RUN yarn swc src --config-file .swcrc -d dist
 
 FROM node:18-alpine AS runner
