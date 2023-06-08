@@ -1,7 +1,7 @@
 import { ActionRowBuilder, Colors, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
 import type { ApplicationStateKeys } from "../../../../constants/application";
-import type { Application } from "../../../../types";
+import type { types } from "cassandra-driver";
 
 // TODO: pagination
 export function generateApplicationListEmbed(count: number, state: ApplicationStateKeys) {
@@ -14,12 +14,12 @@ export function generateApplicationListEmbed(count: number, state: ApplicationSt
 }
 
 
-export function generateApplicationListComponents(applications: Application[]) {
+export function generateApplicationListComponents(applications: types.Row[]) {
     const amount = Math.ceil(applications.length / 25);
     return Array.from({ length: amount }, (_, i) => new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(generateStringSelectMenu(i, applications.splice(i * 25, i * 25 + 25))));
 }
 
-function generateStringSelectMenu(index: number, applications: Application[]) {
+function generateStringSelectMenu(index: number, applications: types.Row[]) {
     return new StringSelectMenuBuilder()
         .setCustomId(`${ApplicationCustomIDs.selects!.list}-${index}`)
         .setMaxValues(1)
@@ -28,6 +28,6 @@ function generateStringSelectMenu(index: number, applications: Application[]) {
         .addOptions(applications.map(mapApplicationToStringSelectMenuOption));
 }
 
-function mapApplicationToStringSelectMenuOption(application: Application): StringSelectMenuOptionBuilder {
+function mapApplicationToStringSelectMenuOption(application: types.Row): StringSelectMenuOptionBuilder {
     return new StringSelectMenuOptionBuilder().setLabel(`View Application ${application.user}`).setValue(application.user.toString());
 }

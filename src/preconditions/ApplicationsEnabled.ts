@@ -9,13 +9,13 @@ export class ModOnlyPrecondition extends Precondition {
     }
 
     private async checkApplicationsEnabled(guild: string) {
-        const result = await this.container.settings.get(guild);
-        return result.first()?.get('enabled') ? this.ok() : this.error({ message: this.#message });
+        const result = await this.container.settings.get(guild).catch(() => null);
+        return result?.first()?.get('enabled') ? this.ok() : this.error({ message: this.#message });
     }
 }
 
 declare module '@sapphire/framework' {
-	interface Preconditions {
-		ApplicationsEnabled: never;
-	}
+    interface Preconditions {
+        ApplicationsEnabled: never;
+    }
 }

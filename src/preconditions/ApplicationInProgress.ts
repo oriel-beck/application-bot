@@ -9,13 +9,13 @@ export class ModOnlyPrecondition extends Precondition {
     }
 
     private async checkApplicationInProgress(user: string) {
-        const result = await this.container.applications.get(user);
-        return result.rowLength ? this.error({ message: this.#message }) : this.ok();
+        const result = await this.container.applications.get(user).catch(() => null);
+        return result?.first() ? this.error({ message: this.#message }) : this.ok();
     }
 }
 
 declare module '@sapphire/framework' {
-	interface Preconditions {
-		ApplicationInProgress: never;
-	}
+    interface Preconditions {
+        ApplicationInProgress: never;
+    }
 }

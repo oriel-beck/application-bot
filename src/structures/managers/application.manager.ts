@@ -42,8 +42,8 @@ export class ApplicationManager extends BaseManager {
         return this.driver.execute(`UPDATE applications SET answers[${question}] = :answer WHERE user = :userid`, { answer, userid }, { prepare: true });
     }
 
-    public getTTL(userid: string) {
-        return this.driver.execute('SELECT TTL(state) FROM applications WHERE user = :userid', { userid }, { prepare: true });
+    public reset() {
+        return this.driver.execute('TRUNCATE applications', [], { prepare: true });
     }
 }
 

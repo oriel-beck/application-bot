@@ -29,12 +29,13 @@ import type { Blacklist } from '../../types';
 })
 export class SlashCommand extends Subcommand {
   public async add(interaction: Subcommand.ChatInputCommandInteraction) {
+    await interaction.deferReply();
     const user = interaction.options.getUser('user', true);
     const reason = interaction.options.getString('reason', true);
 
     const create = await this.container.blacklists.create(user.id, reason, interaction.user.id).catch(() => null);
 
-    if (!create || !create.rowLength) {
+    if (!create?.first()) {
       return interaction.editReply(`Failed to blacklist ${user}, try again later.`);
     }
 
@@ -45,7 +46,11 @@ export class SlashCommand extends Subcommand {
     await interaction.deferReply();
     const user = interaction.options.getUser('user', true);
 
-    await this.container.blacklists.delete(user.id);
+    const remove = await this.container.blacklists.delete(user.id).catch(() => null);
+
+    if (!remove) {
+      return interaction.editReply(`Failed to unblacklisted ${user}.`)
+    }
 
     return interaction.editReply(`Unblacklisted ${user}.`);
   }
@@ -57,7 +62,7 @@ export class SlashCommand extends Subcommand {
 
     const update = await this.container.blacklists.update(user.id, 'reason', reason).catch(() => null);
 
-    if (!update || !update.rowLength) {
+    if (!update) {
       return interaction.editReply(`Failed to re-reason ${user}, try again later`);
     }
 
@@ -67,14 +72,14 @@ export class SlashCommand extends Subcommand {
   public async show(interaction: Subcommand.ChatInputCommandInteraction) {
     await interaction.deferReply();
     const user = interaction.options.getUser('user', true);
-    
+
     const select = await this.container.blacklists.get(user.id).catch(() => null);
 
     if (!select) {
       return interaction.editReply(`Failed to get blacklist information for ${user}.`);
     }
 
-    if (!select.rowLength) {
+    if (!select?.first()) {
       return interaction.editReply(`${user} is not blacklisted.`);
     }
 
@@ -93,7 +98,7 @@ export class SlashCommand extends Subcommand {
         .addSubcommand(this.removeSubcommandBuilder())
         .addSubcommand(this.reasonSubcommandBuilder())
         .addSubcommand(this.showSubcommandBuilder())
-        )
+    );
   }
 
   private addSubcommandBuilder() {

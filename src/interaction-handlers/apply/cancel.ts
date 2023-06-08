@@ -10,7 +10,7 @@ import { ApplyCustomIDs } from "../../constants/custom-ids";
 export class CancelButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
         await interaction.deferReply({ ephemeral: true });
-        
+
         const deleted = await this.container.applications.delete(interaction.user.id).catch(() => null);
 
         if (!deleted) {
@@ -19,6 +19,7 @@ export class CancelButtonHandler extends InteractionHandler {
 
         interaction.editReply('Cancelled application process.');
         return interaction.message.edit({
+            content: '',
             embeds: [
                 {
                     title: 'Application cancelled.',

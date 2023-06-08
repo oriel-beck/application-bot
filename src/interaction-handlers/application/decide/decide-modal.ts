@@ -4,8 +4,8 @@ import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
 import { generateApplicationComponents, generateApplicationEmbed } from "../../../util/command-utils/application/embeds/application-embed.utils";
 import type { ModalSubmitInteraction } from "discord.js";
-import type { Application } from "../../../types";
 import { ApplicationState } from "../../../constants/application";
+import type { types } from "cassandra-driver";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.ModalSubmit
@@ -24,7 +24,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         const user = split.at(2)!;
         const reason = interaction.fields.getTextInputValue('reason');
 
-        const app = await this.container.applications.get(user).then((res) => res.first() as unknown as Application).catch(() => null);
+        const app = await this.container.applications.get(user).then((res) => res.first()).catch(() => null);
 
         if (!app) {
             return interaction.reply({
@@ -48,9 +48,10 @@ export class DecisionButtonHandler extends InteractionHandler {
         return interaction.customId.startsWith(ApplicationCustomIDs.buttons.decide) ? this.some() : this.none()
     }
 
-    async deny(interaction: ModalSubmitInteraction, application: Application, reason?: string) {
-        let res = await this.container.applications.update(application.user.toString(), 'state', 'denied').catch(() => null);
-        if (!res) {
+    async deny(interaction: ModalSubmitInteraction, application: types.Row, reason?: string) {
+        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.denied).catch(() => null);
+
+        if (!res?.first()) {
             return interaction.reply({
                 content: 'Application not found.',
                 ephemeral: true
@@ -62,18 +63,30 @@ export class DecisionButtonHandler extends InteractionHandler {
         });
 
         // TODO: uncomment
-        // this.deletePendingApplication(application);
+        this.deletePendingApplication(application);
         this.sendDecidedApplication(application, ApplicationState.denied);
         this.sendDM(ApplicationState.denied, application.user.toString(), reason);
         return;
     }
 
-    async accept(interaction: ModalSubmitInteraction, application: Application, reason: string) {
-        let res = await this.container.applications.update(application.user.toString(), 'state', 'denied').catch(() => null);
-        if (!res) {
+    async accept(interaction: ModalSubmitInteraction, application: types.Row, reason: string) {
+        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.accepted).catch(() => null);
+
+        if (!res?.first()) {
             return interaction.reply({
                 content: 'Application not found.',
                 ephemeral: true
+            });
+        }
+
+        const member = await interaction.guild?.members.addRole({
+            user: res.first().get('user') as string,
+            role: this.container.config.roles.trial_support
+        }).catch(() => null);
+
+        if (!member) {
+            return interaction.reply({
+                content: 'This member is no longer in the guild, failed to accept.'
             });
         }
 
@@ -82,7 +95,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         });
 
         // TODO: uncomment
-        // this.deletePendingApplication(application);
+        this.deletePendingApplication(application);
         this.sendDecidedApplication(application, ApplicationState.accepted);
         this.sendDM(ApplicationState.accepted, application.user.toString(), reason);
         const staffChannel = this.container.client.channels.cache.get(this.container.config.channels.staff);
@@ -92,7 +105,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         return;
     }
 
-    async delete(interaction: ModalSubmitInteraction, application: Application, reason: string) {
+    async delete(interaction: ModalSubmitInteraction, application: types.Row, reason: string) {
         let res = await this.container.applications.delete(application.user.toString()).catch(() => null);
         if (!res) {
             return interaction.reply({
@@ -106,14 +119,14 @@ export class DecisionButtonHandler extends InteractionHandler {
         return;
     }
 
-    deletePendingApplication(application: Application) {
+    deletePendingApplication(application: types.Row) {
         const pendingChannel = this.container.client.channels.cache.get(this.container.config.channels.pending);
         if (pendingChannel?.isTextBased()) {
             pendingChannel.messages.delete(application.message.toString()).catch(() => null);
         }
     }
 
-    async sendDecidedApplication(application: Application, type: ApplicationState) {
+    async sendDecidedApplication(application: types.Row, type: ApplicationState) {
         const channel = this.container.client.channels.cache.get(type === ApplicationState.denied ? this.container.config.channels.denied : this.container.config.channels.accepted);
         if (channel?.isTextBased()) {
             const denyMessage = await channel.send({

@@ -5,7 +5,7 @@ import { generateApplyComponents, generateApplyEmbed } from '../../util/command-
 @ApplyOptions<Command.Options>({
   name: 'apply',
   description: 'Start a staff application.',
-  preconditions: ['ApplicationsEnabled', 'ApplicationInProgress']
+  preconditions: ['ApplicationsEnabled', 'Blacklisted', 'ApplicationInProgress']
 })
 export class SlashCommand extends Command {
   public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
@@ -26,14 +26,14 @@ export class SlashCommand extends Command {
     const questions = this.container.questions.getRand(25);
     const create = await this.container.applications.create(interaction.user.id, questions, msg.id).catch((err) => console.log(err));
 
-    if(!create) {
+    if (!create) {
       msg.delete().catch(() => null);
       return interaction.editReply('Failed to create application, please try again later, if this error repeats open a ticket.')
     }
 
     const edit = await msg.edit({
-      content: '',
-      embeds: generateApplyEmbed(questions[0]!, 2400),
+      content: `This application will expire <t:${Math.round(Date.now() / 1000) + 2400}:R>`,
+      embeds: generateApplyEmbed(questions[0]!),
       components: generateApplyComponents([])
     }).catch((err) => console.log(err));
 
@@ -53,8 +53,8 @@ export class SlashCommand extends Command {
         .setName(this.name)
         .setDescription(this.description)
         .setDMPermission(false),
-        {
-          idHints: ['1098190026841538650']
-        });
+      {
+        idHints: ['1098190026841538650']
+      });
   }
 }

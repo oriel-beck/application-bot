@@ -38,7 +38,6 @@ export class AnswerModalHandler extends InteractionHandler {
             });
         }
 
-        const ttl = await this.container.applications.getTTL(interaction.user.id).catch(() => null);
 
         const answers = [...(app?.answers || [])];
         answers[questionNum] = answer;
@@ -46,13 +45,13 @@ export class AnswerModalHandler extends InteractionHandler {
         if ((!app?.answers || !app.answers[questionNum]) && questionNum + 1 !== app?.get('questions').length) {
             // edit to the next question and answer
             return interaction.message?.edit({
-                embeds: generateApplyEmbed(app!.questions[questionNum + 1], ttl?.first().get('ttl(state)'), answers[questionNum + 1], questionNum + 1),
+                embeds: generateApplyEmbed(app!.questions[questionNum + 1], answers[questionNum + 1], questionNum + 1),
                 components: generateApplyComponents(answers, questionNum + 1)
             });
         } else {
             // edit to the current question and answer
             return interaction.message?.edit({
-                embeds: generateApplyEmbed(app!.questions[questionNum], ttl?.first().get('ttl(state)'), answer, questionNum),
+                embeds: generateApplyEmbed(app!.questions[questionNum], answer, questionNum),
                 components: generateApplyComponents(answers, questionNum)
             });
         }

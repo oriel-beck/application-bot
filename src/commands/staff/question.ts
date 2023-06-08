@@ -52,7 +52,7 @@ export class SlashCommand extends Subcommand {
 
     const remove = await this.container.questions.delete(id).catch(() => null);
 
-    if (!remove || !remove.rowLength) {
+    if (!remove) {
       return interaction.editReply(`Failed to delete question \`${id}\`.`)
     }
 
@@ -64,7 +64,7 @@ export class SlashCommand extends Subcommand {
 
     const questions = await this.container.questions.getAll().catch(() => null);
 
-    if (!questions || !questions.rowLength) {
+    if (!questions?.first()) {
       return interaction.editReply('Failed to get questions.');
     }
 
@@ -81,7 +81,7 @@ export class SlashCommand extends Subcommand {
 
     const edit = await this.container.questions.update(id, 'question', question).catch(() => null);
 
-    if (!edit || !edit.rowLength) {
+    if (!edit) {
       return interaction.editReply(`Failed to edit question \`${id}\`.`);
     }
 
@@ -92,10 +92,10 @@ export class SlashCommand extends Subcommand {
     await interaction.deferReply();
 
     const id = interaction.options.getString('id', true);
-    
+
     const question = await this.container.questions.get(id).catch(() => null);
 
-    if (!question || !question.rowLength) {
+    if (!question?.first()) {
       return interaction.editReply(`Could not fine question \`${id}\`.`)
     }
 

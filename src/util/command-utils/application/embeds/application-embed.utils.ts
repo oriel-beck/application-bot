@@ -2,10 +2,9 @@ import { EmbedBuilder, type APIEmbedField, Colors, ActionRowBuilder, ButtonBuild
 import { container } from "@sapphire/framework";
 import { ApplicationCustomIDs } from "../../../../constants/custom-ids";
 import { ApplicationState, type ApplicationStateKeys } from "../../../../constants/application";
-import type { Application } from "../../../../types";
 import type { types } from "cassandra-driver";
 
-export async function generateApplicationEmbed(application: Application | types.Row, page = 0, state?: ApplicationState) {
+export async function generateApplicationEmbed(application: types.Row, page = 0, state?: ApplicationState) {
     const user = await container.client.users.fetch(application.user.toString()).catch(() => null);
     const questions = [...application.questions].splice(page * 7, 7);
     const answers = [...(application.answers || [])].splice(page * 7, 7);
@@ -17,7 +16,7 @@ export async function generateApplicationEmbed(application: Application | types.
     ];
 }
 
-export function generateApplicationComponents(application: Application | types.Row, page = 0, decided = false) {
+export function generateApplicationComponents(application: types.Row, page = 0, decided = false) {
     const buttons = new ActionRowBuilder<ButtonBuilder>();
     buttons.addComponents(new ButtonBuilder()
         .setLabel('Prev')
@@ -28,7 +27,7 @@ export function generateApplicationComponents(application: Application | types.R
     if (!decided) {
         buttons.addComponents(new ButtonBuilder()
             .setLabel('Deny')
-            .setCustomId(`${ApplicationCustomIDs.buttons!.deny}-${application.user}`)
+            .setCustomId(`${ApplicationCustomIDs.buttons!.denied}-${application.user}`)
             .setStyle(ButtonStyle.Danger));
     }
 
@@ -41,7 +40,7 @@ export function generateApplicationComponents(application: Application | types.R
     if (!decided) {
         buttons.addComponents(new ButtonBuilder()
             .setLabel('Accept')
-            .setCustomId(`${ApplicationCustomIDs.buttons!.accept}-${application.user}`)
+            .setCustomId(`${ApplicationCustomIDs.buttons!.accepted}-${application.user}`)
             .setStyle(ButtonStyle.Success));
     }
 

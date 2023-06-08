@@ -48,22 +48,22 @@ To start, run in the main directory `docker compose up --build` and wait for the
     - [x] DM Select
 
 - [ ] Application command
-    - [ ] Reset
-    - [ ] Togggle
+    - [x] Reset
+    - [x] Togggle
     - [x] Delete
-    - [ ] Deny
-    - [ ] Accept
-    - [ ] Show
+    - [x] Deny
+    - [x] Accept
+    - [x] Show
     - [ ] List
         - [x] List embed
         - [x] List select
         - [ ] List buttons (over 125 apps)
     
-- [ ] Blacklist command
-    - [ ] Add
-    - [ ] Remove
-    - [ ] Reason
-    - [ ] Show
+- [x] Blacklist command
+    - [x] Add
+    - [x] Remove
+    - [x] Reason
+    - [x] Show
 
 - [ ] Question command
     - [ ] Add
@@ -74,11 +74,11 @@ To start, run in the main directory `docker compose up --build` and wait for the
         - [ ] List select
         - [ ] List buttons (over 125 questions)
 
-- [ ] Report command
-    - [ ] User command
-    - [ ] Message command
-    - [ ] Slash command
+- [x] Report command
+    - [x] User command
+    - [x] Message command
+    - [x] Slash command
 
-- [ ] About command
+- [x] About command
 - [x] Eval command
 - [x] Application embed (pending, accept, deny)

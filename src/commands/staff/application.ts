@@ -2,10 +2,9 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { SlashCommandSubcommandBuilder } from 'discord.js';
 import { generateModal } from '../../util/command-utils/application/modals/application-modals.utils';
-import { generateApplicationEmbed , generateApplicationComponents } from '../../util/command-utils/application/embeds/application-embed.utils';
+import { generateApplicationEmbed, generateApplicationComponents } from '../../util/command-utils/application/embeds/application-embed.utils';
 import { generateApplicationListComponents, generateApplicationListEmbed } from '../../util/command-utils/application/list/application-list.utils';
 import { ApplicationState, type ApplicationStateKeys } from '../../constants/application';
-import type { Application } from '../../types';
 
 @ApplyOptions<Subcommand.Options>({
   name: 'application',
@@ -31,6 +30,14 @@ import type { Application } from '../../types';
     {
       name: 'list',
       chatInputRun: 'list'
+    },
+    {
+      name: 'toggle',
+      chatInputRun: 'toggle'
+    },
+    {
+      name: 'reset',
+      chatInputRun: 'reset'
     }
   ]
 })
@@ -39,42 +46,56 @@ export class SlashCommand extends Subcommand {
     const user = interaction.options.getUser('user', true).id;
     const app = await this.container.applications.get(user).catch(() => null);
 
-    if (!app || !app.rowLength) {
+    if (!app?.first()) {
       return interaction.reply({
         content: 'This application does not exist in the database.',
         ephemeral: true
       });
     }
 
-    return interaction.showModal(generateModal('deny', user));
+    if (app.first().get('state') !== ApplicationState.pending) {
+      return interaction.reply({
+        content: 'This is not a pending application.',
+        ephemeral: true
+      });
+    }
+
+    return interaction.showModal(generateModal(ApplicationState.denied, user));
   }
 
   public async accept(interaction: Subcommand.ChatInputCommandInteraction) {
     const user = interaction.options.getUser('user', true).id;
     const app = await this.container.applications.get(user).catch(() => null);
 
-    if (!app || !app.rowLength) {
+    if (!app?.first()) {
       return interaction.reply({
         content: 'This application does not exist in the database.',
         ephemeral: true
       });
     }
 
-    return interaction.showModal(generateModal('accept', user));
+    if (app.first().get('state') !== ApplicationState.pending) {
+      return interaction.reply({
+        content: 'This is not a pending application.',
+        ephemeral: true
+      });
+    }
+
+    return interaction.showModal(generateModal(ApplicationState.accepted, user));
   }
 
   public async delete(interaction: Subcommand.ChatInputCommandInteraction) {
     const user = interaction.options.getUser('user', true).id;
     const app = await this.container.applications.get(user).catch(() => null);
 
-    if (!app || !app.rowLength) {
+    if (!app?.first()) {
       return interaction.reply({
         content: 'This application does not exist in the database.',
         ephemeral: true
       });
     }
 
-    return interaction.showModal(generateModal('delete', user))
+    return interaction.showModal(generateModal(ApplicationState.deleted, user))
   }
 
   public async show(interaction: Subcommand.ChatInputCommandInteraction) {
@@ -83,13 +104,13 @@ export class SlashCommand extends Subcommand {
     const user = interaction.options.getUser('user', true).id;
     const app = await this.container.applications.get(user).catch(() => null);
 
-    if (!app || !app.rowLength) {
+    if (!app?.first()) {
       return interaction.editReply('This application does not exist in the database.');
     }
 
     return interaction.editReply({
-      embeds: await generateApplicationEmbed(app.first() as unknown as Application),
-      components: generateApplicationComponents(app.first() as unknown as Application)
+      embeds: await generateApplicationEmbed(app.first()),
+      components: generateApplicationComponents(app.first())
     });
   }
 
@@ -98,15 +119,44 @@ export class SlashCommand extends Subcommand {
 
     const state: ApplicationStateKeys = interaction.options.getString('state', false) as ApplicationStateKeys || ApplicationState.pending;
 
-    const allApps = await this.container.applications.getAll(state).catch(console.log);
+    const allApps = await this.container.applications.getAll(state).catch(() => null);
     if (!allApps) {
-      return interaction.editReply('There are no applications currently in the database.')
+      return interaction.editReply('Failed to fetch applications.');
     }
 
     return interaction.editReply({
       embeds: generateApplicationListEmbed(allApps.rowLength, state),
-      components: generateApplicationListComponents(allApps.rows as unknown as Application[])
+      components: generateApplicationListComponents(allApps.rows)
     });
+  }
+
+  public async toggle(interaction: Subcommand.ChatInputCommandInteraction) {
+    const enabled = await this.container.settings.get(interaction.guild?.id!).then((res) => !!res.first().get('enabled')).catch(() => null)
+    const toggled = await this.container.settings.update(interaction.guild?.id!, 'enabled', !enabled).catch(() => null);
+
+    if (!toggled) {
+      return interaction.reply({
+        content: 'Failed to toggle application state.'
+      })
+    }
+
+    return interaction.reply({
+      content: `Toggled applications, applications are currently ${enabled ? 'disabled' : 'enabled'}.`
+    })
+  }
+
+  public async reset(interaction: Subcommand.ChatInputCommandInteraction) {
+    const reseted = await this.container.applications.reset().catch(() => null);
+
+    if (!reseted) {
+      return interaction.reply({
+        content: 'Failed to reset applications.'
+      });
+    }
+
+    return interaction.reply({
+      content: 'Reset all applications.'
+    })
   }
 
   public registerApplicationCommands(registry: Subcommand.Registry) {
@@ -120,6 +170,8 @@ export class SlashCommand extends Subcommand {
         .addSubcommand(this.deleteSubcommandBuilder())
         .addSubcommand(this.showSubcommandBuilder())
         .addSubcommand(this.listSubcommandBuilder())
+        .addSubcommand(this.toggleCommandBuilder())
+        .addSubcommand(this.resetCommandBuilder())
     )
   }
 
@@ -194,5 +246,17 @@ export class SlashCommand extends Subcommand {
               value: 'accepted'
             }
           ));
+  }
+
+  private toggleCommandBuilder() {
+    return new SlashCommandSubcommandBuilder()
+      .setName('toggle')
+      .setDescription('Enable/Disable the of the applications.')
+  }
+
+  private resetCommandBuilder() {
+    return new SlashCommandSubcommandBuilder()
+      .setName('reset')
+      .setDescription('Deletes all applications.')
   }
 }

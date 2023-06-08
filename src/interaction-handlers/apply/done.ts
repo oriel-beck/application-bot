@@ -56,6 +56,7 @@ export class DoneButtonHandler extends InteractionHandler {
         });
 
         return interaction.message.edit({
+            content: '',
             embeds: [{
                 title: 'Application has been sent.',
                 color: Colors.Green

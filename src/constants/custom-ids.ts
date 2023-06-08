@@ -13,10 +13,10 @@ export const ApplyCustomIDs = Object.freeze({
     }
 });
 
-export const ApplicationCustomIDs  = Object.freeze({
+export const ApplicationCustomIDs = Object.freeze({
     buttons: {
-        deny: 'decide-denied',
-        accept: 'decide-accepted',
+        denied: 'decide-denied',
+        accepted: 'decide-accepted',
         decide: 'decide',
         paginate: 'paginate',
         page: 'page_num'
@@ -29,7 +29,7 @@ export const ApplicationCustomIDs  = Object.freeze({
     }
 });
 
-export const QuestionCustomIDs  = Object.freeze({
+export const QuestionCustomIDs = Object.freeze({
     buttons: {
         edit: 'question-edit',
         delete: 'question-delete',
@@ -40,3 +40,13 @@ export const QuestionCustomIDs  = Object.freeze({
         edit: 'question-edit'
     }
 });
+
+export const ReportCustomIDs = Object.freeze({
+    buttons: {
+        resolve: 'report-resolve',
+        delete: 'report-delete'
+    },
+    modals: {
+        report: 'report-modal'
+    }
+})

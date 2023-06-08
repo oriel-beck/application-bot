@@ -20,10 +20,9 @@ export class SelectSelectHandler extends InteractionHandler {
             });
         }
 
-        const ttl = await this.container.applications.getTTL(interaction.user.id).catch(() => null);
 
         return interaction.update({
-            embeds: generateApplyEmbed(app!.questions[questionNum], ttl?.first()?.get('ttl(state)'), app!.answers[questionNum], questionNum),
+            embeds: generateApplyEmbed(app!.questions[questionNum], app!.answers[questionNum], questionNum),
             components: generateApplyComponents(app!.answers, questionNum)
         });
     }
