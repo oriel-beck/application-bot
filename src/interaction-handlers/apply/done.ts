@@ -4,6 +4,7 @@ import { Colors, type ButtonInteraction } from "discord.js";
 import { isCurrentApplicationMessage } from "../../util/util";
 import { generateApplicationComponents, generateApplicationEmbed } from "../../util/command-utils/application/embeds/application-embed.utils";
 import { ApplyCustomIDs } from "../../constants/custom-ids";
+import { ApplicationState } from "../../constants/application";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -22,7 +23,7 @@ export class DoneButtonHandler extends InteractionHandler {
             });
         }
 
-        const update = this.container.applications.removeTTL(getApp!.get('user'), getApp!.get('answers'), getApp!.get('questions'), getApp!.get('message'), getApp!.get('state')).catch(() => null);
+        const update = this.container.applications.removeTTL(getApp!.get('user'), getApp!.get('answers'), getApp!.get('questions'), getApp!.get('message'), ApplicationState.pending).catch(() => null);
 
         if (!update) {
             return interaction.editReply({
