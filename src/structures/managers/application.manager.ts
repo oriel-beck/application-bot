@@ -2,6 +2,7 @@ import { container } from "@sapphire/framework";
 import { BaseManager } from "./base.manager";
 import { ApplicationState, type ApplicationStateKeys } from "../../constants/application";
 import type { Application } from "../../types";
+import type { types } from "cassandra-driver";
 
 export class ApplicationManager extends BaseManager {
     max = 25;
@@ -30,8 +31,14 @@ export class ApplicationManager extends BaseManager {
         return this.driver.execute(this.genUpdate(field, 'user'), [value, userid], { prepare: true });
     }
 
-    public done(userid: string) {
-        return this.driver.execute('UPDATE applications USING TTL 0 SET state = \'pending\' WHERE user = :userid', { userid }, { prepare: true });
+    public done(application: types.Row) {
+        return this.driver.execute('INSERT INTO applications (user, answers, message, questions, state) VALUES (:user, :answers, :message, :questions, :state) USING TTL 0', {
+            user: application.get('user'),
+            answers: application.get('answers'),
+            message: application.get('message'),
+            questions: application.get('questions'),
+            state: ApplicationState.pending
+        }, { prepare: true });
     }
 
     public addAnswer(userid: string, answer: string) {
