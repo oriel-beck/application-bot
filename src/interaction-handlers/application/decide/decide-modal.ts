@@ -49,7 +49,7 @@ export class DecisionButtonHandler extends InteractionHandler {
     }
 
     async deny(interaction: ModalSubmitInteraction, application: types.Row, reason?: string) {
-        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.denied).catch(() => null);
+        let res = await this.container.applications.removeTTL(application.get('user'), application.get('amswers'), application.get('questions'), application.get('message'), ApplicationState.denied).catch(() => null);
 
         if (!res) {
             return interaction.reply({
@@ -62,7 +62,6 @@ export class DecisionButtonHandler extends InteractionHandler {
             content: `Denied application from <@${application.user.toString()}> ${!!reason ? `with the reason: ${reason}` : 'with no reason'}`
         });
 
-        // TODO: uncomment
         this.deletePendingApplication(application);
         this.sendDecidedApplication(application, ApplicationState.denied);
         this.sendDM(ApplicationState.denied, application.user.toString(), reason);
@@ -70,7 +69,7 @@ export class DecisionButtonHandler extends InteractionHandler {
     }
 
     async accept(interaction: ModalSubmitInteraction, application: types.Row, reason: string) {
-        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.accepted).catch(() => null);
+        let res = await this.container.applications.removeTTL(application.get('user'), application.get('amswers'), application.get('questions'), application.get('message'), ApplicationState.accepted).catch(() => null);
 
         if (!res) {
             return interaction.reply({
@@ -94,7 +93,6 @@ export class DecisionButtonHandler extends InteractionHandler {
             content: `Accepted application from <@${application.user.toString()}> ${!!reason ? `with the reason: ${reason}` : 'with no reason'}`
         });
 
-        // TODO: uncomment
         this.deletePendingApplication(application);
         this.sendDecidedApplication(application, ApplicationState.accepted);
         this.sendDM(ApplicationState.accepted, application.user.toString(), reason);

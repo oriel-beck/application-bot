@@ -22,7 +22,7 @@ export class DoneButtonHandler extends InteractionHandler {
             });
         }
 
-        const update = this.container.applications.done(getApp!).catch(() => null);
+        const update = this.container.applications.removeTTL(getApp!.get('user'), getApp!.get('answers'), getApp!.get('questions'), getApp!.get('message'), getApp!.get('state')).catch(() => null);
 
         if (!update) {
             return interaction.editReply({
