@@ -15,8 +15,8 @@ export abstract class BaseManager {
     public abstract get(...args: any[]): any;
     public abstract update(id: string | bigint, field: string, value: any): any;
 
-    genSelect = (selectedValue = '*', comparisonField?: string) => select(this.name, selectedValue, comparisonField);
+    genSelect = (selectedValue = '*', comparisonField: string) => select(this.name, selectedValue, comparisonField);
     genInsert = (...valueNames: string[]) => insert(this.name, valueNames);
-    genUpdate = (field: string, comparisonField?: string) => update(this.name, field, comparisonField);
-    genDelete = (comparisonField?: string) => del(this.name, comparisonField)
+    genUpdate = (field: string, comparisonField: string, rmTTL = false) => update(this.name, field, comparisonField, rmTTL);
+    genDelete = (comparisonField: string) => del(this.name, comparisonField)
 }

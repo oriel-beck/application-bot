@@ -50,7 +50,7 @@ export class DoneButtonHandler extends InteractionHandler {
             });
         }
 
-        this.container.applications.update(interaction.user.id, 'message', pendingApp.id).catch(() => null);
+        this.container.applications.update(interaction.user.id, 'message', pendingApp.id, true).catch(() => null);
 
         interaction.editReply({
             content: 'Successfully sent application for review.'

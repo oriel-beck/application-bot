@@ -26,8 +26,8 @@ export class ApplicationManager extends BaseManager {
         return this.driver.execute(this.genDelete('user'), [userid], { prepare: true });
     }
 
-    public update(userid: string, field: keyof Application, value: any) {
-        return this.driver.execute(this.genUpdate(field, 'user'), [value, userid], { prepare: true });
+    public update(userid: string, field: keyof Application, value: any, rmTTL = false) {
+        return this.driver.execute(this.genUpdate(field, 'user', rmTTL), [value, userid], { prepare: true });
     }
 
     public removeTTL(user: string, answers: string[], questions: string[], message: string, state: ApplicationState) {

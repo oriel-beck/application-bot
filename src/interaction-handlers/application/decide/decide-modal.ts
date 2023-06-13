@@ -49,7 +49,7 @@ export class DecisionButtonHandler extends InteractionHandler {
     }
 
     async deny(interaction: ModalSubmitInteraction, application: types.Row, reason?: string) {
-        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.denied).catch(() => null);
+        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.denied, true).catch(() => null);
 
         if (!res) {
             return interaction.reply({
@@ -69,7 +69,7 @@ export class DecisionButtonHandler extends InteractionHandler {
     }
 
     async accept(interaction: ModalSubmitInteraction, application: types.Row, reason: string) {
-        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.accepted).catch(() => null);
+        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.accepted, true).catch(() => null);
 
         if (!res) {
             return interaction.reply({
