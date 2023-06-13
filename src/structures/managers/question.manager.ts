@@ -37,7 +37,7 @@ export class QuestionManager extends BaseManager {
     }
 
     public getAll() {
-        return this.driver.execute(this.genSelect(), [], { prepare: true });
+        return this.driver.execute('SELECT * FROM questions', [], { prepare: true });
     }
 
     public getRand(max: number) {
@@ -69,10 +69,6 @@ export class QuestionManager extends BaseManager {
         return [];
     }
 
-    private getAllQuestions() {
-        return this.driver.execute(this.genSelect(), [], { prepare: true })
-    }
-
     private async getJsonQuestionsFromFile() {
         if (await canAccessFile(jsonPaths.base)) {
             return readFileToJson<string[]>(jsonPaths.base, '[]');
@@ -86,7 +82,7 @@ export class QuestionManager extends BaseManager {
 
         await Promise.all(randQuestions.map((q) => this.driver.execute('INSERT INTO appbot.questions (id, question) VALUES (?, ?) IF NOT EXISTS', [q.id, q.question])));
 
-        const storedQuestions = await this.getAllQuestions();
+        const storedQuestions = await this.getAll();
         this.questions = storedQuestions.rows.map((row) => ({
             id: row.get('id'),
             question: row.get('question')
