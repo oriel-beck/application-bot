@@ -51,7 +51,7 @@ export class DecisionButtonHandler extends InteractionHandler {
     async deny(interaction: ModalSubmitInteraction, application: types.Row, reason?: string) {
         let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.denied).catch(() => null);
 
-        if (!res?.first()) {
+        if (!res) {
             return interaction.reply({
                 content: 'Application not found.',
                 ephemeral: true
@@ -72,7 +72,7 @@ export class DecisionButtonHandler extends InteractionHandler {
     async accept(interaction: ModalSubmitInteraction, application: types.Row, reason: string) {
         let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.accepted).catch(() => null);
 
-        if (!res?.first()) {
+        if (!res) {
             return interaction.reply({
                 content: 'Application not found.',
                 ephemeral: true
