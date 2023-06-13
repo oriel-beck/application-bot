@@ -17,6 +17,7 @@ export async function generateApplicationEmbed(application: types.Row, page = 0,
 }
 
 export function generateApplicationComponents(application: types.Row, page = 0) {
+    const decided = [ApplicationState.denied, ApplicationState.accepted].includes(application.get('state'));
     const buttons = new ActionRowBuilder<ButtonBuilder>();
     buttons.addComponents(new ButtonBuilder()
         .setLabel('Prev')
@@ -24,7 +25,7 @@ export function generateApplicationComponents(application: types.Row, page = 0) 
         .setCustomId(`${ApplicationCustomIDs.buttons!.paginate}-${page - 1}-${application.user}`)
         .setStyle(ButtonStyle.Primary));
 
-    if (application.get('state') === ApplicationState.pending) {
+    if (!decided) {
         buttons.addComponents(new ButtonBuilder()
             .setLabel('Deny')
             .setCustomId(`${ApplicationCustomIDs.buttons!.denied}-${application.user}`)
@@ -37,7 +38,7 @@ export function generateApplicationComponents(application: types.Row, page = 0) 
         .setCustomId(ApplicationCustomIDs.buttons!.page)
         .setStyle(ButtonStyle.Secondary));
 
-    if (application.get('state') === ApplicationState.pending) {
+    if (!decided) {
         buttons.addComponents(new ButtonBuilder()
             .setLabel('Accept')
             .setCustomId(`${ApplicationCustomIDs.buttons!.accepted}-${application.user}`)
