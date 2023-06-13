@@ -127,13 +127,13 @@ export class DecisionButtonHandler extends InteractionHandler {
     async sendDecidedApplication(application: types.Row, type: ApplicationState) {
         const channel = this.container.client.channels.cache.get(type === ApplicationState.denied ? this.container.config.channels.denied : this.container.config.channels.accepted);
         if (channel?.isTextBased()) {
-            const denyMessage = await channel.send({
+            const decidedMessage = await channel.send({
                 embeds: await generateApplicationEmbed(application, 0, type),
                 components: generateApplicationComponents(application)
             }).catch(() => null);
 
-            if (denyMessage) {
-                this.container.applications.update(application.user.toString(), 'message', denyMessage.id);
+            if (decidedMessage) {
+                this.container.applications.update(application.user.toString(), 'message', decidedMessage.id, true);
             }
         }
     }
