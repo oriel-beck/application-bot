@@ -4,6 +4,7 @@ import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
 import type { ButtonInteraction } from "discord.js";
 import { generateApplicationComponents, generateApplicationEmbed } from "../../../util/command-utils/application/embeds/application-embed.utils";
+import { ApplicationState } from "../../../constants/application";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -31,8 +32,8 @@ export class PaginationButtonHandler extends InteractionHandler {
         }
 
         return interaction.update({
-            embeds: await generateApplicationEmbed(app!, page),
-            components: generateApplicationComponents(app!, page)
+            embeds: await generateApplicationEmbed(app, page),
+            components: generateApplicationComponents(app, page, app.get('state') === ApplicationState.pending)
         });
     }
 

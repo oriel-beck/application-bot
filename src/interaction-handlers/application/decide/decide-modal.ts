@@ -129,7 +129,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         if (channel?.isTextBased()) {
             const decidedMessage = await channel.send({
                 embeds: await generateApplicationEmbed(application, 0, type),
-                components: generateApplicationComponents(application)
+                components: generateApplicationComponents(application, 0, type === ApplicationState.pending)
             }).catch(() => null);
 
             if (decidedMessage) {

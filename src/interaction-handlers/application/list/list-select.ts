@@ -5,6 +5,7 @@ import { isApplicationExist } from "../../../util/util";
 import { isMod } from "../../../util/precondition-util";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids";
 import type { StringSelectMenuInteraction } from "discord.js";
+import { ApplicationState } from "../../../constants/application";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.SelectMenu
@@ -31,7 +32,7 @@ export class ListSelectHandler extends InteractionHandler {
 
         return interaction.reply({
             embeds: await generateApplicationEmbed(app!),
-            components: generateApplicationComponents(app!)
+            components: generateApplicationComponents(app!, 0, app?.get('state') === ApplicationState.pending)
         });
     }
 
