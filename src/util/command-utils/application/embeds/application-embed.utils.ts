@@ -11,7 +11,7 @@ export async function generateApplicationEmbed(application: types.Row, page = 0,
     return [
         new EmbedBuilder()
             .setTitle(`Application from ${user ? user.tag : application.user}`)
-            .addFields(mapQuestionsAndAnswersToFields(questions, answers))
+            .addFields(mapQuestionsAndAnswersToFields(questions, answers, page))
             .setColor(applicaionEmbedColorFromState(state || application.state))
     ];
 }
@@ -53,7 +53,7 @@ export function generateApplicationComponents(application: types.Row, page = 0, 
     return [buttons];
 }
 
-const mapQuestionsAndAnswersToFields = (questions: string[], answers: string[], page = 0): APIEmbedField[] => questions.map((q, i) => ({ name: `Q${questionNumber(i, page)}) ${q}`, value: `A${questionNumber(i, page)}) ${answers[i] || 'N/A'}` }));
+const mapQuestionsAndAnswersToFields = (questions: string[], answers: string[], page: number): APIEmbedField[] => questions.map((q, i) => ({ name: `Q${questionNumber(i, page)}) ${q}`, value: `A${questionNumber(i, page)}) ${answers[i] || 'N/A'}` }));
 const questionNumber = (question: number, page: number) => (question + 1) + (7 * page);
 function applicaionEmbedColorFromState(state: ApplicationStateKeys) {
     switch (state) {
