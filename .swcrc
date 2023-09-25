@@ -1,6 +1,6 @@
 {
     "module": {
-        "type": "commonjs" // These are defaults. "strict": false, "strictMode": true, "lazy": false, "noInterop": false 
+        "type": "es6"
     },
     "jsc": {
         "parser": {
@@ -14,8 +14,15 @@
         "loose": false,
         "externalHelpers": false,
         // Requires v1.2.50 or upper and requires target to be es2016 or upper.
-        "keepClassNames": true
+        "keepClassNames": true,
+        // Configure module aliases
+        // Keep this in sync with ./tsconfig.json
+        "baseUrl": "./src",
+        "paths": {
+            "@lib/*": [
+                "lib/*"
+            ]
+        }
     },
-    "isModule": true,
-    "sourceMaps": true
+    "isModule": true
 }

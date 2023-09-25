@@ -1,6 +1,18 @@
 {
 	"extends": "@sapphire/ts-config",
   "compilerOptions": {
-    "outDir": "dist"
+    "experimentalDecorators": true,
+    "outDir": "dist",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "noUnusedParameters": false,
+    // Configure module aliases
+    // Keep this in sync with ./.swcrc
+    "baseUrl": "./src",
+    "paths": {
+        "@lib/*": [
+            "lib/*"
+        ]
+    }
   }
 }

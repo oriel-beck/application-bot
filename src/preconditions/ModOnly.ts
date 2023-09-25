@@ -1,5 +1,5 @@
+import { isMod } from "@lib/precondition-util.js";
 import { Precondition } from "@sapphire/framework";
-import { isMod } from "../util/precondition-util";
 import type { APIInteractionGuildMember, CommandInteraction, GuildMember } from "discord.js";
 
 export class ModOnlyPrecondition extends Precondition {
