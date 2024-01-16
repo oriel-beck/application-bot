@@ -10,7 +10,7 @@ export abstract class BaseManager {
         console.log(name, 'manager is ready');
     }
 
-    init() {
+    async init() {
 
     }
 

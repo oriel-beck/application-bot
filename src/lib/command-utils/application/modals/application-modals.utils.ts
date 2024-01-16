@@ -1,5 +1,4 @@
-import { ActionRowBuilder, TextInputBuilder } from "@discordjs/builders";
-import { ModalBuilder, TextInputStyle } from "discord.js";
+import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids.js";
 import type { ApplicationState } from "../../../constants/application.js";
 

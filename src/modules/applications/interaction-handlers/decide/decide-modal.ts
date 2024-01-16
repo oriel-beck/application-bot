@@ -79,7 +79,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         }
 
         const member = await interaction.guild?.members.addRole({
-            user: res.first().get('user') as string,
+            user: application.user.toString(),
             role: this.container.config.roles.trial_support
         }).catch(() => null);
 
@@ -128,6 +128,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         const channel = this.container.client.channels.cache.get(type === ApplicationState.denied ? this.container.config.channels.denied : this.container.config.channels.accepted);
         if (channel?.isTextBased()) {
             const decidedMessage = await channel.send({
+                content: `Application from <@${application.user.toString()}>`,
                 embeds: await generateApplicationEmbed(application, 0, type),
                 components: generateApplicationComponents(application, 0, type === ApplicationState.pending)
             }).catch(() => null);
