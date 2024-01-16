@@ -1,4 +1,6 @@
 import { types, type ArrayOrObject, type QueryOptions, Client } from "cassandra-driver";
+import { readFile } from "fs/promises";
+import { join } from "path";
 
 export default class CassandraManager {
     private attempts = 0;
@@ -8,9 +10,39 @@ export default class CassandraManager {
         throwOnEmpty("DB_USER");
         throwOnEmpty("DB_PASS");
 
+        console.log("starting migration")
+        const interval = setInterval(async () => {
+            const result = await fetch("http://scylla:10000/system/uptime_ms").catch(() => null);
+            if (!result || result.status !== 200) return;
+            const migrationClient = new Client({
+                contactPoints: ['scylla:9042'],
+                localDataCenter: "datacenter1",
+                credentials: {
+                    username: process.env.DB_USER!,
+                    password: process.env.DB_PASS!
+                }
+            });
+
+            const migrationFile = (await readFile(join(process.cwd(), "scylla", "migrations.cql"), { encoding: 'utf-8' })).split("---");
+            
+            let count = 0;
+            for (const query of migrationFile) {
+                const res = await migrationClient.execute(query).catch(() => null);
+                if (res) {
+                    count++;
+                }
+            }
+
+            if (count === migrationFile.length) {
+                clearInterval(interval);
+                console.log("migration done")
+            } else {
+                console.log("migration failed, retrying in 5s")
+            }
+        }, 5000)
+
         this.driver = new Client({
             contactPoints: ['scylla:9042'],
-            // TODO: look into datacenters for clustering
             localDataCenter: "datacenter1",
             keyspace: "appbot",
             credentials: {

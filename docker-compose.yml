@@ -1,7 +1,10 @@
 version: '3.9'
 
 volumes:
-  scylla_db:
+  scylla_db: {}
+
+networks:
+  appbot: {}
 
 services:
   appbot:
@@ -11,6 +14,8 @@ services:
       - .env
     depends_on:
       - scylla
+    networks:
+      - appbot
 
   scylla:
     image: scylladb/scylla
@@ -19,5 +24,10 @@ services:
       - scylla_db:/var/lib/scylla
     env_file:
       - .env
+    command:
+      - --api-address 0.0.0.0
     ports:
-      - '9042:9042'
+      - 9042
+      - 10000
+    networks:
+      - appbot

@@ -37,5 +37,21 @@ const client = new ApplicationClient({
   ]
 });
 
-client.login(process.env.BOT_TOKEN).catch((err) => console.error('Failed to start tht bot', err));
 
+client.login(process.env.BOT_TOKEN).catch((err) => console.error('Failed to start the bot', err));
+
+/*
+{
+    "channels": {
+        "pending": "778626940474753070",
+        "denied": "789180848674832384",
+        "accepted": "778899305607593994",
+        "report": "778227221286223873",
+        "staff": "609162354483265567"
+    },
+    "roles": {
+        "mod": "566364651986747392",
+        "trial_support": "601184059514945554"
+    }
+}
+*/

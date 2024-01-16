@@ -6,6 +6,7 @@
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "noUnusedParameters": false,
+    "lib": ["dom"],
     // Configure module aliases
     // Keep this in sync with ./.swcrc
     "baseUrl": "./src",

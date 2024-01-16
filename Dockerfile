@@ -14,4 +14,5 @@ COPY --from=builder /app/node_modules node_modules
 COPY --from=builder /app/dist src
 COPY json json
 COPY *json ./
+COPY scylla scylla
 CMD node src/index.js
