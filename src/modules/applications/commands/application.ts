@@ -4,7 +4,6 @@ import { generateModal } from '@lib/command-utils/application/modals/application
 import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { ApplicationState, ApplicationStateKeys } from '@lib/constants/application.js';
-import { SlashCommandSubcommandBuilder } from 'discord.js';
 
 @ApplyOptions<Subcommand.Options>({
   name: 'application',
@@ -165,98 +164,63 @@ export class SlashCommand extends Subcommand {
         .setName(this.name)
         .setDescription(this.description)
         .setDMPermission(false)
-        .addSubcommand(this.denySubcommandBuilder())
-        .addSubcommand(this.acceptSubcommandBuilder())
-        .addSubcommand(this.deleteSubcommandBuilder())
-        .addSubcommand(this.showSubcommandBuilder())
-        .addSubcommand(this.listSubcommandBuilder())
-        .addSubcommand(this.toggleCommandBuilder())
-        .addSubcommand(this.resetCommandBuilder())
+        .addSubcommand((builder) => builder.setName('deny')
+          .setDescription('Deny an application.')
+          .addUserOption((option) =>
+            option
+              .setName('user')
+              .setDescription('The user to deny the application of.')
+              .setRequired(true)))
+        .addSubcommand((builder) => builder.setName('accept')
+          .setDescription('Accept an application.')
+          .addUserOption((option) =>
+            option
+              .setName('user')
+              .setDescription('The user to accept the application of.')
+              .setRequired(true)))
+        .addSubcommand((builder) => builder.setName('delete')
+          .setDescription('Delete an application.')
+          .addUserOption((option) =>
+            option
+              .setName('user')
+              .setDescription('The user to delete the application of.')
+              .setRequired(true)))
+        .addSubcommand((builder) => builder.setName('show')
+          .setDescription('Show an application.')
+          .addUserOption((option) =>
+            option
+              .setName('user')
+              .setDescription('The user to show the application of.')
+              .setRequired(true)))
+        .addSubcommand((builder) => builder.setName('list')
+          .setDescription('List all applications.')
+          .addStringOption((option) =>
+            option
+              .setName('state')
+              .setDescription('The state to search applications by (default pending).')
+              .setRequired(false)
+              .addChoices(
+                {
+                  name: 'Active Applications',
+                  value: 'active'
+                },
+                {
+                  name: 'Pending Applications',
+                  value: 'pending'
+                },
+                {
+                  name: 'Denied Applications',
+                  value: 'denied'
+                },
+                {
+                  name: 'Accepted Applications',
+                  value: 'accepted'
+                }
+              )))
+        .addSubcommand((builder) => builder.setName('toggle')
+          .setDescription('Enable/Disable the of the applications.'))
+        .addSubcommand((builder) => builder.setName('reset')
+          .setDescription('Deletes all applications.'))
     )
-  }
-
-  private denySubcommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('deny')
-      .setDescription('Deny an application.')
-      .addUserOption((option) =>
-        option
-          .setName('user')
-          .setDescription('The user to deny the application of.')
-          .setRequired(true));
-  }
-
-  private acceptSubcommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('accept')
-      .setDescription('Accept an application.')
-      .addUserOption((option) =>
-        option
-          .setName('user')
-          .setDescription('The user to accept the application of.')
-          .setRequired(true));
-  }
-
-  private deleteSubcommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('delete')
-      .setDescription('Delete an application.')
-      .addUserOption((option) =>
-        option
-          .setName('user')
-          .setDescription('The user to delete the application of.')
-          .setRequired(true));
-  }
-
-  private showSubcommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('show')
-      .setDescription('Show an application.')
-      .addUserOption((option) =>
-        option
-          .setName('user')
-          .setDescription('The user to show the application of.')
-          .setRequired(true));
-  }
-
-  private listSubcommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('list')
-      .setDescription('List all applications.')
-      .addStringOption((option) =>
-        option
-          .setName('state')
-          .setDescription('The state to search applications by (default pending).')
-          .setRequired(false)
-          .addChoices(
-            {
-              name: 'Active Applications',
-              value: 'active'
-            },
-            {
-              name: 'Pending Applications',
-              value: 'pending'
-            },
-            {
-              name: 'Denied Applications',
-              value: 'denied'
-            },
-            {
-              name: 'Accepted Applications',
-              value: 'accepted'
-            }
-          ));
-  }
-
-  private toggleCommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('toggle')
-      .setDescription('Enable/Disable the of the applications.')
-  }
-
-  private resetCommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('reset')
-      .setDescription('Deletes all applications.')
   }
 }

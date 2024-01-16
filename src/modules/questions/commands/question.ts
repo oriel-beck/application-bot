@@ -2,7 +2,6 @@ import { generateQuestionListEmbed } from '@lib/command-utils/question/list/ques
 import { generateQuestionShowComponents, generateQuestionShowEmbed } from '@lib/command-utils/question/show/question-show.utils.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
-import { SlashCommandSubcommandBuilder } from 'discord.js';
 import type { Question } from '@lib/types.js';
 
 @ApplyOptions<Subcommand.Options>({
@@ -111,64 +110,40 @@ export class SlashCommand extends Subcommand {
         .setName(this.name)
         .setDMPermission(false)
         .setDescription(this.description)
-        .addSubcommand(this.addSubCommandBuilder())
-        .addSubcommand(this.removeSubCommandBuilder())
-        .addSubcommand(this.editSubCommandBuilder())
-        .addSubcommand(this.listSubCommandBuilder())
-        .addSubcommand(this.showSubCommandBuilder()));
-  }
-
-  private addSubCommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('add')
-      .setDescription('Add a new question.')
-      .addStringOption((option) =>
-        option
-          .setName('question')
-          .setDescription('The question to add.')
-          .setRequired(true))
-  }
-
-  private removeSubCommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('remove')
-      .setDescription('Remove a question.')
-      .addStringOption((option) =>
-        option
-          .setName('id')
-          .setDescription('The id question to remove.')
-          .setRequired(true))
-  }
-
-  private listSubCommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('list')
-      .setDescription('List all questions.')
-  }
-  private editSubCommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('edit')
-      .setDescription('Edit a question.')
-      .addStringOption((option) =>
-        option
-          .setName('id')
-          .setDescription('The id of the question to edit.')
-          .setRequired(true))
-      .addStringOption((option) =>
-        option
-          .setName('question')
-          .setDescription('The question to add.')
-          .setRequired(true))
-  }
-
-  private showSubCommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('show')
-      .setDescription('Show a question.')
-      .addStringOption((option) =>
-        option
-          .setName('id')
-          .setDescription('The id of the question to show.')
-          .setRequired(true))
+        .addSubcommand((builder) => builder.setName('add')
+          .setDescription('Add a new question.')
+          .addStringOption((option) =>
+            option
+              .setName('question')
+              .setDescription('The question to add.')
+              .setRequired(true)))
+        .addSubcommand((builder) => builder.setName('remove')
+          .setDescription('Remove a question.')
+          .addStringOption((option) =>
+            option
+              .setName('id')
+              .setDescription('The id question to remove.')
+              .setRequired(true)))
+        .addSubcommand((builder) => builder.setName('list')
+          .setDescription('List all questions.'))
+        .addSubcommand((builder) => builder.setName('edit')
+          .setDescription('Edit a question.')
+          .addStringOption((option) =>
+            option
+              .setName('id')
+              .setDescription('The id of the question to edit.')
+              .setRequired(true))
+          .addStringOption((option) =>
+            option
+              .setName('question')
+              .setDescription('The question to add.')
+              .setRequired(true)))
+        .addSubcommand((builder) => builder.setName('show')
+          .setDescription('Show a question.')
+          .addStringOption((option) =>
+            option
+              .setName('id')
+              .setDescription('The id of the question to show.')
+              .setRequired(true))));
   }
 }

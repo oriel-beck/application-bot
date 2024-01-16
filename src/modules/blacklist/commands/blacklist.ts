@@ -1,7 +1,6 @@
 import { generateBlacklistShowEmbed } from '@lib/command-utils/blacklist/show/blacklist-show.util.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
-import { SlashCommandSubcommandBuilder } from 'discord.js';
 import type { Blacklist } from '@lib/types.js';
 
 @ApplyOptions<Subcommand.Options>({
@@ -94,64 +93,44 @@ export class SlashCommand extends Subcommand {
         .setName(this.name)
         .setDescription(this.description)
         .setDMPermission(false)
-        .addSubcommand(this.addSubcommandBuilder())
-        .addSubcommand(this.removeSubcommandBuilder())
-        .addSubcommand(this.reasonSubcommandBuilder())
-        .addSubcommand(this.showSubcommandBuilder())
+        .addSubcommand((builder) => builder.setName('add')
+          .setDescription('Blacklists a user.')
+          .addUserOption((option) =>
+            option
+              .setName('user')
+              .setDescription('The user to blacklist.')
+              .setRequired(true))
+          .addStringOption((option) =>
+            option
+              .setName('reason')
+              .setDescription('The reason to blacklist')
+              .setRequired(true)))
+        .addSubcommand((builder) => builder.setName('remove')
+          .setDescription('Unblacklists a user.')
+          .addUserOption((option) =>
+            option
+              .setName('user')
+              .setDescription('The user to unblacklist')
+              .setRequired(true)))
+        .addSubcommand((builder) => builder.setName('reason')
+          .setDescription('Re-reasons a blacklisted user.')
+          .addUserOption((option) =>
+            option
+              .setName('user')
+              .setDescription('The user to re-reason.')
+              .setRequired(true))
+          .addStringOption((option) =>
+            option
+              .setName('reason')
+              .setDescription('The new reason.')
+              .setRequired(true)))
+        .addSubcommand((builder) => builder.setName('show')
+          .setDescription('Show the information of a blacklisted user.')
+          .addUserOption((option) =>
+            option
+              .setName('user')
+              .setDescription('The user to show the blacklist information of.')
+              .setRequired(true)))
     );
-  }
-
-  private addSubcommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('add')
-      .setDescription('Blacklists a user.')
-      .addUserOption((option) =>
-        option
-          .setName('user')
-          .setDescription('The user to blacklist.')
-          .setRequired(true))
-      .addStringOption((option) =>
-        option
-          .setName('reason')
-          .setDescription('The reason to blacklist')
-          .setRequired(true));
-  }
-
-  private removeSubcommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('remove')
-      .setDescription('Unblacklists a user.')
-      .addUserOption((option) =>
-        option
-          .setName('user')
-          .setDescription('The user to unblacklist')
-          .setRequired(true));
-  }
-
-  private reasonSubcommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('reason')
-      .setDescription('Re-reasons a blacklisted user.')
-      .addUserOption((option) =>
-        option
-          .setName('user')
-          .setDescription('The user to re-reason.')
-          .setRequired(true))
-      .addStringOption((option) =>
-        option
-          .setName('reason')
-          .setDescription('The new reason.')
-          .setRequired(true));
-  }
-
-  private showSubcommandBuilder() {
-    return new SlashCommandSubcommandBuilder()
-      .setName('show')
-      .setDescription('Show the information of a blacklisted user.')
-      .addUserOption((option) =>
-        option
-          .setName('user')
-          .setDescription('The user to show the blacklist information of.')
-          .setRequired(true));
   }
 }
