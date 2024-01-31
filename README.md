@@ -26,7 +26,8 @@ DB_PASS=cassandra
     },
     "roles": {
         "mod": "",
-        "trial_support": ""
+        "trial_support": "",
+        "required_role": ""
     }
 }
 ```

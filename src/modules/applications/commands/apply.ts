@@ -5,7 +5,7 @@ import { Command } from '@sapphire/framework';
 @ApplyOptions<Command.Options>({
   name: 'apply',
   description: 'Start a staff application.',
-  preconditions: ['ApplicationsEnabled', 'Blacklisted', 'ApplicationInProgress']
+  preconditions: ['ApplicationsEnabled', 'Blacklisted', 'ApplicationInProgress', 'RequiredRole']
 })
 export class SlashCommand extends Command {
   public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {

@@ -1,5 +1,5 @@
 import { generateApplicationComponents, generateApplicationEmbed } from "@lib/command-utils/application/embeds/application-embed.utils.js";
-import { isMod } from "@lib/precondition-util.js";
+import { hasRole } from "@lib/precondition-util.js";
 import { applicationExists } from "@lib/util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
@@ -12,7 +12,7 @@ import { StringSelectMenuInteraction } from "discord.js";
 })
 export class ListSelectHandler extends InteractionHandler {
     public async run(interaction: StringSelectMenuInteraction) {
-        if (!isMod(interaction.member!)) {
+        if (!hasRole(interaction.member!, this.container.config.roles.mod)) {
             return interaction.reply({
                 content: 'You are missing permissions to use this.',
                 ephemeral: true

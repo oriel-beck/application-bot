@@ -1,7 +1,7 @@
 import { generateApplicationComponents, generateApplicationEmbed } from "@lib/command-utils/application/embeds/application-embed.utils.js";
 import { ApplicationState } from "@lib/constants/application.js";
 import { ApplicationCustomIDs } from "@lib/constants/custom-ids.js";
-import { isMod } from "@lib/precondition-util.js";
+import { hasRole } from "@lib/precondition-util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import type { ButtonInteraction } from "discord.js";
@@ -11,7 +11,7 @@ import type { ButtonInteraction } from "discord.js";
 })
 export class PaginationButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
-        if (!isMod(interaction.member!)) {
+        if (!hasRole(interaction.member!, this.container.config.roles.mod)) {
             return interaction.reply({
                 content: 'You are missing permissions to use this.',
                 ephemeral: true

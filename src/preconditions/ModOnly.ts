@@ -1,4 +1,4 @@
-import { isMod } from "@lib/precondition-util.js";
+import { hasRole } from "@lib/precondition-util.js";
 import { Precondition } from "@sapphire/framework";
 import type { APIInteractionGuildMember, CommandInteraction, GuildMember } from "discord.js";
 
@@ -10,7 +10,7 @@ export class ModOnlyPrecondition extends Precondition {
     }
 
     private checkMod(member: GuildMember | APIInteractionGuildMember) {
-        return isMod(member) ? this.ok() : this.error({
+        return hasRole(member, this.container.config.roles.mod) ? this.ok() : this.error({
             message: this.#message
         });
     }

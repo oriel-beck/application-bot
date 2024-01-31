@@ -14,4 +14,5 @@ export interface ChannelConfig {
 export interface RoleConfig {
     mod: string;
     trial_support: string;
+    required_role: string;
 }

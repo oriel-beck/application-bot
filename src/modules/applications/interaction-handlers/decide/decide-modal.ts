@@ -2,7 +2,7 @@ import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import type { ModalSubmitInteraction } from "discord.js";
 import type { types } from "cassandra-driver";
-import { isMod } from "@lib/precondition-util.js";
+import { hasRole } from "@lib/precondition-util.js";
 import { ApplicationState } from "@lib/constants/application.js";
 import { ApplicationCustomIDs } from "@lib/constants/custom-ids.js";
 import { generateApplicationComponents, generateApplicationEmbed } from "@lib/command-utils/application/embeds/application-embed.utils.js";
@@ -12,7 +12,7 @@ import { generateApplicationComponents, generateApplicationEmbed } from "@lib/co
 })
 export class DecisionButtonHandler extends InteractionHandler {
     public async run(interaction: ModalSubmitInteraction) {
-        if (!isMod(interaction.member!)) {
+        if (!hasRole(interaction.member!, this.container.config.roles.mod)) {
             return interaction.reply({
                 content: 'You are missing permissions to use this.',
                 ephemeral: true

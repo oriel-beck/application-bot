@@ -1,7 +1,7 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import type { ButtonInteraction } from "discord.js";
-import { isMod } from "@lib/precondition-util.js";
+import { hasRole } from "@lib/precondition-util.js";
 import { generateQuestionShowEditModal } from "@lib/command-utils/question/show/question-show.utils.js";
 import { QuestionCustomIDs } from "@lib/constants/custom-ids.js";
 
@@ -10,7 +10,7 @@ import { QuestionCustomIDs } from "@lib/constants/custom-ids.js";
 })
 export class EditButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
-        if (!isMod(interaction.member!)) {
+        if (!hasRole(interaction.member!, this.container.config.roles.mod)) {
             return interaction.reply({
                 content: 'You are missing permissions to use this.',
                 ephemeral: true
