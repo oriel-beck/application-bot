@@ -48,7 +48,6 @@ export class ApplicationClient extends SapphireClient {
                     }
                 }
             }
-
             this.stores.registerPath(rootDir);
         }
 

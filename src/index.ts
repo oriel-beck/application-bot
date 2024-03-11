@@ -33,7 +33,8 @@ const client = new ApplicationClient({
     "misc",
     "owner",
     "questions",
-    "report"
+    "report",
+    "forums"
   ]
 });
 

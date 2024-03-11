@@ -22,12 +22,21 @@ DB_PASS=cassandra
         "denied": "",
         "accepted": "",
         "report": "",
-        "staff": ""
+        "staff": "",
+        "support": ""
     },
     "roles": {
         "mod": "",
         "trial_support": "",
-        "required_role": ""
+        "required_role": "",
+        "staff": ""
+    },
+    "support_tags": {
+        "resolved": "",
+        "complex": "",
+        "question": "",
+        "code_error": "",
+        "wiki_error": ""
     }
 }
 ```
