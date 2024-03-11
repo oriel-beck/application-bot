@@ -12,6 +12,7 @@ export interface ChannelConfig {
     staff: string;
     support: string;
     tips: string;
+    wiki: string;
 }
 
 export interface RoleConfig {
