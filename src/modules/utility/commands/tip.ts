@@ -9,10 +9,12 @@ import { ChatInputCommandInteraction, Colors, EmbedBuilder } from "discord.js";
 export class SlashCommand extends Command {
     public async chatInputRun(interaction: ChatInputCommandInteraction, context: ChatInputCommand.RunContext) {
         const tip = interaction.options.getNumber("tip", true);
-        if (this.container.tips.tips.has(tip)) return interaction.reply({
+        
+        if (!this.container.tips.tips.has(tip)) return interaction.reply({
             content: "That tip does not exist.",
             ephemeral: true
         });
+
         const tipMessage = this.container.tips.tips.get(tip);
         const embed = new EmbedBuilder()
             .setTitle(`Tip #${tip}`)
