@@ -23,7 +23,8 @@ DB_PASS=cassandra
         "accepted": "",
         "report": "",
         "staff": "",
-        "support": ""
+        "support": "",
+        "tips": ""
     },
     "roles": {
         "mod": "",

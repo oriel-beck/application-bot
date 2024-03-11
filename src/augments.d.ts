@@ -4,6 +4,7 @@ import type ApplicationManager from "./modules/applications/managers/application
 import type BlacklistManager from "./modules/blacklist/managers/blacklist.manager.js";
 import type SettingManager from "./modules/misc/managers/setting.manager.js";
 import type QuestionManager from "./modules/questions/managers/question.manager.js";
+import type TipManager from "modules/utility/managers/tip-manager.ts";
 
 declare module '@sapphire/pieces' {
     interface Container {
@@ -13,5 +14,6 @@ declare module '@sapphire/pieces' {
         settings: SettingManager;
         blacklists: BlacklistManager;
         config: Config;
+        tips: TipManager;
     }
 }
