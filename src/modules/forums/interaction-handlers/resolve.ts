@@ -22,11 +22,12 @@ export class ToggleTagHandler extends InteractionHandler {
 
             await interaction.deferUpdate();
             await interaction.message.delete();
+            await interaction.channel.setAppliedTags([this.container.config.support_tags.resolved]);
             await interaction.channel.send({
                 embeds: [
                     new EmbedBuilder()
                     .setTitle("Resolved")
-                    .setDescription("Your post has been resolved and locked, if there are additional issues please open a new post.")
+                    .setDescription("Your post has been resolved, locked, and archived, if there are additional issues please open a new post.")
                     .setFooter({
                         text: "Thank you for using BDFD! ❤️"
                     })
@@ -34,7 +35,8 @@ export class ToggleTagHandler extends InteractionHandler {
                 ]
             });
             await interaction.channel.setLocked(true);
-            return await interaction.channel.setAppliedTags([this.container.config.support_tags.resolved]);
+            await interaction.channel.setArchived(true);
+            return;
         } else {
             return interaction.reply({
                 content: "This cannot be used outside of a forum post.",
