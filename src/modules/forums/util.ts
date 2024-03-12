@@ -48,7 +48,7 @@ export function generatePostHelpEmbed(appliedTags: string[]) {
             .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
             .setCustomId(`supportpost-${container.config.support_tags.resolved}`)
-            .setLabel("Reolve")
+            .setLabel("Resolve")
             .setStyle(ButtonStyle.Success)
     ]);
     return {
