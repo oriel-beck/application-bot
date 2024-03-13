@@ -78,16 +78,15 @@ export class DecisionButtonHandler extends InteractionHandler {
             });
         }
 
-        const member = await interaction.guild?.members.addRole({
-            user: application.user.toString(),
-            role: this.container.config.roles.trial_support
-        }).catch(() => null);
-
+        const member = await interaction.guild?.members.fetch(application.get("user").toString()).catch((err) => console.log(err));
+        
         if (!member) {
             return interaction.reply({
                 content: 'This member is no longer in the guild, failed to accept.'
             });
         }
+
+        await member.roles.add(this.container.config.roles.trial_support).catch((err) => console.log(err));
 
         interaction.reply({
             content: `Accepted application from <@${application.user.toString()}> ${!!reason ? `with the reason: ${reason}` : 'with no reason'}`

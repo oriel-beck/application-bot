@@ -26,16 +26,15 @@ export class ToggleTagHandler extends InteractionHandler {
             await interaction.channel.send({
                 embeds: [
                     new EmbedBuilder()
-                    .setTitle("Resolved")
-                    .setDescription("Your post has been resolved, locked, and archived, if there are additional issues please open a new post.")
-                    .setFooter({
-                        text: "Thank you for using BDFD! ❤️"
-                    })
-                    .setColor(Colors.Green)
+                        .setTitle("Resolved")
+                        .setDescription("Your post has been resolved, locked, and archived, if there are additional issues please open a new post.")
+                        .setFooter({
+                            text: "Thank you for using BDFD! ❤️"
+                        })
+                        .setColor(Colors.Green)
                 ]
             });
-            await interaction.channel.setLocked(true);
-            await interaction.channel.setArchived(true);
+            await interaction.channel.edit({ locked: true, archived: true });
             return;
         } else {
             return interaction.reply({
