@@ -5,7 +5,7 @@ export class ForumOnlyPrecondition extends Precondition {
     #message = 'You can not use this command outside a forum post.';
 
     public chatInputRun(interaction: CommandInteraction) {
-        return interaction.channel?.isThreadOnly() ? this.ok() : this.error({ message: this.#message });
+        return interaction.channel?.isThread() && interaction.channel.parent?.isThreadOnly() ? this.ok() : this.error({ message: this.#message });
     }
 }
 
