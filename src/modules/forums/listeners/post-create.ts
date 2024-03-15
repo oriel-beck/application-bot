@@ -8,7 +8,7 @@ import { generatePostHelpEmbed } from "../util.js";
 })
 export class CommandDeniedListener extends Listener<typeof Events.ThreadCreate> {
     async run(thread: AnyThreadChannel<true>, newlyCreated: boolean) {
-        if (!thread.parent?.isThreadOnly() && thread.parent?.id === this.container.config.channels.support || !newlyCreated) return;
+        if (!thread.parent?.isThreadOnly() || thread.parent?.id !== this.container.config.channels.support || !newlyCreated) return;
         const { row, embed } = generatePostHelpEmbed(thread.appliedTags);
         // If the author of the thread sends an attachment the bot cannot reply until the attachment is fully sent by still gets the event, so it will retry in 5 seconds (5 attempts)
         await retryMessage(thread, embed, row);
