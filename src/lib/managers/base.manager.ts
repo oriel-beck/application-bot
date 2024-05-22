@@ -2,7 +2,7 @@ import { del, insert, select, update } from "@lib/db.utils.js";
 import { container } from "@sapphire/framework";
 
 export abstract class BaseManager {
-    driver = container.driver;
+    drizzle = container.drizzle;
     constructor(public name: keyof typeof container) {
         if (container[name]) {
             console.warn('It\'s not recommended to create more than 1 instance of', name);

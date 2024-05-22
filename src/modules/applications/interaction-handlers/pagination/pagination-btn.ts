@@ -5,6 +5,7 @@ import { hasRole } from "@lib/precondition-util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import type { ButtonInteraction } from "discord.js";
+import type { Application } from "@lib/types.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -22,7 +23,7 @@ export class PaginationButtonHandler extends InteractionHandler {
         const page = Number(split.at(1));
         const user = split.at(2);
 
-        const app = await this.container.applications.get(user!).then((res) => res.first()).catch(() => null);
+        const app = await this.container.applications.get(user!).then((res) => res.at(0)).catch(() => null) as Application;
 
         if (!app) {
             return interaction.reply({
@@ -33,7 +34,7 @@ export class PaginationButtonHandler extends InteractionHandler {
 
         return interaction.update({
             embeds: await generateApplicationEmbed(app, page),
-            components: generateApplicationComponents(app, page, app.get('state') === ApplicationState.pending)
+            components: generateApplicationComponents(app, page, app.state === ApplicationState.pending)
         });
     }
 

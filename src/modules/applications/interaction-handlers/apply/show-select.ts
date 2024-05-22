@@ -1,5 +1,6 @@
 import { generateApplyComponents, generateApplyEmbed } from "@lib/command-utils/apply/apply.utils.js";
 import { ApplyCustomIDs } from "@lib/constants/custom-ids.js";
+import { Application } from "@lib/types.js";
 import { applicationExists } from "@lib/util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
@@ -11,9 +12,9 @@ import type { StringSelectMenuInteraction } from "discord.js";
 export class SelectSelectHandler extends InteractionHandler {
     public async run(interaction: StringSelectMenuInteraction) {
         const questionNum = Number(interaction.values[0]);
-        const app = await this.container.applications.get(interaction.user.id).then((res) => res.first()).catch(() => null);
+        const app = await this.container.applications.get(interaction.user.id).then((res) => res.at(0)).catch(() => null) as Application;
 
-        if (!applicationExists(app)) {
+        if (!app || !applicationExists(app)) {
             return interaction.reply({
                 content: 'This application is no longer active.',
                 ephemeral: true

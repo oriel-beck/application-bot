@@ -6,6 +6,7 @@ import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework
 import { ApplicationState } from "@lib/constants/application.js";
 import { ApplicationCustomIDs } from "@lib/constants/custom-ids.js";
 import { StringSelectMenuInteraction } from "discord.js";
+import type { Application } from "@lib/types.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.SelectMenu
@@ -21,9 +22,9 @@ export class ListSelectHandler extends InteractionHandler {
         
         const user = interaction.values[0]!;
 
-        const app = await this.container.applications.get(user).then((res) => res.first()).catch(() => null);
+        const app = await this.container.applications.get(user).then((res) => res.at(0)).catch(() => null) as Application;
 
-        if (!applicationExists(app)) {
+        if (!app || !applicationExists(app)) {
             return interaction.reply({
                 content: 'This user does not have an application.',
                 ephemeral: true
@@ -32,7 +33,7 @@ export class ListSelectHandler extends InteractionHandler {
 
         return interaction.reply({
             embeds: await generateApplicationEmbed(app!),
-            components: generateApplicationComponents(app!, 0, app?.get('state') === ApplicationState.pending)
+            components: generateApplicationComponents(app!, 0, app.state === ApplicationState.pending)
         });
     }
 

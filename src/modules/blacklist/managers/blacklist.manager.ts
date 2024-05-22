@@ -1,5 +1,7 @@
 import { BaseManager } from "@lib/managers/base.manager.js";
 import { Blacklist } from "@lib/types.js";
+import { blacklistTable } from "../../../schema.js";
+import { eq } from "drizzle-orm";
 
 export default class BlacklistManager extends BaseManager {
     constructor() {
@@ -7,18 +9,25 @@ export default class BlacklistManager extends BaseManager {
     }
     
     public create(userid: string, reason: string, mod: string | bigint) {
-        return this.driver.execute(this.genInsert('user', 'reason', 'mod'), [userid, reason, mod], { prepare: true });
+        return this.drizzle.insert(blacklistTable).values({
+            user: BigInt(userid),
+            reason,
+            mod: BigInt(mod)
+        }).returning();
     }
 
     public delete(userid: string) {
-        return this.driver.execute(this.genDelete('user'), [userid], { prepare: true });
+        return this.drizzle.delete(blacklistTable).where(eq(blacklistTable.user, BigInt(userid))).returning();
     }
 
     public update(userid: string, field: keyof Blacklist, value: any) {
-        return this.driver.execute(this.genUpdate(field, 'user'), [value, userid], { prepare: true });
+        return this.drizzle.update(blacklistTable).set({
+            user: BigInt(userid),
+            [field]: value
+        }).returning()
     }
 
     public get(userid: string) {
-        return this.driver.execute(this.genSelect('*', 'user'), [userid], { prepare: true });
+        return this.drizzle.select().from(blacklistTable).where(eq(blacklistTable.user, BigInt(userid)));
     }
 }

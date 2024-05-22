@@ -4,6 +4,7 @@ import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { ApplyCustomIDs } from "@lib/constants/custom-ids.js";
 import type { ModalSubmitInteraction } from "discord.js";
+import type { Application } from "@lib/types.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.ModalSubmit
@@ -15,9 +16,9 @@ export class AnswerModalHandler extends InteractionHandler {
         const questionNum = Number(interaction.customId.split('-').at(2));
         const answer = interaction.fields.getTextInputValue('answer');
 
-        const app = await this.container.applications.get(interaction.user.id).then((res) => res.first()).catch(() => null);
+        const app = await this.container.applications.get(interaction.user.id).then((res) => res.at(0)).catch(() => null) as Application;
 
-        if (!applicationExists(app)) {
+        if (!app || !applicationExists(app)) {
             return interaction.followUp({
                 content: 'The application no longer exist.',
                 ephemeral: true
@@ -42,7 +43,7 @@ export class AnswerModalHandler extends InteractionHandler {
         const answers = [...(app?.answers || [])];
         answers[questionNum] = answer;
 
-        if ((!app?.answers || !app.answers[questionNum]) && questionNum + 1 !== app?.get('questions').length) {
+        if ((!app?.answers || !app.answers[questionNum]) && questionNum + 1 !== app?.questions.length) {
             // edit to the next question and answer
             return interaction.message?.edit({
                 embeds: generateApplyEmbed(app!.questions[questionNum + 1], answers[questionNum + 1], questionNum + 1),

@@ -4,6 +4,7 @@ import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { ApplyCustomIDs } from "@lib/constants/custom-ids.js";
 import type { ButtonInteraction } from "discord.js";
+import type { Application } from "@lib/types.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -12,16 +13,16 @@ export class AnswerButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
         const questionNum = Number(interaction.customId.split('-').at(2))!;
 
-        const application = await this.container.applications.get(interaction.user.id).then((res) => res.first()).catch(() => null);
+        const application = await this.container.applications.get(interaction.user.id).then((res) => res.at(0)).catch(() => null) as Application;
 
-        if (!isCurrentApplicationMessage(application, interaction.message.id)) {
+        if (!application || !isCurrentApplicationMessage(application, interaction.message.id)) {
             return interaction.reply({
                 content: 'This application no longer exist.',
                 ephemeral: true
             });
         }
-        
-        return interaction.showModal(generateApplyAnswerModal(application!.questions, application!.answers || [], questionNum));
+
+        return interaction.showModal(generateApplyAnswerModal(application.questions, application.answers || [], questionNum));
     }
 
     public parse(interaction: ButtonInteraction) {

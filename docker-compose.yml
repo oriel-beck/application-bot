@@ -1,7 +1,8 @@
 version: '3.9'
 
 volumes:
-  scylla_db: {}
+  postgres_db: {}
+  redis_data: {}
 
 networks:
   appbot: {}
@@ -13,21 +14,31 @@ services:
     env_file:
       - .env
     depends_on:
-      - scylla
+      - postgres
+      - redis
     networks:
       - appbot
 
-  scylla:
-    image: scylladb/scylla
+  postgres:
+    image: postgres
     restart: unless-stopped
     volumes:
-      - scylla_db:/var/lib/scylla
+      - postgres_db:/var/lib/postgresql/data
     env_file:
       - .env
-    command:
-      - --api-address 0.0.0.0
     ports:
-      - 9042
-      - 10000
+      - 5432
     networks:
       - appbot
+  
+  redis:
+    image: bitnami/redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/bitnami/redis/data
+    networks:
+      - appbot
+    ports:
+      - 6379
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes

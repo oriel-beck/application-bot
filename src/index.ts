@@ -7,8 +7,8 @@ import '@lib/config/register.js';
 // register subcommand plugin
 import '@sapphire/plugin-subcommands/register';
 
-// assign cassandra driver to container.driver
-import "@lib/cssandra-driver-register.js";
+// register drizzle
+import '@lib/db-register.js';
 
 const client = new ApplicationClient({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages],

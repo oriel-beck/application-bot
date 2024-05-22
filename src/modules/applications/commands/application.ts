@@ -45,14 +45,14 @@ export class SlashCommand extends Subcommand {
     const user = interaction.options.getUser('user', true).id;
     const app = await this.container.applications.get(user).catch(() => null);
 
-    if (!app?.first()) {
+    if (!app?.at(0)) {
       return interaction.reply({
         content: 'This application does not exist in the database.',
         ephemeral: true
       });
     }
 
-    if (app.first().get('state') !== ApplicationState.pending) {
+    if (app.at(0)?.state !== ApplicationState.pending) {
       return interaction.reply({
         content: 'This is not a pending application.',
         ephemeral: true
@@ -66,14 +66,14 @@ export class SlashCommand extends Subcommand {
     const user = interaction.options.getUser('user', true).id;
     const app = await this.container.applications.get(user).catch(() => null);
 
-    if (!app?.first()) {
+    if (!app?.at(0)) {
       return interaction.reply({
         content: 'This application does not exist in the database.',
         ephemeral: true
       });
     }
 
-    if (app.first().get('state') !== ApplicationState.pending) {
+    if (app.at(0)?.state !== ApplicationState.pending) {
       return interaction.reply({
         content: 'This is not a pending application.',
         ephemeral: true
@@ -87,7 +87,7 @@ export class SlashCommand extends Subcommand {
     const user = interaction.options.getUser('user', true).id;
     const app = await this.container.applications.get(user).catch(() => null);
 
-    if (!app?.first()) {
+    if (!app?.at(0)) {
       return interaction.reply({
         content: 'This application does not exist in the database.',
         ephemeral: true
@@ -103,13 +103,13 @@ export class SlashCommand extends Subcommand {
     const user = interaction.options.getUser('user', true).id;
     const app = await this.container.applications.get(user).catch(() => null);
 
-    if (!app?.first()) {
+    if (!app?.at(0)) {
       return interaction.editReply('This application does not exist in the database.');
     }
 
     return interaction.editReply({
-      embeds: await generateApplicationEmbed(app.first()),
-      components: generateApplicationComponents(app.first(), 0, app.first().get('state') === ApplicationState.pending)
+      embeds: await generateApplicationEmbed(app.at(0)),
+      components: generateApplicationComponents(app.at(0), 0, app.at(0)?.state === ApplicationState.pending)
     });
   }
 
@@ -124,13 +124,13 @@ export class SlashCommand extends Subcommand {
     }
 
     return interaction.editReply({
-      embeds: generateApplicationListEmbed(allApps.rowLength, state),
-      components: generateApplicationListComponents(allApps.rows)
+      embeds: generateApplicationListEmbed(allApps.length, state),
+      components: generateApplicationListComponents(allApps)
     });
   }
 
   public async toggle(interaction: Subcommand.ChatInputCommandInteraction) {
-    const enabled = await this.container.settings.get(interaction.guild?.id!).then((res) => !!res.first().get('enabled')).catch(() => null)
+    const enabled = await this.container.settings.get(interaction.guild?.id!).then((res) => !!res.at(0)?.enabled).catch(() => null)
     const toggled = await this.container.settings.update(interaction.guild?.id!, 'enabled', !enabled).catch(() => null);
 
     if (!toggled) {

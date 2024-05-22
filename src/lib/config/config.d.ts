@@ -2,6 +2,7 @@ export interface Config {
     channels: ChannelConfig;
     roles: RoleConfig;
     support_tags: SupportTagsConfig;
+    guild: string;
 }
 
 export interface ChannelConfig {

@@ -10,7 +10,7 @@ export class BlacklistedPrecondition extends Precondition {
 
     private async getBlacklist(user: string) {
         const result = await this.container.blacklists.get(user).catch(() => null);
-        return result?.first() ? this.error({ message: this.#message }) : this.ok();
+        return result?.at(0) ? this.error({ message: this.#message }) : this.ok();
     }
 }
 

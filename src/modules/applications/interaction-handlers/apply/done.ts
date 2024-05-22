@@ -2,9 +2,9 @@ import { generateApplicationComponents, generateApplicationEmbed } from "@lib/co
 import { isCurrentApplicationMessage } from "@lib/util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { ApplicationState } from "@lib/constants/application.js";
 import { ApplyCustomIDs } from "@lib/constants/custom-ids.js";
 import { Colors, type ButtonInteraction } from "discord.js";
+import type { Application } from "@lib/types.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -15,19 +15,11 @@ export class DoneButtonHandler extends InteractionHandler {
             ephemeral: true
         });
 
-        const getApp = await this.container.applications.get(interaction.user.id).then((res) => res.first()).catch(() => null);
+        const getApp = await this.container.applications.get(interaction.user.id).then((res) => res.at(0)).catch(() => null) as Application;
 
         if (!isCurrentApplicationMessage(getApp, interaction.message.id)) {
             return interaction.editReply({
                 content: 'This application does not exist.'
-            });
-        }
-
-        const update = this.container.applications.removeTTL(getApp!.get('user'), getApp!.get('answers'), getApp!.get('questions'), getApp!.get('message'), ApplicationState.pending).catch(() => null);
-
-        if (!update) {
-            return interaction.editReply({
-                content: 'Application update failed, please try again later.'
             });
         }
 
@@ -50,7 +42,7 @@ export class DoneButtonHandler extends InteractionHandler {
             });
         }
 
-        this.container.applications.update(interaction.user.id, 'message', pendingApp.id, true).catch(() => null);
+        this.container.applications.update(interaction.user.id, 'message', pendingApp.id).catch(() => null);
 
         interaction.editReply({
             content: 'Successfully sent application for review.'

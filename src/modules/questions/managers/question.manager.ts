@@ -3,6 +3,8 @@ import { randomUUID } from 'crypto'
 import { BaseManager } from "@lib/managers/base.manager.js";
 import { Question } from "@lib/types.js";
 import { canAccessFile, readFileToJson } from "@lib/util.js";
+import { questionsTable } from "../../../schema.js";
+import { eq } from "drizzle-orm";
 
 const jsonPaths = Object.freeze({
     rand: join(process.cwd(), 'json', 'rand-questions.json'),
@@ -25,24 +27,28 @@ export default class QuestionManager extends BaseManager {
 
     public async create(question: string) {
         const uuid = randomUUID();
-        await this.driver.execute(this.genInsert('id', 'question'), [uuid, question], { prepare: true });
-        return uuid;
+        return this.drizzle.insert(questionsTable).values({
+            question,
+            id: uuid
+        }).returning().then((v) => v.at(0)?.id);
     }
 
     public delete(id: string) {
-        return this.driver.execute(this.genDelete('id'), [id], { prepare: true });
+        return this.drizzle.delete(questionsTable).where(eq(questionsTable.id, id));
     }
 
     public update(id: string, field: keyof Question, value: any) {
-        return this.driver.execute(this.genUpdate(field, 'id'), [value, id], { prepare: true });
+        return this.drizzle.update(questionsTable).set({
+            [field]: value
+        }).where(eq(questionsTable.id, id)).returning();
     }
 
     public get(id: string) {
-        return this.driver.execute(this.genSelect('*', 'id'), [id], { prepare: true });
+        return this.drizzle.select().from(questionsTable).where(eq(questionsTable.id, id));
     }
 
     public getAll() {
-        return this.driver.execute('SELECT * FROM questions', [], { prepare: true });
+        return this.drizzle.select().from(questionsTable);
     }
 
     public getRand(max: number) {
@@ -85,12 +91,15 @@ export default class QuestionManager extends BaseManager {
     public async initRandomQuestions() {
         const randQuestions = await this.getRandomQuestionsFromFile();
 
-        await Promise.all(randQuestions.map((q) => this.driver.execute('INSERT INTO appbot.questions (id, question) VALUES (?, ?) IF NOT EXISTS', [q.id, q.question])));
+        await Promise.all(randQuestions.map((q) => this.drizzle.insert(questionsTable).values({
+            id: q.id,
+            question: q.question
+        })));
 
         const storedQuestions = await this.getAll();
-        this.questions = storedQuestions.rows.map((row) => ({
-            id: row.get('id'),
-            question: row.get('question')
+        this.questions = storedQuestions.map((row) => ({
+            id: row.id!,
+            question: row.question!
         }));
     }
 

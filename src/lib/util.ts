@@ -1,6 +1,6 @@
 import { access, readFile } from "fs/promises";
-import type { types } from "cassandra-driver";
 import { ApplicationState } from "./constants/application.js";
+import { Application } from "./types.js";
 
 export const canAccessFile = (path: string) => access(path).then(() => true).catch(() => false);
 
@@ -9,5 +9,5 @@ export async function readFileToJson<T>(path: string, defaultValue: string): Pro
     return JSON.parse(jsonString);
 }
 
-export const isCurrentApplicationMessage = (application: types.Row | null, msgid: string, state = ApplicationState.active) => !!application && application.message.toString() === msgid && application.state === state;
-export const applicationExists = (application: types.Row | null) => !!application
+export const isCurrentApplicationMessage = (application: Application, msgid: string, state = ApplicationState.active) => !!application && application.message.toString() === msgid && application.state === state;
+export const applicationExists = (application: Application | null) => !!application

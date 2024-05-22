@@ -20,7 +20,7 @@ export class DeleteButtonHandler extends InteractionHandler {
 
         const deleted = await this.container.questions.delete(question!).catch(() => null);
 
-        if (!deleted || !deleted.rowLength) {
+        if (!deleted || !deleted.rowCount) {
             return interaction.reply({
                 content: 'Failed to delete the question.',
                 ephemeral: true

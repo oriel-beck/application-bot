@@ -1,4 +1,3 @@
-import type CassandraManager from "@lib/managers/cassandra-manager.ts";
 import type { Config } from "./lib/config/config.js";
 import type ApplicationManager from "./modules/applications/managers/application.manager.js";
 import type BlacklistManager from "./modules/blacklist/managers/blacklist.manager.js";
@@ -8,7 +7,6 @@ import type TipManager from "modules/utility/managers/tip-manager.ts";
 
 declare module '@sapphire/pieces' {
     interface Container {
-        driver: CassandraManager;
         applications: ApplicationManager;
         questions: QuestionManager;
         settings: SettingManager;

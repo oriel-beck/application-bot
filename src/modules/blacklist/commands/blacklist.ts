@@ -34,7 +34,7 @@ export class SlashCommand extends Subcommand {
 
     const create = await this.container.blacklists.create(user.id, reason, interaction.user.id).catch(() => null);
 
-    if (!create?.first()) {
+    if (!create?.at(0)) {
       return interaction.editReply(`Failed to blacklist ${user}, try again later.`);
     }
 
@@ -78,12 +78,12 @@ export class SlashCommand extends Subcommand {
       return interaction.editReply(`Failed to get blacklist information for ${user}.`);
     }
 
-    if (!select?.first()) {
+    if (!select?.at(0)) {
       return interaction.editReply(`${user} is not blacklisted.`);
     }
 
     return interaction.editReply({
-      embeds: generateBlacklistShowEmbed(select.first() as unknown as Blacklist)
+      embeds: generateBlacklistShowEmbed(select.at(0) as unknown as Blacklist)
     });
   }
 

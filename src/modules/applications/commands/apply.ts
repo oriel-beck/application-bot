@@ -26,7 +26,7 @@ export class SlashCommand extends Command {
     const questions = this.container.questions.getRand(25);
     const create = await this.container.applications.create(interaction.user.id, questions, msg.id).catch((err) => console.log(err));
 
-    if (!create) {
+    if (!create || !create.at(0)) {
       msg.delete().catch(() => null);
       return interaction.editReply('Failed to create application, please try again later, if this error repeats open a ticket.')
     }

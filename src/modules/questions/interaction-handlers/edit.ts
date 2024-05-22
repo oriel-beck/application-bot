@@ -1,9 +1,10 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ButtonInteraction } from "discord.js";
 import { hasRole } from "@lib/precondition-util.js";
 import { generateQuestionShowEditModal } from "@lib/command-utils/question/show/question-show.utils.js";
 import { QuestionCustomIDs } from "@lib/constants/custom-ids.js";
+import type { ButtonInteraction } from "discord.js";
+import type { Question } from "@lib/types.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -17,7 +18,7 @@ export class EditButtonHandler extends InteractionHandler {
             });
         }
 
-        const question = await this.container.questions.get(interaction.customId.split('-').at(2)!).then((res) => res.first()).catch(() => null);
+        const question = await this.container.questions.get(interaction.customId.split('-').at(2)!).then((res) => res.at(0)).catch(() => null) as Question;
 
         if (!question) {
             return interaction.reply({

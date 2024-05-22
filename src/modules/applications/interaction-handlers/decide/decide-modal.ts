@@ -1,11 +1,11 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import type { ModalSubmitInteraction } from "discord.js";
-import type { types } from "cassandra-driver";
 import { hasRole } from "@lib/precondition-util.js";
 import { ApplicationState } from "@lib/constants/application.js";
 import { ApplicationCustomIDs } from "@lib/constants/custom-ids.js";
 import { generateApplicationComponents, generateApplicationEmbed } from "@lib/command-utils/application/embeds/application-embed.utils.js";
+import type { Application } from "@lib/types.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.ModalSubmit
@@ -24,7 +24,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         const user = split.at(2)!;
         const reason = interaction.fields.getTextInputValue('reason');
 
-        const app = await this.container.applications.get(user).then((res) => res.first()).catch(() => null);
+        const app = await this.container.applications.get(user).then((res) => res.at(0)).catch(() => null) as Application;
 
         if (!app) {
             return interaction.reply({
@@ -48,8 +48,8 @@ export class DecisionButtonHandler extends InteractionHandler {
         return interaction.customId.startsWith(ApplicationCustomIDs.buttons.decide) ? this.some() : this.none()
     }
 
-    async deny(interaction: ModalSubmitInteraction, application: types.Row, reason?: string) {
-        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.denied, true).catch(() => null);
+    async deny(interaction: ModalSubmitInteraction, application: Application, reason?: string) {
+        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.denied).catch(() => null);
 
         if (!res) {
             return interaction.reply({
@@ -68,8 +68,8 @@ export class DecisionButtonHandler extends InteractionHandler {
         return;
     }
 
-    async accept(interaction: ModalSubmitInteraction, application: types.Row, reason: string) {
-        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.accepted, true).catch(() => null);
+    async accept(interaction: ModalSubmitInteraction, application: Application, reason: string) {
+        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.accepted).catch(() => null);
 
         if (!res) {
             return interaction.reply({
@@ -78,7 +78,7 @@ export class DecisionButtonHandler extends InteractionHandler {
             });
         }
 
-        const member = await interaction.guild?.members.fetch(application.get("user").toString()).catch((err) => console.log(err));
+        const member = await interaction.guild?.members.fetch(application.user.toString()).catch((err) => console.log(err));
         
         if (!member) {
             return interaction.reply({
@@ -102,7 +102,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         return;
     }
 
-    async delete(interaction: ModalSubmitInteraction, application: types.Row, reason: string) {
+    async delete(interaction: ModalSubmitInteraction, application: Application, reason: string) {
         let res = await this.container.applications.delete(application.user.toString()).catch(() => null);
         if (!res) {
             return interaction.reply({
@@ -116,14 +116,14 @@ export class DecisionButtonHandler extends InteractionHandler {
         return;
     }
 
-    deletePendingApplication(application: types.Row) {
+    deletePendingApplication(application: Application) {
         const pendingChannel = this.container.client.channels.cache.get(this.container.config.channels.pending);
         if (pendingChannel?.isTextBased()) {
             pendingChannel.messages.delete(application.message.toString()).catch(() => null);
         }
     }
 
-    async sendDecidedApplication(application: types.Row, type: ApplicationState) {
+    async sendDecidedApplication(application: Application, type: ApplicationState) {
         const channel = this.container.client.channels.cache.get(type === ApplicationState.denied ? this.container.config.channels.denied : this.container.config.channels.accepted);
         if (channel?.isTextBased()) {
             const decidedMessage = await channel.send({
@@ -133,7 +133,7 @@ export class DecisionButtonHandler extends InteractionHandler {
             }).catch(() => null);
 
             if (decidedMessage) {
-                this.container.applications.update(application.user.toString(), 'message', decidedMessage.id, true);
+                this.container.applications.update(application.user.toString(), 'message', decidedMessage.id);
             }
         }
     }

@@ -1,3 +1,5 @@
+import { eq, sql } from "drizzle-orm";
+import { applicationsTable } from "../../../schema.js";
 import { ApplicationState, type ApplicationStateKeys } from "../../../lib/constants/application.js";
 import type { Application } from "../../../lib/types.js";
 import { BaseManager } from "@lib/managers/base.manager.js";
@@ -10,38 +12,57 @@ export default class ApplicationManager extends BaseManager {
 
     public create(userid: string, questions: string[], message: string) {
         // TODO: add max to settings
-        return this.driver.execute(this.genInsert('user', 'questions', 'answers', 'message', 'state'), [userid, questions, [], message, 'active'], { prepare: true });
+        return this.drizzle.insert(applicationsTable).values({
+            user: BigInt(userid),
+            questions: questions,
+            answers: [],
+            message: BigInt(message),
+            state: 'active',
+            // 40m into the future
+            expiry: new Date(Date.now() + 40 * 60 * 60)
+        }).onConflictDoUpdate({
+            target: applicationsTable.user,
+            set: {
+                user: BigInt(userid),
+                questions: questions,
+                answers: [],
+                message: BigInt(message),
+                state: 'active',
+                // 40m into the future
+                expiry: new Date(Date.now() + 40 * 60 * 60)
+            }
+        }).returning();
     }
 
     public get(userid: string) {
-        return this.driver.execute(this.genSelect('*', 'user'), [userid], { prepare: true });
+        return this.drizzle.select().from(applicationsTable).where(eq(applicationsTable.user, BigInt(userid))).prepare(`get-${userid}`).execute();
     }
 
     public getAll(state: ApplicationStateKeys = ApplicationState.pending) {
-        return this.driver.execute(`SELECT user FROM ${this.name} WHERE state = :state`, { state }, { prepare: true, autoPage: true });
+        return this.drizzle.select({ user: applicationsTable.user }).from(applicationsTable).where(eq(applicationsTable.state, state)).prepare(`get-all-${state}`).execute();
     }
 
     public delete(userid: string) {
-        return this.driver.execute(this.genDelete('user'), [userid], { prepare: true });
+        return this.drizzle.delete(applicationsTable).where(eq(applicationsTable.user, BigInt(userid))).returning();
     }
 
-    public update(userid: string, field: keyof Application, value: any, rmTTL = false) {
-        return this.driver.execute(this.genUpdate(field, 'user', rmTTL), [value, userid], { prepare: true });
-    }
-
-    public removeTTL(user: string, answers: string[], questions: string[], message: string, state: ApplicationState) {
-        return this.driver.execute('INSERT INTO applications (user, answers, message, questions, state) VALUES (:user, :answers, :message, :questions, :state) USING TTL 0', { user, answers, message, questions, state }, { prepare: true });
+    public update(userid: string, field: keyof Application, value: any) {
+        return this.drizzle.update(applicationsTable).set({ [field]: value }).where(eq(applicationsTable.user, BigInt(userid)));
     }
 
     public addAnswer(userid: string, answer: string) {
-        return this.driver.execute(`UPDATE applications SET answers = answers + :answer WHERE user = :userid`, { answer: [answer], userid }, { prepare: true });
+        return this.drizzle.update(applicationsTable).set({
+            answers: sql`array_append(${applicationsTable.answers}, '${answer}')`
+        }).where(eq(applicationsTable.user, BigInt(userid))).returning()
     }
 
     public editAnswer(userid: string, question: number, answer: string) {
-        return this.driver.execute(`UPDATE applications SET answers[${question}] = :answer WHERE user = :userid`, { answer, userid }, { prepare: true });
+        return this.drizzle.update(applicationsTable).set({
+            answers: sql`${applicationsTable.answers}[${question}] = ${answer}`
+        }).where(eq(applicationsTable.user, BigInt(userid))).returning()
     }
 
     public reset() {
-        return this.driver.execute('TRUNCATE applications', [], { prepare: true });
+        return this.drizzle.delete(applicationsTable);
     }
 }

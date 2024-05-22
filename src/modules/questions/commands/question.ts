@@ -63,12 +63,12 @@ export class SlashCommand extends Subcommand {
 
     const questions = await this.container.questions.getAll().catch(() => null);
 
-    if (!questions?.first()) {
+    if (!questions?.at(0)) {
       return interaction.editReply('Failed to get questions.');
     }
 
     return interaction.editReply({
-      embeds: generateQuestionListEmbed(questions.rows as unknown as Question[])
+      embeds: generateQuestionListEmbed(questions as unknown as Question[])
     })
   }
 
@@ -94,13 +94,13 @@ export class SlashCommand extends Subcommand {
 
     const question = await this.container.questions.get(id).catch(() => null);
 
-    if (!question?.first()) {
+    if (!question?.at(0)) {
       return interaction.editReply(`Could not fine question \`${id}\`.`)
     }
 
     return interaction.editReply({
-      embeds: generateQuestionShowEmbed(question.first() as unknown as Question),
-      components: generateQuestionShowComponents(question.first() as unknown as Question)
+      embeds: generateQuestionShowEmbed(question.at(0) as unknown as Question),
+      components: generateQuestionShowComponents(question.at(0) as unknown as Question)
     })
   }
 

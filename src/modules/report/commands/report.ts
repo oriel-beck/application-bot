@@ -4,7 +4,7 @@ import { ApplicationCommandType } from 'discord.js';
 import { generateReportEmbed, generateReportComponents, generateReportModal } from "@lib/command-utils/report/report.util.js";
 @ApplyOptions<Command.Options>({
     name: 'report',
-    description: 'Report a user to the mod team for cheating.'
+    description: 'Report a user to the mod team for cheating in the staff applications.'
 })
 export class SlashCommand extends Command {
     public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
@@ -69,23 +69,23 @@ export class SlashCommand extends Command {
                 .setDMPermission(false)
                 .addUserOption((option) =>
                     option.setName('user')
-                        .setDescription('The user to report.')
+                        .setDescription('The user to report for cheating in the staff applications.')
                         .setRequired(true)
                 )
                 .addStringOption((option) =>
                     option.setName('reason')
-                        .setDescription('The reason to report the user for.')
+                        .setDescription('The reason to report the user for cheating in the staff applications.')
                         .setRequired(true)
                 ));
 
         registry.registerContextMenuCommand((builder) =>
-            builder.setName('Report User')
+            builder.setName('Report a user for cheating in the staff application')
                 .setDMPermission(false)
                 .setType(ApplicationCommandType.User)
         );
 
         registry.registerContextMenuCommand((builder) =>
-            builder.setName('Report User')
+            builder.setName('Report a user for cheating in the staff applications')
                 .setDMPermission(false)
                 .setType(ApplicationCommandType.Message))
     }
