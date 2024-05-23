@@ -8,11 +8,13 @@ Hopefully v5 will be stateless....
 ## Bot setup
 1) Create a .env file, all values are required.
 ```env
-BOT_TOKEN=TOKEN_HERE
-OWNER=USER_ID
-
-DB_USER=cassandra
-DB_PASS=cassandra
+BOT_TOKEN=*****
+POSTGRES_USER=appbot
+POSTGRES_PASSWORD=*****
+POSTGRES_DB=appbot
+PGDATA=/var/lib/postgresql/data/pgdata
+OWNER=YOUR_DISCORD_ID
+REDIS_HOST=redis
 ```
 2) Create a config file named `config.json` in the main directory, all values are required.
 ```json
@@ -38,7 +40,8 @@ DB_PASS=cassandra
         "question": "",
         "code_error": "",
         "wiki_error": ""
-    }
+    },
+    "guild": "THE_INITIAL_GUILD"
 }
 ```
 
@@ -70,11 +73,11 @@ To start, run in the main directory `docker compose up --build` and wait for the
     - [x] Show
 
 - [ ] Question command
-    - [ ] Add
-    - [ ] Remove
-    - [ ] Edit
-    - [ ] List
-        - [ ] List embed
+    - [x] Add
+    - [x] Remove
+    - [x] Edit
+    - [x] List
+        - [x] List embed
         - [ ] List select
         - [ ] List buttons (over 125 questions)
 
