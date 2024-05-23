@@ -79,13 +79,13 @@ export class SlashCommand extends Command {
                 ));
 
         registry.registerContextMenuCommand((builder) =>
-            builder.setName('Report a user for cheating in the staff application')
+            builder.setName('Report cheater in the staff apps')
                 .setDMPermission(false)
                 .setType(ApplicationCommandType.User)
         );
 
         registry.registerContextMenuCommand((builder) =>
-            builder.setName('Report a user for cheating in the staff applications')
+            builder.setName('Report cheater in the staff apps')
                 .setDMPermission(false)
                 .setType(ApplicationCommandType.Message))
     }

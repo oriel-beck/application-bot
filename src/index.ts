@@ -10,6 +10,9 @@ import '@sapphire/plugin-subcommands/register';
 // register drizzle
 import '@lib/db-register.js';
 
+// register redis
+import '@lib/redis-register.js';
+
 const client = new ApplicationClient({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages],
   partials: [Partials.Channel, Partials.Message, Partials.User],

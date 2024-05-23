@@ -26,6 +26,7 @@
       "@types/pg": "^8.11.6",
       "discord.js": "^14.15.2",
       "drizzle-orm": "^0.30.10",
+      "ioredis": "^5.4.1",
       "pg": "^8.11.5",
       "postgres": "^3.4.4"
    },

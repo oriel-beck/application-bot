@@ -12,9 +12,11 @@ const pool = new Pool({
 
 const db = drizzle(pool, { schema });
 
+console.log("migrating database");
 await migrate(db, { migrationsFolder: "/app/drizzle" })
 
 container.drizzle = db;
+console.log("registering database")
 
 declare module "@sapphire/pieces" {
     interface Container {
