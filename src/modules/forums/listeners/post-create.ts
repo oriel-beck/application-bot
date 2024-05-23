@@ -11,16 +11,20 @@ export class CommandDeniedListener extends Listener<typeof Events.ThreadCreate> 
         if (thread.parent?.id === this.container.config.channels.support && newlyCreated) {
             const { row, embed } = generatePostHelpEmbed(thread.appliedTags);
             // If the author of the thread sends an attachment the bot cannot reply until the attachment is fully sent by still gets the event, so it will retry in 5 seconds (5 attempts)
-            await retryMessage(thread, embed, row);
+            const message = await retryMessage(thread, embed, row);
+            if (message) {
+                // sets the message for the channel for 7d
+                await this.container.redis.setex(message.channel.id, message.id, 604800);
+            }
         }
     }
 }
 
 async function retryMessage(channel: TextBasedChannel, embed: EmbedBuilder, row: ActionRowBuilder<ButtonBuilder>) {
     let attempts = 0;
-    await retry();
+    return await retry();
     async function retry() {
-        await channel.send({
+        return await channel.send({
             embeds: [embed],
             components: [row]
         }).catch(() => {

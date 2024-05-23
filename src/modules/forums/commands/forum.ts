@@ -1,5 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Subcommand } from "@sapphire/plugin-subcommands";
+import { Colors, EmbedBuilder } from "discord.js";
 
 @ApplyOptions<Subcommand.Options>({
     name: "forum",
@@ -11,10 +12,10 @@ import { Subcommand } from "@sapphire/plugin-subcommands";
             name: "remove",
             chatInputRun: "remove"
         },
-        // {
-        //     name: "solve",
-        //     chatInputRun: "solve"
-        // }
+        {
+            name: "solve",
+            chatInputRun: "solve"
+        }
     ]
 })
 export class SlashCommand extends Subcommand {
@@ -33,23 +34,47 @@ export class SlashCommand extends Subcommand {
         });
     }
 
-    // For now button only as it will take space in the DB to save messages per channel.
-    // public async solve(interaction: Subcommand.ChatInputCommandInteraction) {
-    //     if (interaction.channel?.isTextBased() && interaction.channel.isThread()) {
-    //         const success = interaction.channel.setAppliedTags([this.container.config.support_tags.resolved]).catch(() => null);
-    //         if (!success) return interaction.reply({
-    //             content: "Failed to resolve post.",
-    //             ephemeral: true
-    //         });
-    //         await interaction.channel.setLocked(true);
-    //     }
+    public async solve(interaction: Subcommand.ChatInputCommandInteraction) {
+        if (interaction.channel?.isTextBased() && interaction.channel.isThread()) {
+            const success = interaction.channel.setAppliedTags([this.container.config.support_tags.resolved]).catch(() => null);
+            if (!success) return interaction.reply({
+                content: "Failed to resolve post.",
+                ephemeral: true
+            });
 
-    //     return await interaction.reply({
-    //         content: "Resolved the post.",
-    //         ephemeral: true
-    //     });
-    //     // TODO: edit/send something that marks the post as resolved.
-    // }
+            const reply = await interaction.reply({
+                content: "Resolving post...",
+                ephemeral: true
+            });
+
+            await interaction.channel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle("Resolved")
+                        .setDescription("Your post has been resolved, locked, and archived, if there are additional issues please open a new post.")
+                        .setFooter({
+                            text: "Thank you for using BDFD! ❤️"
+                        })
+                        .setColor(Colors.Green)
+                ]
+            });
+
+            const originalMessage = await this.container.redis.get(interaction.channel.id);
+            if (originalMessage) {
+                await interaction.channel.messages.delete(originalMessage);
+            }
+
+            await interaction.channel.edit({ locked: true, archived: true });
+            reply.edit({
+                content: "Solved post!"
+            });
+        }
+
+        return await interaction.reply({
+            content: "Resolved the post.",
+            ephemeral: true
+        });
+    }
 
     public registerApplicationCommands(registry: Subcommand.Registry) {
         registry.registerChatInputCommand((builder) =>
@@ -64,9 +89,9 @@ export class SlashCommand extends Subcommand {
                         .setName("member")
                         .setDescription("The member to remove")
                         .setRequired(true)))
-                // .addSubcommand((subcommand) => subcommand
-                //     .setName("solve")
-                //     .setDescription("Solve and lock the current post"))
+                .addSubcommand((subcommand) => subcommand
+                    .setName("solve")
+                    .setDescription("Solve and lock the current post"))
         );
     }
 }
