@@ -26,7 +26,8 @@ REDIS_HOST=redis
         "report": "",
         "staff": "",
         "support": "",
-        "tips": ""
+        "tips": "",
+        "share_your_bot": ""
     },
     "roles": {
         "mod": "",

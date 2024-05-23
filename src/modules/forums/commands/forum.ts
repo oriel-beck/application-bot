@@ -61,7 +61,7 @@ export class SlashCommand extends Subcommand {
 
             const originalMessage = await this.container.redis.get(interaction.channel.id);
             if (originalMessage) {
-                await interaction.channel.messages.delete(originalMessage);
+                await interaction.channel.messages.delete(originalMessage).catch(() => null);
             }
 
             await interaction.channel.edit({ locked: true, archived: true });

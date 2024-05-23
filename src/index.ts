@@ -14,8 +14,17 @@ import '@lib/db-register.js';
 import '@lib/redis-register.js';
 
 const client = new ApplicationClient({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages],
-  partials: [Partials.Channel, Partials.Message, Partials.User],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessages
+  ],
+  partials: [
+    Partials.Channel,
+    Partials.Message,
+    Partials.User
+  ],
   makeCache: Options.cacheWithLimits({
     MessageManager: 0,
     GuildInviteManager: 0,

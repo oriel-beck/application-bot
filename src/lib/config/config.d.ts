@@ -14,6 +14,7 @@ export interface ChannelConfig {
     support: string;
     tips: string;
     wiki: string;
+    share_your_bot: string;
 }
 
 export interface RoleConfig {
