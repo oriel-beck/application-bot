@@ -30,10 +30,12 @@ export class SlashCommand extends Subcommand {
             await shareBotChannel.messages.delete(oldMessage).catch(() => null);
         }
 
-        return await shareBotChannel.send({
+        const newMessage = await shareBotChannel.send({
             embeds: generateStickyMessageEmbed(),
             components: generateStickyMessageComponents()
         });
+
+        return this.container.cooldown.setMessage(newMessage.id);
     }
 
     public async cooldown(interaction: Subcommand.ChatInputCommandInteraction) {
@@ -46,9 +48,9 @@ export class SlashCommand extends Subcommand {
         const seconds = interaction.options.getString("cooldown");
         const user = interaction.options.getUser("user", true);
         if (!seconds) {
-            await this.container.redis.del(`share-your-bot-cooldown-${user.id}`);
+            await this.container.cooldown.deleteCooldown(user.id);
         } else {
-            await this.container.redis.setex(`share-your-bot-cooldown-${user.id}`, seconds, 1);
+            await this.container.cooldown.setCooldown(user.id, +seconds);
         }
 
         return interaction.reply({

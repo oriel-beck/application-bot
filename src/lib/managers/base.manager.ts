@@ -10,9 +10,7 @@ export abstract class BaseManager {
         console.log(name, 'manager is ready');
     }
 
-    async init() {
-
-    }
+    async init() {}
 
     public abstract create(...args: any[]): any;
     public abstract delete(...args: any[]): any;

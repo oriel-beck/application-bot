@@ -31,6 +31,6 @@ export class EditButtonHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith(QuestionCustomIDs.buttons.edit) ? this.some() : this.none()
+        return interaction.customId.startsWith(QuestionCustomIDs.buttons.edit) ? this.some() : this.none();
     }
 }

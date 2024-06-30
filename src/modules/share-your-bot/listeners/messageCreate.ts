@@ -10,7 +10,7 @@ export class CommandDeniedListener extends Listener<typeof Events.MessageCreate>
     async run(message: Message<boolean>) {
         if (message.channel.id !== this.container.config.channels.share_your_bot || message.author.bot) return;
 
-        const cooldownSeconds = await this.container.redis.ttl(`share-your-bot-cooldown-${message.author.id}`);
+        const cooldownSeconds = await this.container.cooldown.ttl(message.author.id);
         if (cooldownSeconds > 0) {
             setTimeout(async () => {
                 const msg = await message.fetch(true);
@@ -29,21 +29,22 @@ export class CommandDeniedListener extends Listener<typeof Events.MessageCreate>
             return;
         }
 
-        const oldMessage = await this.container.redis.get("share-your-bot-sticky-message");
+        const oldMessage = await this.container.cooldown.getMessage();
         if (oldMessage) {
             await message.channel.messages.delete(oldMessage).catch(() => null);
         }
 
-        await message.channel.send({
+        const newMessage = await message.channel.send({
             embeds: generateStickyMessageEmbed(),
             components: generateStickyMessageComponents()
         });
 
-        // since the message may be deleted by carl-bot/maste-bot automod, check if it exists in 10s, and if it does set the cooldown
+        await this.container.cooldown.setMessage(newMessage.id)
+
+        // since the message may be deleted by carl-bot/maste-bot automod, check if it exists in 3s, and if it does set the cooldown
         setTimeout(async () => {
             const msg = await message.fetch(true);
-            // 86400 - 1d
-            if (msg) await this.container.redis.setex(`share-your-bot-cooldown-${message.author.id}`, 86400, 1);
+            if (msg) await this.container.cooldown.setCooldown(message.author.id);
         }, 3000);
     }
 

@@ -38,6 +38,6 @@ export class DeleteButtonHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith(QuestionCustomIDs.buttons.delete) ? this.some() : this.none()
+        return interaction.customId.startsWith(QuestionCustomIDs.buttons.delete) ? this.some() : this.none();
     }
 }

@@ -12,6 +12,6 @@ export class EditModalHandler extends InteractionHandler {
     }
 
     public parse(interaction: ModalSubmitInteraction) {
-        return interaction.customId.startsWith(QuestionCustomIDs.modals.edit) ? this.some() : this.none()
+        return interaction.customId.startsWith(QuestionCustomIDs.modals.edit) ? this.some() : this.none();
     }
 }
