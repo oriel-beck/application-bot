@@ -16,7 +16,7 @@ export class CommandDeniedListener extends Listener<typeof Events.MessageCreate>
                 const msg = await message.fetch(true);
                 if (msg) {
                     await msg.delete().catch(() => null);
-                    const content = `You are under cooldown, your ad was deleted. You can send a new ad <t:${Date.now() + cooldownSeconds}:R>`;
+                    const content = `You are under cooldown, your ad was deleted. You can send a new ad <t:${Math.round(Date.now() / 1000) + cooldownSeconds}:R>`;
                     const dm = await message.author.send({ content: `${message.author}\n${content}` }).catch(() => null);
                     if (!dm) {
                         const res = await message.channel.send({ content }).catch(() => null);

@@ -35,7 +35,9 @@ export class SlashCommand extends Subcommand {
             components: generateStickyMessageComponents()
         });
 
-        return this.container.cooldown.setMessage(newMessage.id);
+        await this.container.cooldown.setMessage(newMessage.id);
+
+        return interaction.reply("Re-sent the share your bot rules.")
     }
 
     public async cooldown(interaction: Subcommand.ChatInputCommandInteraction) {

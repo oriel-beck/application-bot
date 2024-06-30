@@ -4,7 +4,8 @@ export default class CooldownManager {
     name = "cooldown";
     redis = container.redis;
     private userCooldownKey = "share-your-bot-cooldown";
-    private stickyMessageKey = "share-your-bot-sticky-message"
+    private stickyMessageKey = "share-your-bot-sticky-message";
+    init() { };
     // 86400 - 1d
     setCooldown(userId: string, time = 86400) {
         return this.redis.setex(`${this.userCooldownKey}-${userId}`, time, 1);

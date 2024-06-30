@@ -1,7 +1,7 @@
 import { Precondition } from "@sapphire/framework";
 import type { CommandInteraction } from "discord.js";
 
-export class ModOnlyPrecondition extends Precondition {
+export class OwnerOnlyPrecondition extends Precondition {
     #message = 'You are missing permissions to use this command.';
 
     public chatInputRun(interaction: CommandInteraction) {

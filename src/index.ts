@@ -47,7 +47,8 @@ const client = new ApplicationClient({
     "questions",
     "report",
     "forums",
-    "utility"
+    "utility",
+    "share-your-bot"
   ]
 });
 
