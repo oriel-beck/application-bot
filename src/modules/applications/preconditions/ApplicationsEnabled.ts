@@ -10,7 +10,7 @@ export class ModOnlyPrecondition extends Precondition {
 
     private async checkApplicationsEnabled(guild: string) {
         const result = await this.container.settings.get(guild).catch(() => null);
-        return result?.first()?.get('enabled') ? this.ok() : this.error({ message: this.#message });
+        return result?.at(0)?.enabled ? this.ok() : this.error({ message: this.#message });
     }
 }
 

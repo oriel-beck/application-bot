@@ -1,14 +1,14 @@
 import { relations } from 'drizzle-orm';
-import { bigint, json, pgEnum, varchar, boolean, pgTable, timestamp, uuid, serial, text } from 'drizzle-orm/pg-core';
+import { bigint, json, pgEnum, varchar, boolean, pgTable, timestamp, uuid, text } from 'drizzle-orm/pg-core';
 
 export const stateEnum = pgEnum('state', ['pending', 'denied', 'accepted', 'deleted', 'active']);
 
 export const applicationsTable = pgTable("applications", {
     user: bigint("user", { mode: 'bigint' }).primaryKey(),
-    questions: json("questions").array(),
-    answers: json("answers").array(),
+    questions: json("questions").array().$type<string[]>().notNull().default([]),
+    answers: json("answers").array().$type<string[]>().notNull().default([]),
     message: bigint("message", { mode: 'bigint' }),
-    state: stateEnum("state"),
+    state: stateEnum("state").notNull(),
     expiry: timestamp("expiry")
 });
 

@@ -108,8 +108,8 @@ export class SlashCommand extends Subcommand {
     }
 
     return interaction.editReply({
-      embeds: await generateApplicationEmbed(app.at(0)),
-      components: generateApplicationComponents(app.at(0), 0, app.at(0)?.state === ApplicationState.pending)
+      embeds: await generateApplicationEmbed(app.at(0)!),
+      components: generateApplicationComponents(app.at(0)!, 0, app.at(0)?.state === ApplicationState.pending)
     });
   }
 

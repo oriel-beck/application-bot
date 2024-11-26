@@ -8,4 +8,4 @@ export enum ApplicationState {
 
 
 
-export type ApplicationStateKeys = 'active' | 'pending' | 'denied' | 'accepted';
+export type ApplicationStateKeys = keyof typeof ApplicationState

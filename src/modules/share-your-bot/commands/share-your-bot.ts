@@ -2,6 +2,7 @@ import { generateStickyMessageComponents, generateStickyMessageEmbed } from '@li
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { Subcommand } from '@sapphire/plugin-subcommands';
+import { ChannelType } from 'discord.js';
 @ApplyOptions<Subcommand.Options>({
     name: 'shareyourbot',
     description: 'Controls the share your bot channel',
@@ -20,7 +21,7 @@ import { Subcommand } from '@sapphire/plugin-subcommands';
 export class SlashCommand extends Subcommand {
     public async resend(interaction: Subcommand.ChatInputCommandInteraction) {
         const shareBotChannel = interaction.client?.channels.cache.get(this.container.config.channels.share_your_bot);
-        if (!shareBotChannel?.isTextBased()) return interaction.reply({
+        if (shareBotChannel?.type !== ChannelType.GuildText) return interaction.reply({
             content: `<#${this.container.config.channels.share_your_bot}> is not a valid text channel`,
             ephemeral: true
         });

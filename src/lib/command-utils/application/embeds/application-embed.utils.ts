@@ -1,10 +1,10 @@
 import { EmbedBuilder, type APIEmbedField, Colors, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { container } from "@sapphire/framework";
 import { ApplicationCustomIDs } from "../../../constants/custom-ids.js";
-import { ApplicationState, type ApplicationStateKeys } from "../../../constants/application.js";
-import type { types } from "cassandra-driver";
+import { type ApplicationStateKeys } from "../../../constants/application.js";
+import { Application } from "@lib/types.js";
 
-export async function generateApplicationEmbed(application: types.Row, page = 0, state?: ApplicationState) {
+export async function generateApplicationEmbed(application: Application, page = 0, state?: ApplicationStateKeys) {
     const user = await container.client.users.fetch(application.user.toString()).catch(() => null);
     const questions = [...application.questions].splice(page * 7, 7);
     const answers = [...(application.answers || [])].splice(page * 7, 7);
@@ -16,7 +16,7 @@ export async function generateApplicationEmbed(application: types.Row, page = 0,
     ];
 }
 
-export function generateApplicationComponents(application: types.Row, page = 0, showDecision = true) {
+export function generateApplicationComponents(application: Application, page = 0, showDecision = true) {
     const buttons = new ActionRowBuilder<ButtonBuilder>();
     buttons.addComponents(new ButtonBuilder()
         .setLabel('Prev')
@@ -64,5 +64,7 @@ function applicaionEmbedColorFromState(state: ApplicationStateKeys) {
             return Colors.Red;
         case "accepted":
             return Colors.Green;
+        case 'deleted':
+            return 0;
     }
 }

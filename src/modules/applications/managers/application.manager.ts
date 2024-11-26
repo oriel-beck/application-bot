@@ -39,7 +39,7 @@ export default class ApplicationManager extends BaseManager {
     }
 
     public getAll(state: ApplicationStateKeys = ApplicationState.pending) {
-        return this.drizzle.select({ user: applicationsTable.user }).from(applicationsTable).where(eq(applicationsTable.state, state)).prepare(`get-all-${state}`).execute();
+        return this.drizzle.select().from(applicationsTable).where(eq(applicationsTable.state, state)).prepare(`get-all-${state}`).execute();
     }
 
     public delete(userid: string) {

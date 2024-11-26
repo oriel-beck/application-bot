@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ModalSubmitInteraction } from "discord.js";
+import { ChannelType, type ModalSubmitInteraction } from "discord.js";
 import { hasRole } from "@lib/precondition-util.js";
 import { ApplicationState } from "@lib/constants/application.js";
 import { ApplicationCustomIDs } from "@lib/constants/custom-ids.js";
@@ -96,7 +96,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         this.sendDecidedApplication(application, ApplicationState.accepted);
         this.sendDM(ApplicationState.accepted, application.user.toString(), reason);
         const staffChannel = this.container.client.channels.cache.get(this.container.config.channels.staff);
-        if (staffChannel?.isTextBased()) {
+        if (staffChannel?.type === ChannelType.GuildText) {
             staffChannel.send(`Welcome to the Support Team! as for now you can see you're a Trial Support, which means you're limited to some stuff Support can do, read <#594861601035649024> to know more about this.\n**__How do I get fully promoted to Support?__**\nYou just have to help people out in support channels and tickets. You will be promoted once higher ups (mods+) think you're ready to be a Support member!\nIf you have any questions, feel free to ask here.\n<@${application.user}>`).catch(() => null);
         }
         return;
@@ -125,7 +125,7 @@ export class DecisionButtonHandler extends InteractionHandler {
 
     async sendDecidedApplication(application: Application, type: ApplicationState) {
         const channel = this.container.client.channels.cache.get(type === ApplicationState.denied ? this.container.config.channels.denied : this.container.config.channels.accepted);
-        if (channel?.isTextBased()) {
+        if (channel?.type === ChannelType.GuildText) {
             const decidedMessage = await channel.send({
                 content: `Application from <@${application.user.toString()}>`,
                 embeds: await generateApplicationEmbed(application, 0, type),

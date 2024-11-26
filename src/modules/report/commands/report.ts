@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { ApplicationCommandType } from 'discord.js';
+import { ChannelType } from 'discord.js';
 import { generateReportEmbed, generateReportComponents, generateReportModal } from "@lib/command-utils/report/report.util.js";
 @ApplyOptions<Command.Options>({
     name: 'report',
@@ -25,7 +25,7 @@ export class SlashCommand extends Command {
 
         const reportChannel = this.container.client.channels.cache.get(this.container.config.channels.report);
 
-        if (reportChannel?.isTextBased()) {
+        if (reportChannel?.type === ChannelType.GuildText) {
             return reportChannel.send({
                 embeds: generateReportEmbed(interaction, user, reason),
                 components: generateReportComponents()
@@ -80,13 +80,11 @@ export class SlashCommand extends Command {
 
         registry.registerContextMenuCommand((builder) =>
             builder.setName('Report cheater in the staff apps')
-                .setDMPermission(false)
-                .setType(ApplicationCommandType.User)
+                .setType(2)
         );
 
         registry.registerContextMenuCommand((builder) =>
             builder.setName('Report cheater in the staff apps')
-                .setDMPermission(false)
-                .setType(ApplicationCommandType.Message))
+                .setType(3))
     }
 }

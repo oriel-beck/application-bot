@@ -3,7 +3,7 @@ import { isCurrentApplicationMessage } from "@lib/util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { ApplyCustomIDs } from "@lib/constants/custom-ids.js";
-import { Colors, type ButtonInteraction } from "discord.js";
+import { ChannelType, Colors, type ButtonInteraction } from "discord.js";
 import type { Application } from "@lib/types.js";
 
 @ApplyOptions<InteractionHandler.Options>({
@@ -24,7 +24,7 @@ export class DoneButtonHandler extends InteractionHandler {
         }
 
         const pendingChannel = this.container.client.channels.cache.get(this.container.config.channels.pending);
-        if (!pendingChannel?.isTextBased()) {
+        if (pendingChannel?.type !== ChannelType.GuildText) {
             return interaction.editReply({
                 content: 'Failed to find pending application channel.'
             });

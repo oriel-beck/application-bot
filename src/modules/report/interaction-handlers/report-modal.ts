@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ModalSubmitInteraction } from "discord.js";
+import { ChannelType, type ModalSubmitInteraction } from "discord.js";
 import { generateReportEmbed, generateReportComponents } from "@lib/command-utils/report/report.util.js";
 import { ReportCustomIDs } from "@lib/constants/custom-ids.js";
 
@@ -19,7 +19,7 @@ export class ReportModalHandler extends InteractionHandler {
 
         const reportChannel = this.container.client.channels.cache.get(this.container.config.channels.report);
 
-        if (reportChannel?.isTextBased()) {
+        if (reportChannel?.type === ChannelType.GuildText) {
             reportChannel.send({
                 embeds: generateReportEmbed(interaction, await this.container.client.users.fetch(split.at(2)!), reason, split.at(3)),
                 components: generateReportComponents()
