@@ -5,6 +5,7 @@ import type SettingManager from "./modules/misc/managers/setting.manager.js";
 import type QuestionManager from "./modules/questions/managers/question.manager.js";
 import type TipManager from "modules/utility/managers/tip-manager.ts";
 import type CooldownManager from "modules/share-your-bot/managers/cooldown.manager.ts";
+import type TranscriptManager from "modules/transcripts/managers/transcriptManager.ts";
 
 declare module '@sapphire/pieces' {
     interface Container {
@@ -15,5 +16,6 @@ declare module '@sapphire/pieces' {
         config: Config;
         tips: TipManager;
         cooldown: CooldownManager;
+        transcripts: TranscriptManager;
     }
 }

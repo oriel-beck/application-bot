@@ -64,10 +64,16 @@ export class SlashCommand extends Subcommand {
                 await interaction.channel.messages.delete(originalMessage).catch(() => null);
             }
 
+            const owner = await interaction.channel.fetchOwner().catch(() => null);
+
             await interaction.channel.edit({ locked: true, archived: true });
             reply.edit({
                 content: "Solved post!"
             });
+
+            owner?.user?.send({
+                content: `Your post in ${interaction.guild?.name} was resolved, you can return to read your post at any time in ${interaction.channel.url}.`
+            }).catch(() => null);
         }
 
         return await interaction.reply({

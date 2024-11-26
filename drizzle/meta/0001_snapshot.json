@@ -1,4 +1,6 @@
 {
+  "id": "da8839a3-9ae8-46cb-ba95-f5490c610e2e",
+  "prevId": "9f938dc1-3a7e-459f-88d7-074ea2aeaa3d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -36,6 +38,12 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
+        },
+        "expiry": {
+          "name": "expiry",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -71,15 +79,49 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "public.messages": {
+      "name": "messages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user": {
+          "name": "user",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "varchar(2000)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "channel": {
+          "name": "channel",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "public.questions": {
       "name": "questions",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "question": {
           "name": "question",
@@ -114,16 +156,68 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
+    },
+    "public.transcripts": {
+      "name": "transcripts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "author": {
+          "name": "author",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "channel": {
+          "name": "channel",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "transcripts_channel_messages_channel_fk": {
+          "name": "transcripts_channel_messages_channel_fk",
+          "tableFrom": "transcripts",
+          "tableTo": "messages",
+          "columnsFrom": [
+            "channel"
+          ],
+          "columnsTo": [
+            "channel"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
     }
   },
-  "enums": {},
-  "schemas": {},
-  "_meta": {
-    "schemas": {},
-    "tables": {},
-    "columns": {}
+  "enums": {
+    "public.state": {
+      "name": "state",
+      "schema": "public",
+      "values": [
+        "pending",
+        "denied",
+        "accepted",
+        "deleted",
+        "active"
+      ]
+    }
   },
-  "id": "9f938dc1-3a7e-459f-88d7-074ea2aeaa3d",
-  "prevId": "00000000-0000-0000-0000-000000000000",
-  "sequences": {}
+  "schemas": {},
+  "sequences": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
 }

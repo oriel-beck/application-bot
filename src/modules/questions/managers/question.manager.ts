@@ -27,10 +27,11 @@ export default class QuestionManager extends BaseManager {
 
     public async create(question: string) {
         const uuid = randomUUID();
-        return this.drizzle.insert(questionsTable).values({
+        const v = await this.drizzle.insert(questionsTable).values({
             question,
             id: uuid
-        }).returning().then((v) => v.at(0)?.id);
+        }).returning();
+        return v.at(0)?.id;
     }
 
     public delete(id: string) {

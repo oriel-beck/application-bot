@@ -34,7 +34,11 @@ export class ToggleTagHandler extends InteractionHandler {
                         .setColor(Colors.Green)
                 ]
             });
+            const owner = await interaction.channel.fetchOwner().catch(() => null);
             await interaction.channel.edit({ locked: true, archived: true });
+            owner?.user?.send({
+                content: `Your post in ${interaction.guild?.name} was resolved, you can return to read your post at any time in ${interaction.channel.url}.`
+            }).catch(() => null);
             return;
         } else {
             return interaction.reply({

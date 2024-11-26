@@ -2,6 +2,7 @@ export interface Config {
     channels: ChannelConfig;
     roles: RoleConfig;
     support_tags: SupportTagsConfig;
+    categories: CategoriesConfig;
     guild: string;
 }
 
@@ -30,4 +31,8 @@ export interface SupportTagsConfig {
     question: string;
     code_error: string;
     wiki_error: string;
+}
+
+export interface CategoriesConfig {
+    tickets: string;
 }

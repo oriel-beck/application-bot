@@ -1,4 +1,5 @@
-import { bigint, json, pgEnum, varchar, boolean, pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { bigint, json, pgEnum, varchar, boolean, pgTable, timestamp, uuid, serial, text } from 'drizzle-orm/pg-core';
 
 export const stateEnum = pgEnum('state', ['pending', 'denied', 'accepted', 'deleted', 'active']);
 
@@ -9,20 +10,44 @@ export const applicationsTable = pgTable("applications", {
     message: bigint("message", { mode: 'bigint' }),
     state: stateEnum("state"),
     expiry: timestamp("expiry")
-})
+});
 
 export const blacklistTable = pgTable("blacklist", {
     user: bigint("user", { mode: 'bigint' }).primaryKey(),
     reason: varchar("reason", { length: 500 }),
-    mod: bigint("mod", {mode: 'bigint'})
-})
+    mod: bigint("mod", { mode: 'bigint' })
+});
 
 export const settingsTable = pgTable("settings", {
-    guild: bigint("guild", {mode: 'bigint'}).primaryKey(),
+    guild: bigint("guild", { mode: 'bigint' }).primaryKey(),
     enabled: boolean("enabled")
-})
+});
 
 export const questionsTable = pgTable("questions", {
     id: uuid("id"),
-    question: varchar("question", {length: 500})
-})
+    question: varchar("question", { length: 500 })
+});
+
+export const transcriptTable = pgTable("transcript", {
+    author: bigint("author", { mode: 'bigint' }).notNull(),
+    channel: bigint("channel", { mode: 'bigint' }).notNull().primaryKey(),
+});
+
+export const messagesTable = pgTable("messages", {
+    id: bigint("id", { mode: 'bigint' }).primaryKey(),
+    user: bigint("user", { mode: 'bigint' }).notNull(),
+    message: text("message").notNull(),
+    channel: bigint("channel", { mode: 'bigint' }).notNull(),
+});
+
+// Define relationships
+export const transcriptRelations = relations(transcriptTable, ({ one, many }) => ({
+    messages: many(messagesTable), // A transcript has many messages
+}));
+
+export const messagesRelations = relations(messagesTable, ({ one }) => ({
+    transcript: one(transcriptTable, {
+        fields: [messagesTable.channel], // foreign key in messages
+        references: [transcriptTable.channel], // primary key in transcript
+    }),
+}));

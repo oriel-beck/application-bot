@@ -615,13 +615,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sapphire/plugin-subcommands@npm:^6.0.3":
-  version: 6.0.3
-  resolution: "@sapphire/plugin-subcommands@npm:6.0.3"
+"@sapphire/plugin-subcommands@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@sapphire/plugin-subcommands@npm:7.0.0"
   dependencies:
-    "@sapphire/utilities": ^3.15.3
-    tslib: ^2.6.2
-  checksum: 2f75419d3b536a77c6fb8eb3d17f9488defd2b006b4d8976ec2a9e603630d5a10f476305ca19fad32e3c5b98e1502be0a0de1a552ba77df511770c69d6dbeea0
+    "@sapphire/utilities": ^3.17.0
+  checksum: 61f47e40b274f3dfb175eac8cfa377698cc62721a72af96a395ef670935869a5e00b9f47096a96c07799c731f4a17b599fef65060f9de4d92f645c87c9e4e77d
   languageName: node
   linkType: hard
 
@@ -1015,7 +1014,7 @@ __metadata:
   dependencies:
     "@sapphire/decorators": ^6.1.0
     "@sapphire/framework": ^5.2.1
-    "@sapphire/plugin-subcommands": ^6.0.3
+    "@sapphire/plugin-subcommands": ^7.0.0
     "@sapphire/ts-config": ^5.0.1
     "@sapphire/utilities": ^3.17.0
     "@swc/cli": ^0.4.0
@@ -1029,7 +1028,7 @@ __metadata:
     pg: ^8.12.0
     postgres: ^3.4.4
     typescript: ^5.5.4
-    yarn-upgrade-all: ^0.7.2
+    yarn-upgrade-all: ^0.7.4
   languageName: unknown
   linkType: soft
 
@@ -1181,6 +1180,13 @@ __metadata:
   dependencies:
     color-name: ~1.1.4
   checksum: 79e6bdb9fd479a205c71d89574fccfb22bd9053bd98c6c4d870d65c132e5e904e6034978e55b43d69fcaa7433af2016ee203ce76eeba9cfa554b373e7f7db336
+  languageName: node
+  linkType: hard
+
+"color-loggers@npm:^0.3.1":
+  version: 0.3.2
+  resolution: "color-loggers@npm:0.3.2"
+  checksum: cfeadb4eb4888610e34f34f9c86e1b5c13b01617e74765d32a4dc1cc74e4b99a216d19676b3d23efe2c5330e101250a5710d9e70b2ea76e2e6be272eec86c477
   languageName: node
   linkType: hard
 
@@ -3375,11 +3381,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yarn-upgrade-all@npm:^0.7.2":
-  version: 0.7.2
-  resolution: "yarn-upgrade-all@npm:0.7.2"
+"yarn-upgrade-all@npm:^0.7.4":
+  version: 0.7.4
+  resolution: "yarn-upgrade-all@npm:0.7.4"
+  dependencies:
+    color-loggers: ^0.3.1
   bin:
     yarn-upgrade-all: build/index.js
-  checksum: accf406dda39ea10045237e2072c33d788836998bff68d8a2ebdf7c7e84fd8e7dfd78c0070f9ee2923f09336ed8f9523ac72371e4d7318f7870ea3223b4885cb
+  checksum: 61a0c4a8647f70d7ec8765c1f284698b3b35e4b3d2d2ef608af4108a2f2493b91e0617e0367fbe19e65147128d35ec1d25ab55053faf35f11dccc1c93657feae
   languageName: node
   linkType: hard
