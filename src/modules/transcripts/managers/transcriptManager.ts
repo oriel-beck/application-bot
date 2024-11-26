@@ -41,6 +41,7 @@ export default class TranscriptManager extends BaseManager {
                 })
                 .from(transcriptTable)
                 .leftJoin(messagesTable, eq(messagesTable.channel, transcriptTable.channel))
+                .orderBy(messagesTable.id)
                 .where(eq(transcriptTable.channel, BigInt(channel)));
         } else {
             result = await this.drizzle
