@@ -4,6 +4,7 @@ import { Message, MessageMentions } from "discord.js";
 
 @ApplyOptions<Listener.Options>({
     event: Events.MessageCreate,
+    name: 'transcriptsMessageCreate'
 })
 export class MessageCreateListener extends Listener<typeof Events.MessageCreate> {
     async run(message: Message<true>) {

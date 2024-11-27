@@ -4,6 +4,7 @@ import { AttachmentBuilder, ChannelType, DMChannel, NonThreadGuildBasedChannel }
 
 @ApplyOptions<Listener.Options>({
     event: Events.ChannelDelete,
+    name: 'transcriptsChannelDelete'
 })
 export class ChannelDeleteListener extends Listener<typeof Events.ChannelDelete> {
     async run(channel: DMChannel | NonThreadGuildBasedChannel) {

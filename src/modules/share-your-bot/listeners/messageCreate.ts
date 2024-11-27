@@ -5,12 +5,17 @@ import { ChannelType, type TextChannel, type Message } from "discord.js";
 
 @ApplyOptions<Listener.Options>({
     event: Events.MessageCreate,
+    name: 'shareYourBotMessageCreate'
 })
-export class CommandDeniedListener extends Listener<typeof Events.MessageCreate> {
+export class MessageCreateListener extends Listener<typeof Events.MessageCreate> {
     async run(message: Message<boolean>) {
+        console.log(message.channel.id, this.container.config.channels.share_your_bot, message.channel.id !== this.container.config.channels.share_your_bot)
+        console.log(message.author.bot)
+        console.log(message.channel.type, ChannelType.GuildText, message.channel.type !== ChannelType.GuildText)
         if (message.channel.id !== this.container.config.channels.share_your_bot || message.author.bot || message.channel.type !== ChannelType.GuildText) return;
 
         const cooldownSeconds = await this.container.cooldown.ttl(message.author.id);
+        console.log(cooldownSeconds)
         if (cooldownSeconds > 0) {
             setTimeout(async () => {
                 const msg = await message.fetch(true);
@@ -30,6 +35,7 @@ export class CommandDeniedListener extends Listener<typeof Events.MessageCreate>
         }
 
         const oldMessage = await this.container.cooldown.getMessage();
+        console.log(oldMessage)
         if (oldMessage) {
             await message.channel.messages.delete(oldMessage).catch(() => null);
         }

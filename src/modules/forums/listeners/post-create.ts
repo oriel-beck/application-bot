@@ -5,6 +5,7 @@ import { generatePostHelpEmbed } from "../util.js";
 
 @ApplyOptions<Listener.Options>({
     event: Events.ThreadCreate,
+    name: 'supportPostCreate'
 })
 export class PostCreateListener extends Listener<typeof Events.ThreadCreate> {
     async run(thread: AnyThreadChannel, newlyCreated: boolean) {

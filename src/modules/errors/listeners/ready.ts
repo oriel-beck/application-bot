@@ -3,7 +3,8 @@ import { Events, Listener, type ListenerOptions } from "@sapphire/framework";
 import type { Client } from "discord.js";
 
 @ApplyOptions<ListenerOptions>({
-    event: Events.ClientReady
+    event: Events.ClientReady,
+    name: 'globalClientReady'
 })
 export class ClientReadyListener extends Listener<typeof Events.ClientReady> {
     run(client: Client): void {

@@ -3,6 +3,7 @@ import { Events, Listener, UserError, type ChatInputCommandDeniedPayload } from 
 
 @ApplyOptions<Listener.Options>({
     event: Events.ChatInputCommandDenied,
+    name: 'globalCommandDenied'
 })
 export class CommandDeniedListener extends Listener<typeof Events.ChatInputCommandDenied> {
     run(error: UserError, payload: ChatInputCommandDeniedPayload) {

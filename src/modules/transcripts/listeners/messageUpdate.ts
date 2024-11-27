@@ -4,6 +4,7 @@ import { ChannelType, Message, PartialMessage } from "discord.js";
 
 @ApplyOptions<Listener.Options>({
     event: Events.MessageUpdate,
+    name: 'transcriptsMessageUpdate'
 })
 export class MessageDeleteListener extends Listener<typeof Events.MessageUpdate> {
     async run(_oldMessage: Message<boolean> | PartialMessage, newMessage: Message<boolean> | PartialMessage) {
