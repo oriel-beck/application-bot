@@ -38,6 +38,5 @@
       "drizzle-kit": "^0.28.1",
       "typescript": "^5.7.2",
       "yarn-upgrade-all": "^0.7.4"
-   },
-   "packageManager": "yarn@3.8.2"
+   }
 }
