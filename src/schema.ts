@@ -1,12 +1,12 @@
 import { relations } from 'drizzle-orm';
-import { bigint, json, pgEnum, varchar, boolean, pgTable, timestamp, uuid, text } from 'drizzle-orm/pg-core';
+import { bigint, pgEnum, varchar, boolean, pgTable, timestamp, uuid, text } from 'drizzle-orm/pg-core';
 
 export const stateEnum = pgEnum('state', ['pending', 'denied', 'accepted', 'deleted', 'active']);
 
 export const applicationsTable = pgTable("applications", {
     user: bigint("user", { mode: 'bigint' }).primaryKey(),
-    questions: json("questions").array().$type<string[]>().notNull().default([]),
-    answers: json("answers").array().$type<string[]>().notNull().default([]),
+    questions: text("questions").array().notNull().default([]),
+    answers: text("answers").array().notNull().default([]),
     message: bigint("message", { mode: 'bigint' }),
     state: stateEnum("state").notNull(),
     expiry: timestamp("expiry")
@@ -29,19 +29,21 @@ export const questionsTable = pgTable("questions", {
 });
 
 export const transcriptTable = pgTable("transcript", {
-    author: bigint("author", { mode: 'bigint' }).notNull(),
-    channel: bigint("channel", { mode: 'bigint' }).notNull().primaryKey(),
+    author: bigint("author", { mode: "bigint" }).notNull(),
+    channel: bigint("channel", { mode: "bigint" }).notNull().primaryKey(),
 });
 
 export const messagesTable = pgTable("messages", {
-    id: bigint("id", { mode: 'bigint' }).primaryKey(),
-    user: bigint("user", { mode: 'bigint' }).notNull(),
+    id: bigint("id", { mode: "bigint" }).primaryKey(),
+    user: bigint("user", { mode: "bigint" }).notNull(),
     message: text("message").notNull(),
-    channel: bigint("channel", { mode: 'bigint' }).notNull(),
+    channel: bigint("channel", { mode: "bigint" })
+        .notNull()
+        .references(() => transcriptTable.channel, { onDelete: "cascade" }),
 });
 
 // Define relationships
-export const transcriptRelations = relations(transcriptTable, ({ one, many }) => ({
+export const transcriptRelations = relations(transcriptTable, ({ many }) => ({
     messages: many(messagesTable), // A transcript has many messages
 }));
 

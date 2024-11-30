@@ -12,11 +12,7 @@ export class PostCreateListener extends Listener<typeof Events.ThreadCreate> {
         if (thread.parent?.id === this.container.config.channels.support && newlyCreated) {
             const { row, embed } = generatePostHelpEmbed(thread.appliedTags);
             // If the author of the thread sends an attachment the bot cannot reply until the attachment is fully sent by still gets the event, so it will retry in 5 seconds (5 attempts)
-            const message = await retryMessage(thread, embed, row);
-            if (message) {
-                // sets the message for the channel for 7d
-                await this.container.redis.setex(message.channel.id, message.id, 604800);
-            }
+            await retryMessage(thread, embed, row);
         }
     }
 }

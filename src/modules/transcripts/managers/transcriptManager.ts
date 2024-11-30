@@ -29,7 +29,14 @@ export default class TranscriptManager extends BaseManager {
     }
 
     public async get(channel: string, includeMessages = false) {
-        let result;
+        let result: {
+            transcriptAuthor: bigint;
+            transcriptChannel: bigint;
+            messageId?: bigint | null;
+            messageUser?: bigint | null;
+            messageText?: string | null;
+        }[];
+
         if (includeMessages) {
             result = await this.drizzle
                 .select({
@@ -47,10 +54,7 @@ export default class TranscriptManager extends BaseManager {
             result = await this.drizzle
                 .select({
                     transcriptAuthor: transcriptTable.author,
-                    transcriptChannel: transcriptTable.channel,
-                    messageId: messagesTable.id,
-                    messageUser: messagesTable.user,
-                    messageText: messagesTable.message,
+                    transcriptChannel: transcriptTable.channel
                 })
                 .from(transcriptTable)
                 .where(eq(transcriptTable.channel, BigInt(channel)));

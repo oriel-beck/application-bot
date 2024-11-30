@@ -1,6 +1,6 @@
 {
-  "id": "8793edb6-eaf7-433d-93b1-cc6a89d4f38d",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "5ff45587-0874-4da2-8865-f46ebf925a43",
+  "prevId": "8793edb6-eaf7-433d-93b1-cc6a89d4f38d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -117,7 +117,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "messages_channel_transcript_channel_fk": {
+          "name": "messages_channel_transcript_channel_fk",
+          "tableFrom": "messages",
+          "tableTo": "transcript",
+          "columnsFrom": [
+            "channel"
+          ],
+          "columnsTo": [
+            "channel"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},

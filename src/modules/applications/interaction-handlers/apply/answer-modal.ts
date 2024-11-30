@@ -29,7 +29,7 @@ export class AnswerModalHandler extends InteractionHandler {
         if (!app?.answers || !app.answers[questionNum]) {
             update = await this.container.applications.addAnswer(interaction.user.id, answer).catch(console.log);
         } else {
-            update = await this.container.applications.editAnswer(interaction.user.id, questionNum, answer).catch(console.log);
+            update = await this.container.applications.editAnswer(interaction.user.id, app.answers[questionNum], answer).catch(console.log);
         }
 
         if (!update) {

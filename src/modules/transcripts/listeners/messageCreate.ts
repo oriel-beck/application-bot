@@ -11,7 +11,6 @@ export class MessageCreateListener extends Listener<typeof Events.MessageCreate>
         if (message.channel.parentId !== this.container.config.categories.tickets) return;
 
         const currentTranscript = await this.container.transcripts.get(message.channel.id).catch(() => null);
-
         if (!currentTranscript) {
             const topMessage = await message.channel.messages.fetch({ after: '0', limit: 1 });
             // If the first message is not from a bot, abort
@@ -21,7 +20,7 @@ export class MessageCreateListener extends Listener<typeof Events.MessageCreate>
             if (!description) return;
 
             const authorMention = MessageMentions.UsersPattern.exec(description);
-            const author = authorMention?.at(0);
+            const author = authorMention?.at(1);
             if (!author) return;
 
             // Create the transcript if it's missing
@@ -31,12 +30,13 @@ export class MessageCreateListener extends Listener<typeof Events.MessageCreate>
             });
 
             // Fetch all messages in the channel
-            let lastMessageId: string | undefined;
+            let lastMessageId: string | undefined = message.id;
             const allMessages: Message[] = [];
             do {
-                const messages = await message.channel.messages.fetch({ limit: 100, before: lastMessageId });
-                allMessages.push(...messages.values());
-                lastMessageId = messages.size > 0 ? messages.last()?.id : undefined;
+                // @ts-expect-error not sure why but the TS compiler thinks this is any, it's not
+                const msgs = await message.channel.messages.fetch({ limit: 100, before: lastMessageId });
+                allMessages.push(...msgs.values());
+                lastMessageId = msgs.last()?.id;
             } while (lastMessageId);
 
             // Add all fetched messages to the transcript
@@ -49,14 +49,15 @@ export class MessageCreateListener extends Listener<typeof Events.MessageCreate>
                 })
             );
             await Promise.all(addMessagesPromises);
+        } else {
+            // Add the current message to the transcript
+            await this.container.transcripts.addMessage({
+                user: BigInt(message.author.id),
+                channel: BigInt(message.channel.id),
+                message: message.content,
+                id: message.id,
+            });
         }
 
-        // Add the current message to the transcript
-        await this.container.transcripts.addMessage({
-            user: BigInt(message.author.id),
-            channel: BigInt(message.channel.id),
-            message: message.content,
-            id: message.id,
-        });
     }
 }

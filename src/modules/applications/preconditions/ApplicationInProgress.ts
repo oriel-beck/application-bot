@@ -10,7 +10,7 @@ export class ModOnlyPrecondition extends Precondition {
 
     private async checkApplicationInProgress(user: string) {
         const result = await this.container.applications.get(user).catch(() => null);
-        return result ? this.error({ message: this.#message }) : this.ok();
+        return result?.length ? this.error({ message: this.#message }) : this.ok();
     }
 }
 

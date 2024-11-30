@@ -52,14 +52,14 @@ export default class ApplicationManager extends BaseManager {
 
     public addAnswer(userid: string, answer: string) {
         return this.drizzle.update(applicationsTable).set({
-            answers: sql`array_append(${applicationsTable.answers}, '${answer}')`
-        }).where(eq(applicationsTable.user, BigInt(userid))).returning()
+            answers: sql`array_append(${applicationsTable.answers}, ${answer})`
+        }).where(eq(applicationsTable.user, BigInt(userid))).returning();
     }
 
-    public editAnswer(userid: string, question: number, answer: string) {
+    public editAnswer(userid: string, oldAnswer: string, newAnswer: string) {
         return this.drizzle.update(applicationsTable).set({
-            answers: sql`${applicationsTable.answers}[${question}] = ${answer}`
-        }).where(eq(applicationsTable.user, BigInt(userid))).returning()
+            answers: sql`array_replace(${applicationsTable.answers}, ${oldAnswer}, ${newAnswer})`
+        }).where(eq(applicationsTable.user, BigInt(userid))).returning();
     }
 
     public reset() {

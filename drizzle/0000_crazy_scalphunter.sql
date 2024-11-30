@@ -1,8 +1,8 @@
 CREATE TYPE "public"."state" AS ENUM('pending', 'denied', 'accepted', 'deleted', 'active');--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "applications" (
 	"user" bigint PRIMARY KEY NOT NULL,
-	"questions" json[] DEFAULT '{}' NOT NULL,
-	"answers" json[] DEFAULT '{}' NOT NULL,
+	"questions" text[] DEFAULT '{}' NOT NULL,
+	"answers" text[] DEFAULT '{}' NOT NULL,
 	"message" bigint,
 	"state" "state" NOT NULL,
 	"expiry" timestamp
