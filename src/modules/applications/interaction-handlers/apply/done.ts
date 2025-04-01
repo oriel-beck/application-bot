@@ -5,6 +5,7 @@ import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework
 import { ApplyCustomIDs } from "@lib/constants/custom-ids.js";
 import { ChannelType, Colors, type ButtonInteraction } from "discord.js";
 import type { Application } from "@lib/types.js";
+import { ApplicationState } from "@lib/constants/application.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -42,7 +43,8 @@ export class DoneButtonHandler extends InteractionHandler {
             });
         }
 
-        this.container.applications.update(interaction.user.id, 'message', pendingApp.id).catch(() => null);
+        await this.container.applications.update(interaction.user.id, 'message', pendingApp.id).catch(() => null);
+        await this.container.applications.update(interaction.user.id, 'state', ApplicationState.pending).catch(() => null);
 
         interaction.editReply({
             content: 'Successfully sent application for review.'
