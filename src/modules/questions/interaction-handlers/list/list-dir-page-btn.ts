@@ -50,7 +50,7 @@ export class QuestionListDirPageHandler extends InteractionHandler {
 
         const list = rows as unknown as Question[];
         const totalCount = list.length;
-        const perPage = 100;
+        const perPage = 25;
         const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
         const safePage = Math.min(pageIndex, totalPages - 1);
 

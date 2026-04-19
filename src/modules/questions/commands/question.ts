@@ -72,13 +72,13 @@ export class SlashCommand extends Subcommand {
     const list = questions as unknown as Question[];
     const totalCount = list.length;
     const pageIndex = 0;
-    const perPage = totalCount > 125 ? 100 : 125;
+    const perPage = 25;
     const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
 
     return interaction.editReply({
       embeds: generateQuestionListEmbed(
         list,
-        totalCount > 125 ? { pageIndex, perPage, totalPages } : undefined,
+        totalPages > 1 ? { pageIndex, perPage, totalPages } : undefined,
       ),
       components: generateQuestionListComponents(list, pageIndex, totalCount),
     })
