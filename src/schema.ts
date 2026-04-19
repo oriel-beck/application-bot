@@ -24,8 +24,8 @@ export const settingsTable = pgTable("settings", {
 });
 
 export const questionsTable = pgTable("questions", {
-    id: uuid("id"),
-    question: varchar("question", { length: 500 })
+    id: uuid("id").primaryKey().notNull(),
+    question: varchar("question", { length: 500 }).notNull().unique()
 });
 
 export const transcriptTable = pgTable("transcript", {

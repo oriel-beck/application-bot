@@ -1,4 +1,5 @@
-import { join } from "path";
+import { join, dirname } from "path";
+import { mkdir, writeFile } from "fs/promises";
 import { randomUUID } from 'crypto'
 import { BaseManager } from "@lib/managers/base.manager.js";
 import { Question } from "@lib/types.js";
@@ -26,12 +27,19 @@ export default class QuestionManager extends BaseManager {
     }
 
     public async create(question: string) {
-        const uuid = randomUUID();
-        const v = await this.drizzle.insert(questionsTable).values({
-            question,
-            id: uuid
-        }).returning();
-        return v.at(0)?.id;
+        const id = randomUUID();
+        const inserted = await this.drizzle
+            .insert(questionsTable)
+            .values({ question, id })
+            .onConflictDoNothing({ target: questionsTable.question })
+            .returning({ id: questionsTable.id });
+        if (inserted.at(0)?.id) return inserted.at(0)!.id;
+        const [row] = await this.drizzle
+            .select({ id: questionsTable.id })
+            .from(questionsTable)
+            .where(eq(questionsTable.question, question))
+            .limit(1);
+        return row?.id ?? null;
     }
 
     public delete(id: string) {
@@ -53,7 +61,11 @@ export default class QuestionManager extends BaseManager {
     }
 
     public getRand(max: number) {
-        return this.defaultQuestions.concat(this.randomizeQuestions().splice(0, max - this.defaultQuestions.length).map((q) => q.question));
+        const head = this.defaultQuestions.slice(0, max);
+        const need = max - head.length;
+        if (need === 0) return head;
+        const shuffled = this.randomizeQuestions();
+        return head.concat(shuffled.slice(0, need).map((q) => q.question));
     }
 
     private randomizeQuestions() {
@@ -89,19 +101,74 @@ export default class QuestionManager extends BaseManager {
     }
 
 
+    /**
+     * Load DB → dedupe rows → merge with `rand-questions.json` (append DB-only rows to file) →
+     * write JSON → insert file rows missing from DB. DB is canonical for ids that exist there.
+     */
     public async initRandomQuestions() {
-        const randQuestions = await this.getRandomQuestionsFromFile();
+        await this.dedupeQuestionsInDb();
 
-        await Promise.all(randQuestions.map((q) => this.drizzle.insert(questionsTable).values({
-            id: q.id,
-            question: q.question
-        })));
+        const dbRows = await this.getAll();
+        const fileRows = await this.getRandomQuestionsFromFile();
+
+        const fromDb: Question[] = dbRows.map((r) => ({ id: r.id, question: r.question }));
+        const dbIds = new Set(fromDb.map((q) => q.id));
+        const dbQuestions = new Set(fromDb.map((q) => q.question));
+
+        const fileOnly: Question[] = [];
+        for (const q of fileRows) {
+            if (dbIds.has(q.id)) continue;
+            if (dbQuestions.has(q.question)) continue;
+            fileOnly.push(q);
+        }
+
+        const merged = [...fromDb, ...fileOnly];
+        await mkdir(dirname(jsonPaths.rand), { recursive: true });
+        await writeFile(jsonPaths.rand, `${JSON.stringify(merged, null, 2)}\n`, "utf-8");
+
+        const existingIds = new Set(dbRows.map((r) => r.id));
+        const existingQuestions = new Set(dbRows.map((r) => r.question));
+        const seenId = new Set<string>();
+        const seenQuestion = new Set<string>();
+        const toInsert = merged.filter((q) => {
+            if (existingIds.has(q.id) || existingQuestions.has(q.question)) return false;
+            if (seenId.has(q.id) || seenQuestion.has(q.question)) return false;
+            seenId.add(q.id);
+            seenQuestion.add(q.question);
+            return true;
+        });
+        if (toInsert.length) {
+            await this.drizzle
+                .insert(questionsTable)
+                .values(toInsert)
+                .onConflictDoNothing({ target: questionsTable.id });
+        }
 
         const storedQuestions = await this.getAll();
         this.questions = storedQuestions.map((row) => ({
-            id: row.id!,
-            question: row.question!
+            id: row.id,
+            question: row.question
         }));
+    }
+
+    /** Remove duplicate question rows (same `question` text), keeping one row per text. */
+    private async dedupeQuestionsInDb(): Promise<void> {
+        const rows = await this.getAll();
+        const keeperQuestion = new Map<string, string>();
+        const deleteIds: string[] = [];
+
+        for (const r of rows) {
+            const dup = keeperQuestion.get(r.question);
+            if (dup !== undefined) {
+                deleteIds.push(r.id);
+                continue;
+            }
+            keeperQuestion.set(r.question, r.id);
+        }
+
+        for (const id of deleteIds) {
+            await this.drizzle.delete(questionsTable).where(eq(questionsTable.id, id));
+        }
     }
 
     public async initBaseQuestion() {
