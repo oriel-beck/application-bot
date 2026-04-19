@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Events, Listener, type InteractionHandlerError } from "@sapphire/framework";
-import { safeErrorString } from "./error-log.js";
+import { safeErrorString } from "../safe-error-string.js";
 
 @ApplyOptions<Listener.Options>({
     event: Events.InteractionHandlerError,

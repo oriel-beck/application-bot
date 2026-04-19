@@ -20,4 +20,4 @@
 
 ## Schema
 
-Transcript/message tables in `src/schema.ts` (aligned with manager).
+Transcript/message tables in `src/schema.ts` (aligned with manager). `messages` includes `"createdAt"` (see migration `0003_messages_created_at.sql`).

@@ -16,7 +16,7 @@
 | `interaction-handlers/delete.ts` | Button | Delete confirm path for show UI. |
 | `interaction-handlers/edit.ts` | Button | Opens edit flow. |
 | `interaction-handlers/edit-modal.ts` | Modal | Persists question text edit. |
-| `interaction-handlers/list/list-select.ts` | Select | Staff picks a question from `/question list` string selects (`q:list:sel:{index}`). |
+| `interaction-handlers/list/list-select.ts` | Select | Staff picks a question from `/question list` string selects (`q:list:sel:{index}`). Option `value` is `{uuid}#{slot}` so values stay unique for Discord; the handler strips the `#slot` suffix before DB lookup. |
 | `interaction-handlers/list/list-dir-page-btn.ts` | Button | **Directory** pagination when there are **>125** questions: Prev / page label / Next (`q:list:dir:{page}`; center noop `q:list:dir:noop`). |
 
 ## Custom IDs (`QuestionCustomIDs`)

@@ -71,6 +71,7 @@ export function generateQuestionListComponents(
         : Math.min(SELECT_ROWS_FULL, Math.ceil(pageSlice.length / SELECT_OPTIONS_PER_MENU) || 1);
 
     const rows: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] = [];
+    let optionSlot = 0;
     for (let i = 0; i < selectRowCount; i++) {
         const chunk = pageSlice.slice(
             i * SELECT_OPTIONS_PER_MENU,
@@ -79,9 +80,10 @@ export function generateQuestionListComponents(
         if (!chunk.length) break;
         rows.push(
             new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-                generateStringSelectMenu(i, chunk),
+                generateStringSelectMenu(i, chunk, optionSlot),
             ),
         );
+        optionSlot += chunk.length;
     }
 
     if (needsDir) {
@@ -116,18 +118,24 @@ function buildQuestionDirectoryButtonRow(pageIndex: number, totalPages: number):
     );
 }
 
-function generateStringSelectMenu(index: number, chunk: Question[]) {
+function generateStringSelectMenu(index: number, chunk: Question[], optionSlotBase: number) {
     return new StringSelectMenuBuilder()
         .setCustomId(`${QuestionCustomIDs.selects.list}:${index}`)
         .setMaxValues(1)
         .setMinValues(1)
         .setPlaceholder("Select a question to view")
-        .addOptions(chunk.map(mapQuestionToStringSelectMenuOption));
+        .addOptions(
+            chunk.map((q, j) => mapQuestionToStringSelectMenuOption(q, optionSlotBase + j)),
+        );
 }
 
-function mapQuestionToStringSelectMenuOption(question: Question): StringSelectMenuOptionBuilder {
+/** Discord rejects duplicate `value`s in a message's string selects; `#slot` disambiguates. */
+function mapQuestionToStringSelectMenuOption(
+    question: Question,
+    optionSlot: number,
+): StringSelectMenuOptionBuilder {
     const base = `${question.id} — ${question.question}`;
     return new StringSelectMenuOptionBuilder()
         .setLabel(truncateSelectLabel(base))
-        .setValue(question.id);
+        .setValue(`${question.id}#${optionSlot}`);
 }

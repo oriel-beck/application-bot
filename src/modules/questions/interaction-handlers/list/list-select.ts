@@ -3,7 +3,7 @@ import { QuestionCustomIDs } from "@lib/constants/custom-ids.js";
 import { hasRole } from "@lib/precondition-util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { StringSelectMenuInteraction } from "discord.js";
+import { MessageFlags, type StringSelectMenuInteraction } from "discord.js";
 import type { Question } from "@lib/types.js";
 
 const LIST_SEL_RE = /^q:list:sel:\d+$/;
@@ -16,11 +16,12 @@ export class QuestionListSelectHandler extends InteractionHandler {
         if (!hasRole(interaction.member!, this.container.config.roles.mod)) {
             return interaction.reply({
                 content: "You are missing permissions to use this.",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
-        const id = interaction.values[0]!;
+        const raw = interaction.values[0]!;
+        const id = raw.replace(/#\d+$/, "") || raw;
 
         const row = await this.container.questions
             .get(id)
@@ -30,7 +31,7 @@ export class QuestionListSelectHandler extends InteractionHandler {
         if (!row) {
             return interaction.reply({
                 content: "That question could not be found.",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 

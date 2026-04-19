@@ -3,6 +3,12 @@
 **Path:** `src/modules/errors/`  
 **Manager:** none
 
+## Shared utilities
+
+| File | Purpose |
+|------|---------|
+| `safe-error-string.ts` | `safeErrorString()` for logging (imported by error listeners; not a Sapphire piece). |
+
 ## Listeners
 
 | File | Purpose |
