@@ -1,52 +1,66 @@
 
 export const ApplyCustomIDs = Object.freeze({
     buttons: {
-        cancel: 'application-cancel',
-        done: 'application-done',
-        answer: 'application-answer',
+        cancel: 'apply:btn:cancel',
+        done: 'apply:btn:done',
+        answer: 'apply:btn:answer',
     },
     modals: {
-        answer: 'application-answer'
+        answer: 'apply:mdl:answer',
     },
     selects: {
-        edit: 'application-question-select'
-    }
+        edit: 'apply:sel:edit',
+    },
 });
 
 export const ApplicationCustomIDs = Object.freeze({
     buttons: {
-        denied: 'decide-denied',
-        accepted: 'decide-accepted',
-        decide: 'decide',
-        paginate: 'paginate',
-        page: 'page_num'
+        denied: 'app:dec:btn:denied',
+        accepted: 'app:dec:btn:accepted',
+        paginate: 'app:view:page',
+        page: 'app:view:indicator',
+        listDir: 'app:list:dir',
     },
     selects: {
-        list: 'application-list'
+        list: 'app:list:sel',
     },
     modals: {
-        decide: 'decide'
-    }
+        decide: 'app:dec:mdl',
+    },
 });
 
 export const QuestionCustomIDs = Object.freeze({
     buttons: {
-        edit: 'question-edit',
-        delete: 'question-delete',
-        // TODO
-        page: ''
+        edit: 'q:btn:edit',
+        delete: 'q:btn:del',
+        page: 'q:page',
+        listDir: 'q:list:dir',
+    },
+    selects: {
+        list: 'q:list:sel',
     },
     modals: {
-        edit: 'question-edit'
-    }
+        edit: 'q:mdl:edit',
+    },
 });
 
 export const ReportCustomIDs = Object.freeze({
     buttons: {
-        resolve: 'report-resolve',
-        delete: 'report-delete'
+        resolve: 'rpt:btn:resolve',
+        delete: 'rpt:btn:delete',
     },
     modals: {
-        report: 'report-modal'
-    }
-})
+        report: 'rpt:mdl',
+    },
+});
+
+/** Forums module — not loaded from this file in augments; keep prefixes stable. */
+export const ForumCustomIDs = Object.freeze({
+    toggleTag: 'forum:tag',
+    supportResolve: 'forum:support',
+});
+
+/** Share-your-bot sticky additions button. */
+export const ShareCustomIDs = Object.freeze({
+    stickyAdditions: 'share:sticky:additions',
+});

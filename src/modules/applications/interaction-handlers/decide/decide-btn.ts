@@ -5,7 +5,9 @@ import { hasRole } from "@lib/precondition-util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from "@sapphire/framework";
 import type { ButtonInteraction } from "discord.js";
-import type{ Application } from "@lib/types.js";
+import type { Application } from "@lib/types.js";
+
+const DEC_BTN_PREFIX = 'app:dec:btn:';
 
 @ApplyOptions<InteractionHandlerOptions>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -19,10 +21,11 @@ export class DecisionButtonHandler extends InteractionHandler {
             });
         }
 
-        const split = interaction.customId.split('-');
-        const decisionType = split.at(1) as ApplicationState;
+        const parts = interaction.customId.split(':');
+        const decisionType = parts[3] as ApplicationState;
+        const userId = parts[4];
 
-        const app = await this.container.applications.get(split.at(2)!).then((res) => res.at(0)).catch(() => null) as Application;
+        const app = await this.container.applications.get(userId!).then((res) => res.at(0)).catch(() => null) as Application;
 
         if (!app) {
             return interaction.reply({
@@ -35,6 +38,6 @@ export class DecisionButtonHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith(ApplicationCustomIDs.buttons.decide) ? this.some() : this.none()
+        return interaction.customId.startsWith(DEC_BTN_PREFIX) ? this.some() : this.none()
     }
 }

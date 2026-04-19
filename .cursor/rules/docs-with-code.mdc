@@ -1,0 +1,15 @@
+---
+description: Keep docs/module-map in sync whenever src changes
+alwaysApply: true
+---
+
+# Documentation with code changes
+
+When you edit **`src/`** (or `README.md` / `AGENTS.md` / `docs/module-map/`), finish the task only after updating docs **if the change would make them wrong or incomplete**.
+
+1. **`docs/module-map/<module>.md`** — Update the module you touched (commands, handlers, managers, flows, **`customId`** prefixes from `src/lib/constants/custom-ids.ts`). Update multiple module files if shared `src/lib/` code affects them.
+2. **`README.md`** — If install steps, config, or overview text should change, update it.
+
+Do **not** recreate `docs/module-plans/`; that folder was removed. Prefer concise updates to **`docs/module-map/`** over new standalone planning docs.
+
+Read **`AGENTS.md`** for layout, `enabledModules`, and conventions.

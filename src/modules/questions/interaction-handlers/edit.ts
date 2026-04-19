@@ -6,6 +6,8 @@ import { QuestionCustomIDs } from "@lib/constants/custom-ids.js";
 import type { ButtonInteraction } from "discord.js";
 import type { Question } from "@lib/types.js";
 
+const PREFIX = `${QuestionCustomIDs.buttons.edit}:`;
+
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
 })
@@ -18,7 +20,12 @@ export class EditButtonHandler extends InteractionHandler {
             });
         }
 
-        const question = await this.container.questions.get(interaction.customId.split('-').at(2)!).then((res) => res.at(0)).catch(() => null) as Question;
+        if (!interaction.customId.startsWith(PREFIX)) {
+            return;
+        }
+        const id = interaction.customId.slice(PREFIX.length);
+
+        const question = await this.container.questions.get(id).then((res) => res.at(0)).catch(() => null) as Question;
 
         if (!question) {
             return interaction.reply({
@@ -31,6 +38,6 @@ export class EditButtonHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith(QuestionCustomIDs.buttons.edit) ? this.some() : this.none();
+        return interaction.customId.startsWith(PREFIX) ? this.some() : this.none();
     }
 }

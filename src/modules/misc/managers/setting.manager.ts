@@ -10,10 +10,10 @@ export default class SettingManager extends BaseManager {
     }
 
     public async init() {
-        this.drizzle.insert(settingsTable).values({
+        await this.drizzle.insert(settingsTable).values({
             guild: BigInt(container.config.guild),
             enabled: false
-        });
+        }).onConflictDoNothing();
     }
 
     public create(guildid: string) {

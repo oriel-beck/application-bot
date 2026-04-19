@@ -19,9 +19,9 @@ export class DecisionButtonHandler extends InteractionHandler {
             });
         }
 
-        const split = interaction.customId.split('-');
-        const decisionType = split.at(1) as ApplicationState;
-        const user = split.at(2)!;
+        const parts = interaction.customId.split(':');
+        const decisionType = parts[3] as ApplicationState;
+        const user = parts[4]!;
         const reason = interaction.fields.getTextInputValue('reason');
 
         const app = await this.container.applications.get(user).then((res) => res.at(0)).catch(() => null) as Application;
@@ -45,7 +45,7 @@ export class DecisionButtonHandler extends InteractionHandler {
     }
 
     public parse(interaction: ModalSubmitInteraction) {
-        return interaction.customId.startsWith(ApplicationCustomIDs.buttons.decide) ? this.some() : this.none()
+        return interaction.customId.startsWith(`${ApplicationCustomIDs.modals.decide}:`) ? this.some() : this.none()
     }
 
     async deny(interaction: ModalSubmitInteraction, application: Application, reason?: string) {

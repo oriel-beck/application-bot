@@ -3,6 +3,9 @@ import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from "@sapphire/framework";
 import { ButtonInteraction } from "discord.js";
 import { generatePostHelpEmbed } from "../util.js";
+import { ForumCustomIDs } from "@lib/constants/custom-ids.js";
+
+const PREFIX = `${ForumCustomIDs.toggleTag}:`;
 
 @ApplyOptions<InteractionHandlerOptions>({
     interactionHandlerType: InteractionHandlerTypes.Button,
@@ -15,7 +18,7 @@ export class ToggleTagHandler extends InteractionHandler {
                 ephemeral: true
             });
 
-            const tag = interaction.customId.split("-").at(1)!;
+            const tag = interaction.customId.slice(PREFIX.length);
             let appliedTags = interaction.channel.appliedTags;
 
             if (appliedTags.length === 1 && appliedTags[0] === tag) return interaction.reply({
@@ -45,6 +48,6 @@ export class ToggleTagHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith('toggletag') ? this.some() : this.none();
+        return interaction.customId.startsWith(PREFIX) ? this.some() : this.none();
     }
 }

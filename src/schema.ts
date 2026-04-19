@@ -37,6 +37,7 @@ export const messagesTable = pgTable("messages", {
     id: bigint("id", { mode: "bigint" }).primaryKey(),
     user: bigint("user", { mode: "bigint" }).notNull(),
     message: text("message").notNull(),
+    createdAt: timestamp({ mode: 'date' }),
     channel: bigint("channel", { mode: "bigint" })
         .notNull()
         .references(() => transcriptTable.channel, { onDelete: "cascade" }),

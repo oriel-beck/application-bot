@@ -1,6 +1,6 @@
 import { BaseManager } from "@lib/managers/base.manager.js";
 import { and, eq } from "drizzle-orm";
-import { messagesTable, transcriptTable } from "schema.js";
+import { messagesTable, transcriptTable } from "../../../schema.js";
 
 interface TransriptMessageCreatePayload {
     id: string;

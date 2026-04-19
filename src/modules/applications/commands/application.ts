@@ -123,9 +123,18 @@ export class SlashCommand extends Subcommand {
       return interaction.editReply('Failed to fetch applications.');
     }
 
+    const totalCount = allApps.length;
+    const perPage = totalCount > 125 ? 100 : 125;
+    const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
+    const pageIndex = 0;
+
     return interaction.editReply({
-      embeds: generateApplicationListEmbed(allApps.length, state),
-      components: generateApplicationListComponents(allApps)
+      embeds: generateApplicationListEmbed(
+        totalCount,
+        state,
+        totalCount > 125 ? { pageIndex, perPage, totalPages } : undefined,
+      ),
+      components: generateApplicationListComponents(allApps, state, pageIndex, totalCount),
     });
   }
 

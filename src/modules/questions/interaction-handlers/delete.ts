@@ -4,6 +4,8 @@ import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import type { ButtonInteraction } from "discord.js";
 
+const PREFIX = `${QuestionCustomIDs.buttons.delete}:`;
+
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
 })
@@ -16,9 +18,12 @@ export class DeleteButtonHandler extends InteractionHandler {
             });
         }
         
-        const question = interaction.customId.split('-').at(2);
+        if (!interaction.customId.startsWith(PREFIX)) {
+            return;
+        }
+        const question = interaction.customId.slice(PREFIX.length);
 
-        const deleted = await this.container.questions.delete(question!).catch(() => null);
+        const deleted = await this.container.questions.delete(question).catch(() => null);
 
         if (!deleted || !deleted.rowCount) {
             return interaction.reply({
@@ -38,6 +43,6 @@ export class DeleteButtonHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith(QuestionCustomIDs.buttons.delete) ? this.some() : this.none();
+        return interaction.customId.startsWith(PREFIX) ? this.some() : this.none();
     }
 }

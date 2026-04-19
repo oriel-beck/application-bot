@@ -11,7 +11,8 @@ import type { Application } from "@lib/types.js";
 })
 export class AnswerButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
-        const questionNum = Number(interaction.customId.split('-').at(2))!;
+        const parts = interaction.customId.split(':');
+        const questionNum = Number(parts.at(-1));
 
         const application = await this.container.applications.get(interaction.user.id).then((res) => res.at(0)).catch(() => null) as Application;
 
@@ -26,6 +27,6 @@ export class AnswerButtonHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith(ApplyCustomIDs.buttons.answer) ? this.some() : this.none()
+        return interaction.customId.startsWith(`${ApplyCustomIDs.buttons.answer}:`) ? this.some() : this.none()
     }
 }

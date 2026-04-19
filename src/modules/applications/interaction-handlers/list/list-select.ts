@@ -8,6 +8,8 @@ import { ApplicationCustomIDs } from "@lib/constants/custom-ids.js";
 import { StringSelectMenuInteraction } from "discord.js";
 import type { Application } from "@lib/types.js";
 
+const LIST_SEL_RE = /^app:list:sel:\d+$/;
+
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.SelectMenu
 })
@@ -38,6 +40,6 @@ export class ListSelectHandler extends InteractionHandler {
     }
 
     public parse(interaction: StringSelectMenuInteraction) {
-        return interaction.customId.startsWith(ApplicationCustomIDs.selects.list) ? this.some() : this.none()
+        return LIST_SEL_RE.test(interaction.customId) ? this.some() : this.none();
     }
 }

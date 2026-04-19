@@ -18,9 +18,9 @@ export class PaginationButtonHandler extends InteractionHandler {
             });
         }
 
-        const split = interaction.customId.split('-');
-        const page = Number(split.at(1));
-        const user = split.at(2);
+        const parts = interaction.customId.split(':');
+        const page = Number(parts[3]);
+        const user = parts[4];
 
         const app = await this.container.applications.get(user!).then((res) => res.at(0)).catch(() => null);
 
@@ -38,6 +38,6 @@ export class PaginationButtonHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith(ApplicationCustomIDs.buttons.paginate) ? this.some() : this.none()
+        return interaction.customId.startsWith(`${ApplicationCustomIDs.buttons.paginate}:`) ? this.some() : this.none()
     }
 }

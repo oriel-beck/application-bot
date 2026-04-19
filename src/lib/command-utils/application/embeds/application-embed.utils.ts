@@ -18,16 +18,17 @@ export async function generateApplicationEmbed(application: Application, page = 
 
 export function generateApplicationComponents(application: Application, page = 0, showDecision = true) {
     const buttons = new ActionRowBuilder<ButtonBuilder>();
+    const uid = application.user.toString();
     buttons.addComponents(new ButtonBuilder()
         .setLabel('Prev')
         .setDisabled(page === 0)
-        .setCustomId(`${ApplicationCustomIDs.buttons!.paginate}-${page - 1}-${application.user}`)
+        .setCustomId(`${ApplicationCustomIDs.buttons!.paginate}:${page - 1}:${uid}`)
         .setStyle(ButtonStyle.Primary));
 
     if (showDecision) {
         buttons.addComponents(new ButtonBuilder()
             .setLabel('Deny')
-            .setCustomId(`${ApplicationCustomIDs.buttons!.denied}-${application.user}`)
+            .setCustomId(`${ApplicationCustomIDs.buttons!.denied}:${uid}`)
             .setStyle(ButtonStyle.Danger));
     }
 
@@ -40,14 +41,14 @@ export function generateApplicationComponents(application: Application, page = 0
     if (showDecision) {
         buttons.addComponents(new ButtonBuilder()
             .setLabel('Accept')
-            .setCustomId(`${ApplicationCustomIDs.buttons!.accepted}-${application.user}`)
+            .setCustomId(`${ApplicationCustomIDs.buttons!.accepted}:${uid}`)
             .setStyle(ButtonStyle.Success));
     }
 
     buttons.addComponents(new ButtonBuilder()
         .setLabel('Next')
         .setDisabled(Math.ceil(application.answers.length / 7) === page + 1)
-        .setCustomId(`${ApplicationCustomIDs.buttons!.paginate}-${page + 1}-${application.user}`)
+        .setCustomId(`${ApplicationCustomIDs.buttons!.paginate}:${page + 1}:${uid}`)
         .setStyle(ButtonStyle.Primary));
 
     return [buttons];

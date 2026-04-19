@@ -2,11 +2,14 @@ import { hasRole } from "@lib/precondition-util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from "@sapphire/framework";
 import { ButtonInteraction, Colors, EmbedBuilder } from "discord.js";
+import { ForumCustomIDs } from "@lib/constants/custom-ids.js";
+
+const PREFIX = `${ForumCustomIDs.supportResolve}:`;
 
 @ApplyOptions<InteractionHandlerOptions>({
     interactionHandlerType: InteractionHandlerTypes.Button,
 })
-export class ToggleTagHandler extends InteractionHandler {
+export class ResolveSupportPostHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
         if (interaction.channel?.isThread() && interaction.channel.parent?.isThreadOnly()) {
             if (!hasRole(interaction.member!, this.container.config.roles.staff) && !hasRole(interaction.member!, this.container.config.roles.trial_support) && interaction.channel.ownerId !== interaction.user.id) return interaction.reply({
@@ -14,7 +17,7 @@ export class ToggleTagHandler extends InteractionHandler {
                 ephemeral: true
             });
 
-            const tag = interaction.customId.split("-").at(1)!;
+            const tag = interaction.customId.slice(PREFIX.length);
             if (tag !== this.container.config.support_tags.resolved) return interaction.reply({
                 content: "Internal error, this is not a valid tag for this interaction handler",
                 ephemeral: true
@@ -49,6 +52,6 @@ export class ToggleTagHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId.startsWith('supportpost') ? this.some() : this.none();
+        return interaction.customId.startsWith(PREFIX) ? this.some() : this.none();
     }
 }

@@ -1,4 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
+import { ShareCustomIDs } from "../../constants/custom-ids.js";
 
 export function generateStickyMessageEmbed(): EmbedBuilder[] {
     return [
@@ -16,7 +17,7 @@ export function generateStickyMessageComponents(): ActionRowBuilder<ButtonBuilde
     return [
         new ActionRowBuilder<ButtonBuilder>().addComponents(
             new ButtonBuilder()
-            .setCustomId("sticky-message-additions")
+            .setCustomId(ShareCustomIDs.stickyAdditions)
             .setLabel("Additions")
             .setStyle(ButtonStyle.Secondary)
         )

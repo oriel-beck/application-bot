@@ -3,6 +3,15 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import type { Blacklist } from '@lib/types.js';
 
+function isPostgresUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code: unknown }).code === '23505'
+  );
+}
+
 @ApplyOptions<Subcommand.Options>({
   name: 'blacklist',
   description: 'Manages the blacklist system.',
@@ -32,10 +41,23 @@ export class SlashCommand extends Subcommand {
     const user = interaction.options.getUser('user', true);
     const reason = interaction.options.getString('reason', true);
 
-    const create = await this.container.blacklists.create(user.id, reason, interaction.user.id).catch(() => null);
+    let create: Awaited<ReturnType<typeof this.container.blacklists.create>>;
+    try {
+      create = await this.container.blacklists.create(user.id, reason, interaction.user.id);
+    } catch (error) {
+      if (isPostgresUniqueViolation(error)) {
+        return interaction.editReply(`${user} is already blacklisted.`);
+      }
+      console.error('[blacklist add]', error);
+      return interaction.editReply(
+        `Could not blacklist ${user} because the database request failed. Please try again in a moment.`
+      );
+    }
 
     if (!create?.at(0)) {
-      return interaction.editReply(`Failed to blacklist ${user}, try again later.`);
+      return interaction.editReply(
+        `Could not blacklist ${user} because the database returned an unexpected empty result. Please try again in a moment.`
+      );
     }
 
     return interaction.editReply(`Blacklisted ${user}.`);
@@ -45,10 +67,18 @@ export class SlashCommand extends Subcommand {
     await interaction.deferReply();
     const user = interaction.options.getUser('user', true);
 
-    const remove = await this.container.blacklists.delete(user.id).catch(() => null);
+    let remove: Awaited<ReturnType<typeof this.container.blacklists.delete>>;
+    try {
+      remove = await this.container.blacklists.delete(user.id);
+    } catch (error) {
+      console.error('[blacklist remove]', error);
+      return interaction.editReply(
+        `Could not remove ${user} from the blacklist because the database request failed. Please try again in a moment.`
+      );
+    }
 
-    if (!remove) {
-      return interaction.editReply(`Failed to unblacklisted ${user}.`)
+    if (!remove.length) {
+      return interaction.editReply(`${user} is not on the blacklist.`);
     }
 
     return interaction.editReply(`Unblacklisted ${user}.`);
@@ -59,10 +89,18 @@ export class SlashCommand extends Subcommand {
     const user = interaction.options.getUser('user', true);
     const reason = interaction.options.getString('reason', true);
 
-    const update = await this.container.blacklists.update(user.id, 'reason', reason).catch(() => null);
+    let update: Awaited<ReturnType<typeof this.container.blacklists.update>>;
+    try {
+      update = await this.container.blacklists.update(user.id, 'reason', reason);
+    } catch (error) {
+      console.error('[blacklist reason]', error);
+      return interaction.editReply(
+        `Could not update the blacklist reason for ${user} because the database request failed. Please try again in a moment.`
+      );
+    }
 
-    if (!update) {
-      return interaction.editReply(`Failed to re-reason ${user}, try again later`);
+    if (!update.length) {
+      return interaction.editReply(`${user} is not on the blacklist, so their reason could not be updated.`);
     }
 
     return interaction.editReply(`Re-reasoned the blacklist for ${user}.`);
@@ -75,7 +113,9 @@ export class SlashCommand extends Subcommand {
     const select = await this.container.blacklists.get(user.id).catch(() => null);
 
     if (!select) {
-      return interaction.editReply(`Failed to get blacklist information for ${user}.`);
+      return interaction.editReply(
+        `Could not load blacklist information for ${user} because the database request failed. Please try again in a moment.`
+      );
     }
 
     if (!select?.at(0)) {

@@ -1,4 +1,4 @@
-import { generateQuestionListEmbed } from '@lib/command-utils/question/list/question-list.utils.js';
+import { generateQuestionListComponents, generateQuestionListEmbed } from '@lib/command-utils/question/list/question-list.utils.js';
 import { generateQuestionShowComponents, generateQuestionShowEmbed } from '@lib/command-utils/question/show/question-show.utils.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
@@ -63,12 +63,24 @@ export class SlashCommand extends Subcommand {
 
     const questions = await this.container.questions.getAll().catch(() => null);
 
-    if (!questions?.at(0)) {
-      return interaction.editReply('Failed to get questions.');
+    if (!questions?.length) {
+      return interaction.editReply(
+        questions == null ? 'Failed to get questions.' : 'There are no questions.'
+      );
     }
 
+    const list = questions as unknown as Question[];
+    const totalCount = list.length;
+    const pageIndex = 0;
+    const perPage = totalCount > 125 ? 100 : 125;
+    const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
+
     return interaction.editReply({
-      embeds: generateQuestionListEmbed(questions as unknown as Question[])
+      embeds: generateQuestionListEmbed(
+        list,
+        totalCount > 125 ? { pageIndex, perPage, totalPages } : undefined,
+      ),
+      components: generateQuestionListComponents(list, pageIndex, totalCount),
     })
   }
 

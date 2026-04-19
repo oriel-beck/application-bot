@@ -6,7 +6,7 @@ import { Events, Listener } from "@sapphire/framework";
     once: true,
     name: 'tipsClientReadyOnce'
 })
-export class CommandDeniedListener extends Listener<typeof Events.ClientReady> {
+export class TipsClientReadyListener extends Listener<typeof Events.ClientReady> {
     async run() {
         await this.container.tips.refreshTips();
     }

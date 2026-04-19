@@ -7,14 +7,9 @@
     "moduleResolution": "nodenext",
     "noUnusedParameters": false,
     "skipLibCheck": true,
-    "lib": ["dom"],
-    // Configure module aliases
-    // Keep this in sync with ./.swcrc
-    "baseUrl": "./src",
+    "lib": ["ES2022", "DOM"],
     "paths": {
-        "@lib/*": [
-            "lib/*"
-        ]
+        "@lib/*": ["./src/lib/*"]
     }
   }
 }

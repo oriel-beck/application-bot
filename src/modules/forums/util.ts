@@ -1,5 +1,6 @@
 import { container } from "@sapphire/framework";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder } from "discord.js";
+import { ForumCustomIDs } from "@lib/constants/custom-ids.js";
 
 export function generatePostHelpEmbed(appliedTags: string[]) {
     const mainTags = [container.config.support_tags.code_error, container.config.support_tags.wiki_error, container.config.support_tags.question] as const;
@@ -31,23 +32,23 @@ export function generatePostHelpEmbed(appliedTags: string[]) {
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents([
         new ButtonBuilder()
-            .setCustomId(`toggletag-${container.config.support_tags.code_error}`)
+            .setCustomId(`${ForumCustomIDs.toggleTag}:${container.config.support_tags.code_error}`)
             .setLabel("Code error")
             .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
-            .setCustomId(`toggletag-${container.config.support_tags.wiki_error}`)
+            .setCustomId(`${ForumCustomIDs.toggleTag}:${container.config.support_tags.wiki_error}`)
             .setLabel("Wiki error")
             .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
-            .setCustomId(`toggletag-${container.config.support_tags.question}`)
+            .setCustomId(`${ForumCustomIDs.toggleTag}:${container.config.support_tags.question}`)
             .setLabel("Question")
             .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
-            .setCustomId(`toggletag-${container.config.support_tags.complex}`)
+            .setCustomId(`${ForumCustomIDs.toggleTag}:${container.config.support_tags.complex}`)
             .setLabel("Complex")
             .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
-            .setCustomId(`supportpost-${container.config.support_tags.resolved}`)
+            .setCustomId(`${ForumCustomIDs.supportResolve}:${container.config.support_tags.resolved}`)
             .setLabel("Resolve")
             .setStyle(ButtonStyle.Success)
     ]);

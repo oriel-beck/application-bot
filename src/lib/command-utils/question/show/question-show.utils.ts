@@ -18,18 +18,18 @@ export function generateQuestionShowComponents(question: Question) {
                 new ButtonBuilder()
                     .setLabel('Delete')
                     .setStyle(ButtonStyle.Danger)
-                    .setCustomId(`${QuestionCustomIDs.buttons!.delete}-${question.id}`),
+                    .setCustomId(`${QuestionCustomIDs.buttons!.delete}:${question.id}`),
                 new ButtonBuilder()
                     .setLabel('Edit')
                     .setStyle(ButtonStyle.Secondary)
-                    .setCustomId(`${QuestionCustomIDs.buttons!.edit}-${question.id}`)
+                    .setCustomId(`${QuestionCustomIDs.buttons!.edit}:${question.id}`)
             )
     ]
 }
 
 export function generateQuestionShowEditModal(id: string, question: string) {
     return new ModalBuilder()
-    .setCustomId(`${QuestionCustomIDs.modals!.edit}-${id}`)
+    .setCustomId(`${QuestionCustomIDs.modals!.edit}:${id}`)
     .setTitle('Editing question')
         .addComponents(
             new ActionRowBuilder<TextInputBuilder>()

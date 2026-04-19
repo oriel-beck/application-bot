@@ -48,16 +48,33 @@ export class SlashCommand extends Subcommand {
             ephemeral: true
         });
 
-        const seconds = interaction.options.getString("cooldown");
+        const secondsRaw = interaction.options.getNumber("seconds", false);
         const user = interaction.options.getUser("user", true);
-        if (!seconds) {
+        const shouldClear = secondsRaw == null || secondsRaw === 0;
+
+        if (shouldClear) {
             await this.container.cooldown.deleteCooldown(user.id);
-        } else {
-            await this.container.cooldown.setCooldown(user.id, +seconds);
+            return interaction.reply({
+                content: `Reset ${user}'s cooldown.`,
+                ephemeral: true
+            });
         }
 
+        if (
+            !Number.isFinite(secondsRaw) ||
+            secondsRaw <= 0 ||
+            !Number.isInteger(secondsRaw)
+        ) {
+            return interaction.reply({
+                content: "Seconds must be a positive whole number when setting a cooldown.",
+                ephemeral: true
+            });
+        }
+
+        await this.container.cooldown.setCooldown(user.id, secondsRaw);
+
         return interaction.reply({
-            content: seconds ? `Reset ${user}'s cooldown.` : `Set ${user}'s cooldown to ${seconds} seconds`,
+            content: `Set ${user}'s cooldown to ${secondsRaw} seconds.`,
             ephemeral: true
         });
     }
@@ -65,7 +82,7 @@ export class SlashCommand extends Subcommand {
     public registerApplicationCommands(registry: Command.Registry) {
         registry.registerChatInputCommand((builder) => builder
             .setName(this.name)
-            .setDescription(this.name)
+            .setDescription(this.description)
             .addSubcommand(builder => builder
                 .setName("resend")
                 .setDescription("re-sends the share your bot rules")

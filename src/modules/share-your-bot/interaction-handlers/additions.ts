@@ -1,4 +1,5 @@
 import { generateStickyMessageAdditionsEmbeds } from "@lib/command-utils/sticky-message/resend.js";
+import { ShareCustomIDs } from "@lib/constants/custom-ids.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import type { ButtonInteraction } from "discord.js";
@@ -15,6 +16,6 @@ export class StickyMessageAdditionsHandler extends InteractionHandler {
     }
 
     public parse(interaction: ButtonInteraction) {
-        return interaction.customId === "sticky-message-additions" ? this.some() : this.none();
+        return interaction.customId === ShareCustomIDs.stickyAdditions ? this.some() : this.none();
     }
 }

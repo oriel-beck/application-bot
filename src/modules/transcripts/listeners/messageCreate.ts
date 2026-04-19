@@ -23,32 +23,40 @@ export class MessageCreateListener extends Listener<typeof Events.MessageCreate>
             const author = authorMention?.at(1);
             if (!author) return;
 
-            // Create the transcript if it's missing
-            await this.container.transcripts.create({
-                channel: BigInt(message.channel.id),
-                author: BigInt(author)
-            });
-
-            // Fetch all messages in the channel
-            let lastMessageId: string | undefined = message.id;
-            const allMessages: Message[] = [];
-            do {
-                // @ts-expect-error not sure why but the TS compiler thinks this is any, it's not
-                const msgs = await message.channel.messages.fetch({ limit: 100, before: lastMessageId });
-                allMessages.push(...msgs.values());
-                lastMessageId = msgs.last()?.id;
-            } while (lastMessageId);
-
-            // Add all fetched messages to the transcript
-            const addMessagesPromises = allMessages.map((msg) =>
-                this.container.transcripts.addMessage({
+            try {
+                // Create the transcript if it's missing
+                await this.container.transcripts.create({
                     channel: BigInt(message.channel.id),
-                    user: BigInt(msg.author.id),
-                    message: msg.content,
-                    id: msg.id,
-                })
-            );
-            await Promise.all(addMessagesPromises);
+                    author: BigInt(author)
+                });
+
+                // Fetch all messages in the channel
+                let lastMessageId: string | undefined = message.id;
+                const allMessages: Message[] = [];
+                do {
+                    // @ts-expect-error not sure why but the TS compiler thinks this is any, it's not
+                    const msgs = await message.channel.messages.fetch({ limit: 100, before: lastMessageId });
+                    allMessages.push(...msgs.values());
+                    lastMessageId = msgs.last()?.id;
+                } while (lastMessageId);
+
+                const BATCH_SIZE = 20;
+                for (let i = 0; i < allMessages.length; i += BATCH_SIZE) {
+                    const chunk = allMessages.slice(i, i + BATCH_SIZE);
+                    await Promise.all(
+                        chunk.map((msg) =>
+                            this.container.transcripts.addMessage({
+                                channel: BigInt(message.channel.id),
+                                user: BigInt(msg.author.id),
+                                message: msg.content,
+                                id: msg.id,
+                            })
+                        )
+                    );
+                }
+            } catch (error) {
+                console.error('Transcript backfill failed:', error);
+            }
         } else {
             // Add the current message to the transcript
             await this.container.transcripts.addMessage({

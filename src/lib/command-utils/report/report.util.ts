@@ -38,7 +38,7 @@ export function generateReportComponents() {
 
 export function generateReportModal(user: string, message = '') {
     return new ModalBuilder()
-        .setCustomId(`${ReportCustomIDs.modals.report}-${user}-${message}`)
+        .setCustomId(`${ReportCustomIDs.modals.report}:${user}:${message || 'none'}`)
         .setTitle('Report for cheating in the staff application')
         .addComponents(
             new ActionRowBuilder<TextInputBuilder>()

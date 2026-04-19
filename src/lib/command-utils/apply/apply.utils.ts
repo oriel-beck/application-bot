@@ -28,7 +28,7 @@ export function generateApplyComponents(answers: string[], currentAnswer = 0): A
             new ButtonBuilder()
                 .setLabel('Answer')
                 .setStyle(ButtonStyle.Success)
-                .setCustomId(`${ApplyCustomIDs.buttons!.answer}-${currentAnswer}`),
+                .setCustomId(`${ApplyCustomIDs.buttons!.answer}:${currentAnswer}`),
             new ButtonBuilder()
                 .setLabel('Done')
                 .setStyle(answers && answers.length === 25 ? ButtonStyle.Primary : ButtonStyle.Secondary)
@@ -65,7 +65,7 @@ export function generateApplyAnswerModal(questions: string[], answers: string[],
 
     return new ModalBuilder()
         .setTitle(`Question ${questionNum + 1}`)
-        .setCustomId(`${ApplyCustomIDs.modals!.answer}-${questionNum}`)
+        .setCustomId(`${ApplyCustomIDs.modals!.answer}:${questionNum}`)
         .addComponents(
             new ActionRowBuilder<TextInputBuilder>()
                 .addComponents(textInput)

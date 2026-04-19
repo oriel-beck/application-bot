@@ -1,5 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Events, Listener, type ChatInputCommandErrorPayload } from "@sapphire/framework";
+import { safeErrorString } from "./error-log.js";
 
 @ApplyOptions<Listener.Options>({
     event: Events.ChatInputCommandError,
@@ -7,6 +8,8 @@ import { Events, Listener, type ChatInputCommandErrorPayload } from "@sapphire/f
 })
 export class CommandErrorsListener extends Listener<typeof Events.ChatInputCommandError> {
     run(error: unknown, payload: ChatInputCommandErrorPayload) {
-        console.error(`[ChatInputCommandError(${payload.command.name})]:`, error);
+        console.error(
+            `[${new Date().toISOString()}] [ChatInputCommandError(${payload.command.name})]: ${safeErrorString(error)}`,
+        );
     }
 }

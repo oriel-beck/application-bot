@@ -13,7 +13,7 @@ export class AnswerModalHandler extends InteractionHandler {
     public async run(interaction: ModalSubmitInteraction) {
         await interaction.deferUpdate();
 
-        const questionNum = Number(interaction.customId.split('-').at(2));
+        const questionNum = Number(interaction.customId.split(':').at(-1));
         const answer = interaction.fields.getTextInputValue('answer');
 
         const app = await this.container.applications.get(interaction.user.id).then((res) => res.at(0)).catch(() => null) as Application;
@@ -59,6 +59,6 @@ export class AnswerModalHandler extends InteractionHandler {
     }
 
     public parse(interaction: ModalSubmitInteraction) {
-        return interaction.customId.startsWith(ApplyCustomIDs.modals.answer) ? this.some() : this.none();
+        return interaction.customId.startsWith(`${ApplyCustomIDs.modals.answer}:`) ? this.some() : this.none();
     }
 }

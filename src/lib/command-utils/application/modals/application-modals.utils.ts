@@ -4,7 +4,7 @@ import type { ApplicationState } from "../../../constants/application.js";
 
 export function generateModal(type: ApplicationState, user: string) {
     return new ModalBuilder()
-        .setCustomId(`${ApplicationCustomIDs.modals!.decide}-${type}-${user}`)
+        .setCustomId(`${ApplicationCustomIDs.modals!.decide}:${type}:${user}`)
         .setTitle(Titles[type]!)
         .addComponents(
             new ActionRowBuilder<TextInputBuilder>()
