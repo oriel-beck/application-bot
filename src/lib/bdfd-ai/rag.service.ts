@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { ChromaClient, type Collection } from 'chromadb';
+import { BDFD_BASICS } from './bdfd-basics.js';
 import type { ChatTurn } from './types.js';
 import { extractUrls, fetchExternalContent, mentionsOversizedCode } from './external-content.js';
 
@@ -9,13 +10,12 @@ const CHAT_MODEL = 'gpt-4o-mini';
 const TOP_K = 5;
 
 const SYSTEM_PROMPT = `You are an expert assistant for BDFD (Bot Designer for Discord).
-You help users debug their BDFD code and answer questions about BDFD functions.
-Answer using only the provided documentation. If the answer is not in the docs, say so clearly.
+You help users debug BDScript and answer questions about BDFD functions.
 
-Wiki excerpts use plain triple-backtick fences for real BDFD/BDScript (e.g. $nomention, {args}, !trigger).
-Lines like "[Discord UI preview omitted" mean the wiki had a visual mock only — ignore that placeholder.
-Never output discord yaml, user_id/username YAML, or "command:/trigger:/code:" structures; those are wiki UI previews, not BDFD.
-When explaining how to create or edit a command, describe the BDFD app fields (command name, trigger, reply message code) and show only BDScript in plain \`\`\` fences (no language tag).
+Use <bdfd_basics> for platform structure and syntax rules. Use <wiki_context> for function-specific details.
+If neither source covers the question, say you are not sure — do not guess syntax from other bot frameworks.
+
+Wiki excerpts use plain triple-backtick fences for real BDScript. Lines like "[Discord UI preview omitted" are stripped wiki mocks — ignore them.
 
 Be concise and practical. Your reply will be shown in a Discord embed (markdown supported).
 If the user says their code is too large to paste, tell them to send a pastebin raw link or a .txt file URL in a reply to you.`;
@@ -84,7 +84,7 @@ export class RagService {
         const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
             {
                 role: 'system',
-                content: `${SYSTEM_PROMPT}\n\n<wiki_context>\n${wikiChunks || '(no matching documentation)'}\n</wiki_context>`,
+                content: `${SYSTEM_PROMPT}\n\n<bdfd_basics>\n${BDFD_BASICS}\n</bdfd_basics>\n\n<wiki_context>\n${wikiChunks || '(no matching documentation)'}\n</wiki_context>`,
             },
         ];
 

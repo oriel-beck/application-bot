@@ -48,4 +48,4 @@ Turns are stored in PostgreSQL (`ai_conversation_turns`): alternating **user** /
 - Script: `src/scripts/ingest-wiki.ts` → `node dist/src/scripts/ingest-wiki.js` (also in compose).
 - Before chunking, `src/lib/bdfd-ai/wiki-markdown.ts` strips wiki `discord yaml` preview fences (mdbook UI mocks); only plain ``` BDFD blocks are kept for RAG.
 - Env: `OPENAI_API_KEY`, `CHROMA_URL`. **Re-run ingest after changing normalization** so Chroma chunks refresh.
-- RAG prompt (`rag.service.ts`) instructs the model to use BDScript fences only, not YAML previews.
+- RAG prompt (`rag.service.ts`) includes static primer `src/lib/bdfd-ai/bdfd-basics.ts` (command fields, `$message`, no `{args}`-style placeholders) plus wiki chunks; instructs not to guess off-framework syntax.
