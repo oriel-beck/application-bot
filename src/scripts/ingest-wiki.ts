@@ -2,11 +2,12 @@
  * Ingest BDFD wiki markdown into Chroma. Run after build:
  *   node dist/src/scripts/ingest-wiki.js
  */
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import OpenAI from 'openai';
 import { ChromaClient } from 'chromadb';
 import { createHash } from 'crypto';
+import { ingestDiscordChannels } from '../lib/bdfd-ai/discord-ingest.js';
 import {
     bdfdApiCallbacksToChunks,
     bdfdApiFunctionsToChunks,
@@ -32,7 +33,12 @@ const MAX_CHUNK_CHARS = 3200;
 interface WikiChunk {
     id: string;
     document: string;
-    metadata: { file: string; heading: string; url: string; source: 'wiki' | 'bdfd-api' };
+    metadata: { file: string; heading: string; url: string; source: 'wiki' | 'bdfd-api' | 'discord' };
+}
+
+interface IngestConfig {
+    guild?: string;
+    channels?: Record<string, string>;
 }
 
 function slugify(text: string): string {
@@ -119,6 +125,16 @@ async function embedBatch(openai: OpenAI, texts: string[]): Promise<number[][]> 
     return res.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
 }
 
+async function loadConfigJson(): Promise<IngestConfig | null> {
+    try {
+        const raw = await readFile(join(process.cwd(), 'config.json'), 'utf8');
+        const parsed = JSON.parse(raw) as IngestConfig;
+        return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch {
+        return null;
+    }
+}
+
 async function main() {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error('OPENAI_API_KEY is required');
@@ -141,6 +157,7 @@ async function main() {
 
     const allChunks: WikiChunk[] = [];
     const functionIndex: BdscriptFunctionIndex = new Map();
+    const config = await loadConfigJson();
 
     for (const path of paths) {
         const raw = await fetchMarkdown(path);
@@ -167,6 +184,44 @@ async function main() {
     console.log(
         `Added ${callbackChunks.length} callback API chunks (${callbackAdded} new names in function index)`
     );
+
+    const envChannelIds = (process.env.BDFD_INGEST_CHANNEL_IDS ?? '')
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean);
+    const configChannelKeys = (process.env.BDFD_INGEST_CHANNEL_KEYS ?? 'tips,wiki,faq')
+        .split(',')
+        .map((key) => key.trim())
+        .filter(Boolean);
+    const configChannelIds = configChannelKeys
+        .map((key) => config?.channels?.[key])
+        .filter((id): id is string => typeof id === 'string' && id.length > 0);
+    const ingestChannelIds = [...new Set([...envChannelIds, ...configChannelIds])];
+    const discordToken = process.env.BDFD_INGEST_BOT_TOKEN ?? process.env.BOT_TOKEN;
+    const rawMaxMessages = Number(process.env.BDFD_INGEST_MAX_MESSAGES_PER_CHANNEL ?? '');
+    const maxMessagesPerChannel =
+        Number.isFinite(rawMaxMessages) && rawMaxMessages > 0 ? rawMaxMessages : undefined;
+    const ingestGuildId = process.env.BDFD_INGEST_GUILD_ID ?? config?.guild;
+
+    if (ingestChannelIds.length && discordToken) {
+        console.log(
+            `Fetching Discord channel content from ${ingestChannelIds.length} configured channel(s)...`
+        );
+        const discordChunks = await ingestDiscordChannels({
+            token: discordToken,
+            channelIds: ingestChannelIds,
+            guildId: ingestGuildId,
+            maxMessagesPerChannel,
+        });
+        allChunks.push(...discordChunks);
+        console.log(`Added ${discordChunks.length} Discord message chunks`);
+    } else if (ingestChannelIds.length && !discordToken) {
+        console.warn(
+            'BDFD_INGEST_CHANNEL_IDS is set but no bot token found (BDFD_INGEST_BOT_TOKEN or BOT_TOKEN). Skipping Discord channel ingestion.'
+        );
+    } else {
+        console.log('No BDFD_INGEST_CHANNEL_IDS set; skipping Discord channel ingestion.');
+    }
     console.log(`Prepared ${allChunks.length} total chunks`);
 
     const indexPath = join(process.cwd(), 'json', 'bdscript-functions.json');
