@@ -17,6 +17,10 @@ const ATTACHMENT_NOTICE =
     '\n\n**Full response is attached as `bdfd-ai-response.txt`.**';
 const ATTACHMENT_FILENAME = 'bdfd-ai-response.txt';
 
+/** Shown on successful RAG replies (not rate-limit / unavailable embeds). */
+export const AI_RESPONSE_DISCLAIMER =
+    'AI-generated from the wiki — may be inaccurate. Verify important details or ask staff.';
+
 export function shouldAttachAiResponse(text: string): boolean {
     return text.length > DISCORD_EMBED_DESCRIPTION_MAX;
 }
@@ -40,6 +44,10 @@ export function buildAiEmbed(description: string): EmbedBuilder {
         .setColor(Colors.Blurple)
         .setTitle('BDFD AI')
         .setDescription(description);
+}
+
+export function buildAiResponseEmbed(description: string): EmbedBuilder {
+    return buildAiEmbed(description).setFooter({ text: AI_RESPONSE_DISCLAIMER });
 }
 
 export function buildRateLimitEmbed(limit: number): EmbedBuilder {
@@ -68,7 +76,7 @@ export function buildDisabledEmbed(): EmbedBuilder {
 
 export function formatAiPayload(text: string): AiReplyPayload {
     if (!shouldAttachAiResponse(text)) {
-        return { embeds: [buildAiEmbed(text)] };
+        return { embeds: [buildAiResponseEmbed(text)] };
     }
 
     const previewBody =
@@ -81,7 +89,7 @@ export function formatAiPayload(text: string): AiReplyPayload {
     });
 
     return {
-        embeds: [buildAiEmbed(description)],
+        embeds: [buildAiResponseEmbed(description)],
         files: [file],
     };
 }

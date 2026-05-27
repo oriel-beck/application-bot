@@ -35,7 +35,7 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 | File | Role |
 |------|------|
 | `process-request.ts` | Gates, thinking UI, RAG call, save turns |
-| `response-utils.ts` | Embeds; replies over 4096 chars attach `bdfd-ai-response.txt` |
+| `response-utils.ts` | Embeds (footer disclaimer on successful replies); over 4096 chars attach `bdfd-ai-response.txt` |
 | `rag.service.ts` | Chroma + OpenAI (`container.rag`) |
 | `discord-ingest.ts` | Optional Discord channel history ingest (guides/FAQ channels) |
 | `channel-utils.ts` | Channel kind + author resolution |
