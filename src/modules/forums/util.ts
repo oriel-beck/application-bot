@@ -26,6 +26,10 @@ export function generatePostHelpEmbed(appliedTags: string[]) {
         value: "` ● ` Make sure your question is easy to read.\n` ● ` Check <#567724334278508554> to see if someone already answered your question."
     });
     if (appliedTags.includes(complex)) embed.setDescription(embed.data.description || "" + "\nIf you mark your post as **Complex**, this means your code is confusing for an average user to understand. You have a higher chance of not receiving a response, however. If this happens, please make a ticket using </new:806148472058281984>.");
+    embed.addFields({
+        name: "AI assistant",
+        value: "` ● ` Use **`/ai`** or reply to **this message** for wiki-powered help. Conversation history is saved for follow-ups."
+    });
     embed.setFooter({
         text: "Do not try to hoist your post in any channel in the server, this is against our rules and you will receive a warning if you do so."
     });

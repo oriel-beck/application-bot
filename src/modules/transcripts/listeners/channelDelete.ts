@@ -1,3 +1,4 @@
+import { cleanupClosedSupportChannel } from "@lib/bdfd-ai/cleanup-channel.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { Events, Listener } from "@sapphire/framework";
 import { AttachmentBuilder, ChannelType, DMChannel, NonThreadGuildBasedChannel } from "discord.js";
@@ -34,7 +35,7 @@ export class ChannelDeleteListener extends Listener<typeof Events.ChannelDelete>
             files: [attachment]
         }).catch((err) => console.error("Failed to DM transcript", err));
 
-        // don't delete unless sent so I can recover it
-        if (sent) await this.container.transcripts.delete(channel.id);
+        // don't delete transcript unless sent so it can be recovered; always clear AI state
+        await cleanupClosedSupportChannel(channel.id, { deleteTranscript: !!sent });
     }
 }

@@ -4,6 +4,9 @@ import { ApplicationClient } from '@lib/app-client.js';
 // register config
 import '@lib/config/register.js';
 
+// register international support translations
+import '@lib/international-support-register.js';
+
 // register subcommand plugin
 import '@sapphire/plugin-subcommands/register';
 
@@ -12,6 +15,9 @@ import '@lib/db-register.js';
 
 // register redis
 import '@lib/redis-register.js';
+
+// register bdfd-ai RAG
+import '@lib/bdfd-ai/bdfd-ai-register.js';
 
 const client = new ApplicationClient({
   intents: [
@@ -49,7 +55,8 @@ const client = new ApplicationClient({
     "forums",
     "utility",
     "share-your-bot",
-    "transcripts"
+    "transcripts",
+    "bdfd-ai"
   ]
 });
 

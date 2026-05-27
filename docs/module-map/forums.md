@@ -13,13 +13,13 @@
 
 | File | Purpose |
 |------|---------|
-| `listeners/post-create.ts` | React to new forum posts (tags/workflows). |
+| `listeners/post-create.ts` | Welcome embed on new posts in `channels.support` (tag buttons + AI invoke hint) and `channels.international_support` (Resolve only, locale from language tags + AI hint). |
 
 ## Interaction handlers
 
 | File | Purpose |
 |------|---------|
-| `interaction-handlers/resolve.ts` | Resolve forum thread/tag flow. |
+| `interaction-handlers/resolve.ts` | Resolve forum thread/tag flow; clears AI conversation + transcript for the thread. |
 | `interaction-handlers/toggle-tag.ts` | Toggle configured support tags. |
 
 ## Preconditions
@@ -28,4 +28,5 @@
 
 ## Utilities
 
-- `util.ts` — forum-specific helpers; buttons use `ForumCustomIDs` from `src/lib/constants/custom-ids.ts`: `forum:tag:{tagId}` (toggle topic tags) and `forum:support:{resolvedTagId}` (resolve).
+- `util.ts` — support forum embed + topic tag buttons (`forum:tag:{tagId}`, `forum:support:{resolvedTagId}`).
+- `international-util.ts` / `international-support.i18n.ts` — international forum: translated generic embed, Resolve button only; locale from `international_support_tags` language flags (default English). Copy lives in `json/international-support.json` (loaded at startup via `@lib/international-support-register.js`).

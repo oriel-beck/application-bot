@@ -1,6 +1,13 @@
+import { cleanupClosedSupportChannel } from "@lib/bdfd-ai/cleanup-channel.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { Subcommand } from "@sapphire/plugin-subcommands";
 import { Colors, EmbedBuilder } from "discord.js";
+import {
+    detectInternationalSupportLanguage,
+    formatInternationalResolvedDm,
+    getInternationalSupportStrings,
+    isInternationalSupportForum,
+} from "../international-support.i18n.js";
 
 @ApplyOptions<Subcommand.Options>({
     name: "forum",
@@ -36,7 +43,15 @@ export class SlashCommand extends Subcommand {
 
     public async solve(interaction: Subcommand.ChatInputCommandInteraction) {
         if (interaction.channel?.isTextBased() && interaction.channel.isThread()) {
-            const success = interaction.channel.setAppliedTags([this.container.config.support_tags.resolved]).catch(() => null);
+            const isInternational = isInternationalSupportForum(interaction.channel.parentId ?? undefined);
+            const resolvedTag = isInternational
+                ? this.container.config.international_support_tags.resolved
+                : this.container.config.support_tags.resolved;
+            const strings = isInternational
+                ? getInternationalSupportStrings(detectInternationalSupportLanguage(interaction.channel.appliedTags))
+                : null;
+
+            const success = interaction.channel.setAppliedTags([resolvedTag]).catch(() => null);
             if (!success) return interaction.reply({
                 content: "Failed to resolve post.",
                 ephemeral: true
@@ -50,11 +65,9 @@ export class SlashCommand extends Subcommand {
             await interaction.channel.send({
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle("Resolved")
-                        .setDescription("Your post has been resolved, locked, and archived, if there are additional issues please open a new post.")
-                        .setFooter({
-                            text: "Thank you for using BDFD! ❤️"
-                        })
+                        .setTitle(strings?.resolvedTitle ?? "Resolved")
+                        .setDescription(strings?.resolvedDescription ?? "Your post has been resolved, locked, and archived, if there are additional issues please open a new post.")
+                        .setFooter({ text: strings?.resolvedFooter ?? "Thank you for using BDFD! ❤️" })
                         .setColor(Colors.Green)
                 ]
             });
@@ -71,9 +84,15 @@ export class SlashCommand extends Subcommand {
                 content: "Solved post!"
             });
 
-            owner?.user?.send({
-                content: `Your post in ${interaction.guild?.name} was resolved, you can return to read your post at any time in ${interaction.channel.url}.`
-            }).catch(() => null);
+            const guildName = interaction.guild?.name ?? "the server";
+            const dmContent = strings
+                ? formatInternationalResolvedDm(strings.resolvedDm, guildName, interaction.channel.url)
+                : `Your post in ${guildName} was resolved, you can return to read your post at any time in ${interaction.channel.url}.`;
+
+            owner?.user?.send({ content: dmContent }).catch(() => null);
+
+            await cleanupClosedSupportChannel(interaction.channel.id, { deleteTranscript: true });
+            return;
         }
 
         return await interaction.reply({

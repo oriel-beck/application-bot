@@ -18,6 +18,7 @@ export interface Blacklist {
 export interface Setting {
     guild: types.Long;
     enabled: boolean;
+    aiEnabled: boolean;
 }
 
 export interface Question {

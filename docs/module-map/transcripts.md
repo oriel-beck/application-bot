@@ -16,7 +16,7 @@
 | `listeners/messageCreate.ts` | Record new messages. |
 | `listeners/messageUpdate.ts` | Record edits. |
 | `listeners/messageDelete.ts` | Handle deletions. |
-| `listeners/channelDelete.ts` | Cleanup when channels removed. |
+| `listeners/channelDelete.ts` | DM transcript on ticket delete; removes DB transcript + AI state via `cleanupClosedSupportChannel` when DM succeeds (AI state always cleared). |
 
 ## Schema
 

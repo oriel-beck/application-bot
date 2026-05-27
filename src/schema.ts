@@ -20,7 +20,18 @@ export const blacklistTable = pgTable("blacklist", {
 
 export const settingsTable = pgTable("settings", {
     guild: bigint("guild", { mode: 'bigint' }).primaryKey(),
-    enabled: boolean("enabled")
+    enabled: boolean("enabled"),
+    aiEnabled: boolean("ai_enabled").notNull().default(false),
+});
+
+export const aiTurnRoleEnum = pgEnum('ai_turn_role', ['user', 'assistant']);
+
+export const aiConversationTurnsTable = pgTable('ai_conversation_turns', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    channel: bigint('channel', { mode: 'bigint' }).notNull(),
+    role: aiTurnRoleEnum('role').notNull(),
+    content: text('content').notNull(),
+    createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
 });
 
 export const questionsTable = pgTable("questions", {

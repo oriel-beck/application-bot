@@ -6,6 +6,9 @@ import type QuestionManager from "./modules/questions/managers/question.manager.
 import type TipManager from "modules/utility/managers/tip-manager.ts";
 import type CooldownManager from "modules/share-your-bot/managers/cooldown.manager.ts";
 import type TranscriptManager from "modules/transcripts/managers/transcriptManager.ts";
+import type { RagService } from "./lib/bdfd-ai/rag.service.js";
+import type AiRateManager from "./modules/bdfd-ai/managers/ai-rate.manager.js";
+import type AiConversationManager from "./modules/bdfd-ai/managers/ai-conversation.manager.js";
 
 declare module '@sapphire/pieces' {
     interface Container {
@@ -17,5 +20,8 @@ declare module '@sapphire/pieces' {
         tips: TipManager;
         cooldown: CooldownManager;
         transcripts: TranscriptManager;
+        rag: RagService;
+        aiRate: AiRateManager;
+        aiConversation: AiConversationManager;
     }
 }

@@ -3,6 +3,7 @@ version: '3.9'
 volumes:
   postgres_db: {}
   redis_data: {}
+  chroma_data: {}
 
 networks:
   appbot: {}
@@ -13,11 +14,37 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      CHROMA_URL: http://chroma:8000
     depends_on:
       - postgres
       - redis
+      - chroma
     networks:
       - appbot
+
+  chroma:
+    image: chromadb/chroma:latest
+    restart: unless-stopped
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      ANONYMIZED_TELEMETRY: "false"
+    networks:
+      - appbot
+
+  ingestor:
+    build: .
+    command: ["node", "src/scripts/ingest-wiki.js"]
+    env_file:
+      - .env
+    environment:
+      CHROMA_URL: http://chroma:8000
+    depends_on:
+      - chroma
+    networks:
+      - appbot
+    restart: "no"
 
   postgres:
     image: postgres

@@ -1,6 +1,7 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Events, Listener } from "@sapphire/framework";
 import type { ActionRowBuilder, AnyThreadChannel, ButtonBuilder, EmbedBuilder } from "discord.js";
+import { generateInternationalPostHelpEmbed } from "../international-util.js";
 import { generatePostHelpEmbed } from "../util.js";
 
 @ApplyOptions<Listener.Options>({
@@ -9,9 +10,17 @@ import { generatePostHelpEmbed } from "../util.js";
 })
 export class PostCreateListener extends Listener<typeof Events.ThreadCreate> {
     async run(thread: AnyThreadChannel, newlyCreated: boolean) {
-        if (thread.parent?.id === this.container.config.channels.support && newlyCreated) {
+        if (!newlyCreated) return;
+
+        if (thread.parent?.id === this.container.config.channels.support) {
             const { row, embed } = generatePostHelpEmbed(thread.appliedTags);
-            // If the author of the thread sends an attachment the bot cannot reply until the attachment is fully sent by still gets the event, so it will retry in 5 seconds (5 attempts)
+            // If the author sends an attachment the bot cannot reply until it is fully sent but still gets the event, so retry in 5 seconds (5 attempts)
+            await retryMessage(thread, embed, row);
+            return;
+        }
+
+        if (thread.parent?.id === this.container.config.channels.international_support) {
+            const { row, embed } = generateInternationalPostHelpEmbed(thread.appliedTags);
             await retryMessage(thread, embed, row);
         }
     }

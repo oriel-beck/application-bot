@@ -76,7 +76,7 @@ Each module is a **Sapphire root**: expected subfolders vary by feature but comm
 - `preconditions/` — named preconditions referenced from commands (e.g. `ApplicationsEnabled`, `Blacklisted`).
 - `managers/` — optional; if present, each `*.ts` compiles to `*.js` and default export is loaded by `ApplicationClient` as described above.
 
-**Current `enabledModules` list** (from `src/index.ts`): `applications`, `blacklist`, `errors`, `misc`, `owner`, `questions`, `report`, `forums`, `utility`, `share-your-bot`, `transcripts`.
+**Current `enabledModules` list** (from `src/index.ts`): `applications`, `blacklist`, `errors`, `misc`, `owner`, `questions`, `report`, `forums`, `utility`, `share-your-bot`, `transcripts`, `bdfd-ai`.
 
 **Cross-cutting:** `src/modules/errors/` — central error/denied listeners.
 
@@ -99,6 +99,7 @@ Global preconditions (e.g. `StaffOnly`, `OwnerOnly`, `ModOnly`, `RequiredRole`, 
 ## JSON assets
 
 - `json/base-questions.json` — seed/reference question data used by the questions flow (see question manager/command usage when changing).
+- `json/international-support.json` — locale strings for the international support forum (`@lib/international-support-register.js`).
 
 ## Conventions for edits (agent checklist)
 

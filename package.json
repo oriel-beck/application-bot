@@ -24,9 +24,11 @@
       "@sapphire/plugin-subcommands": "^7.0.1",
       "@sapphire/utilities": "^3.18.2",
       "@types/pg": "^8.20.0",
+      "chromadb": "^1.10.5",
       "discord.js": "^14.26.3",
       "drizzle-orm": "^0.45.2",
       "ioredis": "^5.10.1",
+      "openai": "^4.104.0",
       "pg": "^8.20.0",
       "postgres": "^3.4.9"
    },
