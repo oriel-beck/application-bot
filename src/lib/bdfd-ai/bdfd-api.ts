@@ -123,15 +123,8 @@ function wikiCallbackPath(name: string): string {
     return `${WIKI_CALLBACK_PREFIX}${name}.md`;
 }
 
-export function formatBdfdApiCallbackDoc(callback: BdfdApiCallback, name: string): string {
-    const lines: string[] = [
-        `## BDFD API callback: $${name}`,
-        '',
-        '_Official BDFD public API callback definition. Callbacks are used in the **command trigger** field, not in reply code._',
-        '',
-        `**Syntax:** \`${callback.name}\``,
-        '',
-    ];
+function formatBdfdApiCallbackVariant(callback: BdfdApiCallback): string {
+    const lines: string[] = [`**Syntax:** \`${callback.name}\``, ''];
 
     const description = callback.description?.trim();
     if (description) {
@@ -156,20 +149,22 @@ export function formatBdfdApiCallbackDoc(callback: BdfdApiCallback, name: string
         );
     }
 
-    lines.push(`**Wiki:** ${wikiUrlFromPath(wikiCallbackPath(name))}`);
-
-    return lines.join('\n').trim().slice(0, MAX_CHUNK_CHARS);
+    return lines.join('\n').trim();
 }
 
-export function formatBdfdApiFunctionDoc(func: BdfdApiFunction, name: string): string {
-    const lines: string[] = [
-        `## BDFD API: $${name}`,
-        '',
-        '_Official BDFD public API definition. Prefer wiki excerpts for examples when both are available._',
-        '',
-        `**Syntax:** \`${func.tag}\``,
-        '',
-    ];
+export function formatBdfdApiCallbackDoc(callback: BdfdApiCallback, name: string): string {
+    return (
+        `## BDFD API callback: $${name}\n\n` +
+        '_Official BDFD public API callback definition. Callbacks are used in the **command trigger** field, not in reply code._\n\n' +
+        `${formatBdfdApiCallbackVariant(callback)}\n\n` +
+        `**Wiki:** ${wikiUrlFromPath(wikiCallbackPath(name))}`
+    )
+        .trim()
+        .slice(0, MAX_CHUNK_CHARS);
+}
+
+function formatBdfdApiFunctionVariant(func: BdfdApiFunction): string {
+    const lines: string[] = [`**Syntax:** \`${func.tag}\``, ''];
 
     const description = [func.shortDescription, func.longDescription]
         .map((s) => s?.trim())
@@ -198,25 +193,77 @@ export function formatBdfdApiFunctionDoc(func: BdfdApiFunction, name: string): s
         );
     }
 
-    lines.push(`**Wiki:** ${wikiUrlFromPath(`src/bdscript/${name}.md`)}`);
-
-    return lines.join('\n').trim().slice(0, MAX_CHUNK_CHARS);
+    return lines.join('\n').trim();
 }
 
-export function bdfdApiFunctionsToChunks(functions: BdfdApiFunction[]): BdfdApiWikiChunk[] {
-    const chunks: BdfdApiWikiChunk[] = [];
+export function formatBdfdApiFunctionDoc(func: BdfdApiFunction, name: string): string {
+    return (
+        `## BDFD API: $${name}\n\n` +
+        '_Official BDFD public API definition. Prefer wiki excerpts for examples when both are available._\n\n' +
+        `${formatBdfdApiFunctionVariant(func)}\n\n` +
+        `**Wiki:** ${wikiUrlFromPath(`src/bdscript/${name}.md`)}`
+    )
+        .trim()
+        .slice(0, MAX_CHUNK_CHARS);
+}
+
+function groupFunctionsByName(functions: BdfdApiFunction[]): Map<string, BdfdApiFunction[]> {
+    const byName = new Map<string, BdfdApiFunction[]>();
 
     for (const func of functions) {
         const name = parseBdscriptTag(func.tag);
         if (!name) continue;
 
+        const list = byName.get(name);
+        if (list) list.push(func);
+        else byName.set(name, [func]);
+    }
+
+    return byName;
+}
+
+function groupCallbacksByName(callbacks: BdfdApiCallback[]): Map<string, BdfdApiCallback[]> {
+    const byName = new Map<string, BdfdApiCallback[]>();
+
+    for (const callback of callbacks) {
+        const name = parseBdscriptTag(callback.name);
+        if (!name) continue;
+
+        const list = byName.get(name);
+        if (list) list.push(callback);
+        else byName.set(name, [callback]);
+    }
+
+    return byName;
+}
+
+function formatBdfdApiFunctionDocMerged(variants: BdfdApiFunction[], name: string): string {
+    const variantBlocks = variants.map((func, i) => {
+        const label = variants.length > 1 ? `### Variant ${i + 1}\n\n` : '';
+        return `${label}${formatBdfdApiFunctionVariant(func)}`;
+    });
+
+    return (
+        `## BDFD API: $${name}\n\n` +
+        '_Official BDFD public API definition. Multiple syntax variants are listed when the API defines overloads._\n\n' +
+        `${variantBlocks.join('\n\n---\n\n')}\n\n` +
+        `**Wiki:** ${wikiUrlFromPath(`src/bdscript/${name}.md`)}`
+    )
+        .trim()
+        .slice(0, MAX_CHUNK_CHARS);
+}
+
+export function bdfdApiFunctionsToChunks(functions: BdfdApiFunction[]): BdfdApiWikiChunk[] {
+    const chunks: BdfdApiWikiChunk[] = [];
+
+    for (const [name, variants] of groupFunctionsByName(functions)) {
         const file = `${API_FUNCTION_FILE_PREFIX}${name}.md`;
         chunks.push({
             id: `${file}#api`,
-            document: formatBdfdApiFunctionDoc(func, name),
+            document: formatBdfdApiFunctionDocMerged(variants, name),
             metadata: {
                 file,
-                heading: func.tag,
+                heading: variants.map((v) => v.tag).join(' · '),
                 url: 'https://wiki.botdesignerdiscord.com/resources/api.html',
                 source: 'bdfd-api',
             },
@@ -226,20 +273,33 @@ export function bdfdApiFunctionsToChunks(functions: BdfdApiFunction[]): BdfdApiW
     return chunks;
 }
 
+function formatBdfdApiCallbackDocMerged(variants: BdfdApiCallback[], name: string): string {
+    const variantBlocks = variants.map((cb, i) => {
+        const label = variants.length > 1 ? `### Variant ${i + 1}\n\n` : '';
+        return `${label}${formatBdfdApiCallbackVariant(cb)}`;
+    });
+
+    return (
+        `## BDFD API callback: $${name}\n\n` +
+        '_Official BDFD public API callback definition. Multiple syntax variants are listed when the API defines overloads._\n\n' +
+        `${variantBlocks.join('\n\n---\n\n')}\n\n` +
+        `**Wiki:** ${wikiUrlFromPath(wikiCallbackPath(name))}`
+    )
+        .trim()
+        .slice(0, MAX_CHUNK_CHARS);
+}
+
 export function bdfdApiCallbacksToChunks(callbacks: BdfdApiCallback[]): BdfdApiWikiChunk[] {
     const chunks: BdfdApiWikiChunk[] = [];
 
-    for (const callback of callbacks) {
-        const name = parseBdscriptTag(callback.name);
-        if (!name) continue;
-
+    for (const [name, variants] of groupCallbacksByName(callbacks)) {
         const file = `${API_CALLBACK_FILE_PREFIX}${name}.md`;
         chunks.push({
             id: `${file}#api`,
-            document: formatBdfdApiCallbackDoc(callback, name),
+            document: formatBdfdApiCallbackDocMerged(variants, name),
             metadata: {
                 file,
-                heading: callback.name,
+                heading: variants.map((v) => v.name).join(' · '),
                 url: 'https://wiki.botdesignerdiscord.com/resources/api.html',
                 source: 'bdfd-api',
             },
