@@ -5,6 +5,7 @@
 import OpenAI from 'openai';
 import { ChromaClient } from 'chromadb';
 import { createHash } from 'crypto';
+import { normalizeWikiMarkdownForRag } from '../lib/bdfd-ai/wiki-markdown.js';
 
 const WIKI_REPO = 'NilPointer-Software/bdfd-wiki';
 const WIKI_BRANCH = 'dev';
@@ -110,7 +111,8 @@ async function main() {
 
     const allChunks: WikiChunk[] = [];
     for (const path of paths) {
-        const content = await fetchMarkdown(path);
+        const raw = await fetchMarkdown(path);
+        const content = normalizeWikiMarkdownForRag(raw);
         allChunks.push(...chunkMarkdown(path, content));
     }
     console.log(`Prepared ${allChunks.length} chunks`);

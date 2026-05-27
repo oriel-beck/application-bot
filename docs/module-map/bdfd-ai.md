@@ -45,4 +45,7 @@ Turns are stored in PostgreSQL (`ai_conversation_turns`): alternating **user** /
 
 ## Ingestion / env
 
-Unchanged — see previous doc sections for Chroma ingest, `OPENAI_API_KEY`, `CHROMA_URL`.
+- Script: `src/scripts/ingest-wiki.ts` → `node dist/src/scripts/ingest-wiki.js` (also in compose).
+- Before chunking, `src/lib/bdfd-ai/wiki-markdown.ts` strips wiki `discord yaml` preview fences (mdbook UI mocks); only plain ``` BDFD blocks are kept for RAG.
+- Env: `OPENAI_API_KEY`, `CHROMA_URL`. **Re-run ingest after changing normalization** so Chroma chunks refresh.
+- RAG prompt (`rag.service.ts`) instructs the model to use BDScript fences only, not YAML previews.
