@@ -22,6 +22,8 @@ export interface ProcessAiRequestOptions {
     channelId: string;
     userText: string;
     source: AiRequestSource;
+    /** When true, skips `settings.ai_enabled` (used by `/ai`). */
+    ignoreAiEnabled?: boolean;
 }
 
 type EditableMessage = {
@@ -48,7 +50,7 @@ async function createThinkingSurface(
             .catch(() => null);
     }
 
-    await source.interaction.deferReply();
+    await source.interaction.deferReply({ ephemeral: true });
     await source.interaction
         .editReply({ embeds: [buildThinkingEmbed(THINKING_STATUSES[0]!)] })
         .catch(() => null);
@@ -59,10 +61,10 @@ async function createThinkingSurface(
 }
 
 export async function processAiRequest(options: ProcessAiRequestOptions): Promise<void> {
-    const { container, channelId, userText, source } = options;
+    const { container, channelId, userText, source, ignoreAiEnabled } = options;
 
     const settings = await container.settings.get(container.config.guild).catch(() => null);
-    if (!settings?.at(0)?.aiEnabled) {
+    if (!ignoreAiEnabled && !settings?.at(0)?.aiEnabled) {
         const payload = { embeds: [buildDisabledEmbed()] };
         if (source.type === 'message') {
             await source.message.reply(payload).catch(() => null);

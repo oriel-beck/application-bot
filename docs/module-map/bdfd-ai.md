@@ -6,8 +6,8 @@ RAG-powered AI assistant for support forum threads, international support thread
 
 ## Trigger
 
-1. **`/ai`** — slash command with a `message` option (channel author only, `BdfdAiEnabled` precondition).
-2. **Reply to a bot message** — same rules as before (`listeners/message-create.ts`).
+1. **`/ai`** — slash command with a `message` option; works in any guild channel, replies **ephemerally**, ignores `ai_enabled` (`processAiRequest` with `ignoreAiEnabled: true`).
+2. **Reply to a bot message** — support/intl threads and tickets only; requires `ai_enabled` (`listeners/message-create.ts`).
 
 Both paths share `processAiRequest` in `src/lib/bdfd-ai/process-request.ts`.
 
@@ -21,14 +21,14 @@ Turns are stored in PostgreSQL (`ai_conversation_turns`): alternating **user** /
 
 | Path | Role |
 |------|------|
-| `commands/ai.ts` | User-facing `/ai` command |
+| `commands/ai.ts` | User-facing `/ai` command (any channel, ephemeral, ignores toggle) |
 | `commands/ai-toggle.ts` | Owner `/ai-toggle` — enable/disable guild AI |
 | `commands/ai-limit.ts` | Owner `/ai-limit` — limits, usage, clear conversation |
 | `listeners/message-create.ts` | Reply-to-bot flow |
 | `listeners/ticket-intro.ts` | One-time ticket intro (only when AI enabled) |
 | `managers/ai-rate.manager.ts` | Per-channel usage limit, thinking lock |
 | `managers/ai-conversation.manager.ts` | Persisted turn history (`container.aiConversation`) |
-| `preconditions/BdfdAiEnabled.ts` | Blocks `/ai` when `settings.ai_enabled` is false |
+| `preconditions/BdfdAiEnabled.ts` | Unused by `/ai`; reserved for future gated commands |
 
 ## Shared lib (`src/lib/bdfd-ai/`)
 
