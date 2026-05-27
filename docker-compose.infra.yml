@@ -22,8 +22,13 @@ services:
     environment:
       CHROMA_URL: http://chroma:8000
       REDIS_HOST: redis
+    volumes:
+      - ./json:/app/json
     depends_on:
-      - chroma
+      chroma:
+        condition: service_started
+      ingestor:
+        condition: service_completed_successfully
     networks:
       - appbot
       - infra
@@ -45,6 +50,8 @@ services:
       - .env
     environment:
       CHROMA_URL: http://chroma:8000
+    volumes:
+      - ./json:/app/json
     depends_on:
       - chroma
     networks:

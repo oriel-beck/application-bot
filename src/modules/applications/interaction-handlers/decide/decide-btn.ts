@@ -1,6 +1,5 @@
 import { generateModal } from "@lib/command-utils/application/modals/application-modals.utils.js";
 import { ApplicationState } from "@lib/constants/application.js";
-import { ApplicationCustomIDs } from "@lib/constants/custom-ids.js";
 import { hasRole } from "@lib/precondition-util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from "@sapphire/framework";

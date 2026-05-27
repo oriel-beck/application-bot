@@ -4,7 +4,6 @@ import { applicationExists } from "@lib/util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { ApplicationState } from "@lib/constants/application.js";
-import { ApplicationCustomIDs } from "@lib/constants/custom-ids.js";
 import { StringSelectMenuInteraction } from "discord.js";
 import type { Application } from "@lib/types.js";
 

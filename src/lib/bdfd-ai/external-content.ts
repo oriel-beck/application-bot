@@ -36,14 +36,6 @@ export function normalizeFetchUrl(url: string): string | null {
     }
 }
 
-export function mentionsOversizedCode(text: string): boolean {
-    const lower = text.toLowerCase();
-    return (
-        /\b(too\s+big|too\s+large|won'?t\s+fit|doesn'?t\s+fit|character\s+limit|char\s+limit)\b/i.test(lower) ||
-        /\b(pastebin|paste\.ee|hastebin|gist)\b/i.test(lower)
-    );
-}
-
 export async function fetchExternalContent(urls: string[]): Promise<string | undefined> {
     const chunks: string[] = [];
 

@@ -1,5 +1,4 @@
 import { generateQuestionShowComponents, generateQuestionShowEmbed } from "@lib/command-utils/question/show/question-show.utils.js";
-import { QuestionCustomIDs } from "@lib/constants/custom-ids.js";
 import { hasRole } from "@lib/precondition-util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";

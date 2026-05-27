@@ -4,7 +4,7 @@ import { processAiRequest } from '@lib/bdfd-ai/process-request.js';
 
 @ApplyOptions<Command.Options>({
     name: 'ai',
-    description: 'Ask the BDFD AI assistant a question (only you can see the reply).',
+    description: 'Ask the BDFD AI assistant a question.',
 })
 export class AiCommand extends Command {
     public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
@@ -12,16 +12,16 @@ export class AiCommand extends Command {
         if (!userText) {
             return interaction.reply({
                 content: 'Please provide a message.',
-                ephemeral: true,
             });
         }
 
-        await processAiRequest({
+        return processAiRequest({
             container: this.container,
             channelId: interaction.channelId,
             userText,
             source: { type: 'interaction', interaction },
             ignoreAiEnabled: true,
+            skipChannelTracking: true,
         });
     }
 

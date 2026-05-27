@@ -2,13 +2,24 @@ import {
     AttachmentBuilder,
     Colors,
     EmbedBuilder,
-    type MessageEditOptions,
-    type MessageReplyOptions,
+    type InteractionEditReplyOptions,
 } from 'discord.js';
 
-export const AI_EMBED_MAX = 4000;
-const AI_EMBED_ATTACH_THRESHOLD = 3900;
-const AI_EMBED_SUMMARY_MAX = 500;
+/** Payload for AI output — valid for slash `editReply` / `reply` (and channel replies via cast). */
+export type AiReplyPayload = InteractionEditReplyOptions;
+
+/** Discord embed description limit — attach .txt when response exceeds this */
+export const DISCORD_EMBED_DESCRIPTION_MAX = 4000; // Leave some space
+export const AI_EMBED_ATTACH_THRESHOLD = DISCORD_EMBED_DESCRIPTION_MAX;
+
+const AI_EMBED_PREVIEW_MAX = 500;
+const ATTACHMENT_NOTICE =
+    '\n\n**Full response is attached as `bdfd-ai-response.txt`.**';
+const ATTACHMENT_FILENAME = 'bdfd-ai-response.txt';
+
+export function shouldAttachAiResponse(text: string): boolean {
+    return text.length > DISCORD_EMBED_DESCRIPTION_MAX;
+}
 
 export const THINKING_STATUSES = [
     'Thinking...',
@@ -55,34 +66,28 @@ export function buildDisabledEmbed(): EmbedBuilder {
     );
 }
 
-export function buildPastePromptEmbed(): EmbedBuilder {
-    return buildAiEmbed(
-        "Your code looks too large to send in Discord. Please upload it to a **pastebin** (use the raw link) or a **.txt** file URL, then reply to this message with that link so I can read it."
-    );
-}
-
-export function formatAiPayload(text: string): MessageReplyOptions & MessageEditOptions {
-    if (text.length <= AI_EMBED_ATTACH_THRESHOLD) {
+export function formatAiPayload(text: string): AiReplyPayload {
+    if (!shouldAttachAiResponse(text)) {
         return { embeds: [buildAiEmbed(text)] };
     }
 
-    const summary =
-        text.slice(0, AI_EMBED_SUMMARY_MAX) +
-        (text.length > AI_EMBED_SUMMARY_MAX ? '\n\n…' : '') +
-        '\n\n**Full response is attached as `bdfd-ai-response.txt`.**';
+    const previewBody =
+        text.slice(0, AI_EMBED_PREVIEW_MAX) + (text.length > AI_EMBED_PREVIEW_MAX ? '\n\n…' : '');
+    const previewMax = DISCORD_EMBED_DESCRIPTION_MAX - ATTACHMENT_NOTICE.length;
+    const description = (previewBody + ATTACHMENT_NOTICE).slice(0, previewMax);
 
     const file = new AttachmentBuilder(Buffer.from(text, 'utf-8'), {
-        name: 'bdfd-ai-response.txt',
+        name: ATTACHMENT_FILENAME,
     });
 
     return {
-        embeds: [buildAiEmbed(summary.slice(0, AI_EMBED_MAX))],
+        embeds: [buildAiEmbed(description)],
         files: [file],
     };
 }
 
 export interface ThinkingSurface {
-    edit: (options: MessageEditOptions) => Promise<unknown>;
+    edit: (options: AiReplyPayload) => Promise<unknown>;
 }
 
 export function startThinkingAnimation(
