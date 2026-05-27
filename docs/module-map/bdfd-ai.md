@@ -52,7 +52,7 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 - Ingest skips **`src/javascript/`** (deprecated BDJS) via `wiki-ingest.ts`; each run **recreates** the Chroma collection so old BDJS chunks are removed.
 - Ingest also pulls **[BDFD public API](https://wiki.botdesignerdiscord.com/resources/api.html)** `function_list` and `callback_list` (`bdfd-api.ts`) — one Chroma chunk per function/callback; merges names into `bdscript-functions.json`.
 - Optional Discord ingest source (`discord-ingest.ts`): set `BDFD_INGEST_CHANNEL_IDS` (comma-separated channel IDs) and token via `BDFD_INGEST_BOT_TOKEN` (falls back to `BOT_TOKEN`) to index message history from guide/FAQ channels.
-- If `BDFD_INGEST_CHANNEL_IDS` is not set, ingest auto-falls back to `config.json` channel keys from `BDFD_INGEST_CHANNEL_KEYS` (default: `tips,wiki,faq`) and uses `config.guild` as guild fallback for jump-link URLs.
+- If `BDFD_INGEST_CHANNEL_IDS` is not set, ingest auto-falls back to `config.json` channel keys from `BDFD_INGEST_CHANNEL_KEYS` (default: `tips,variable_guides,limiter_guides,faq`) and uses `config.guild` as guild fallback for jump-link URLs.
 - Optional: `BDFD_INGEST_GUILD_ID` (overrides `config.guild`), `BDFD_INGEST_MAX_MESSAGES_PER_CHANNEL` (default `500`).
 - Env: `OPENAI_API_KEY`, `CHROMA_URL` (+ optional Discord ingest env above). **Re-run ingest** after ingest/rule changes.
 - RAG (`rag.service.ts`): initial wiki search + **tool loop** (`search_wiki`, `check_bdscript_functions`, max 4 rounds). `json/bdscript-functions.json` is built at ingest (`bdscript-function-index.ts`) for fast function existence checks.

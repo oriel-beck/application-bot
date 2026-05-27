@@ -13,7 +13,14 @@ export interface DiscordIngestMessage {
         global_name?: string | null;
     };
     attachments?: Array<{ filename?: string; url?: string; content_type?: string | null }>;
-    embeds?: Array<{ title?: string; description?: string; url?: string }>;
+    embeds?: Array<{
+        title?: string;
+        description?: string;
+        url?: string;
+        author?: { name?: string };
+        footer?: { text?: string };
+        fields?: Array<{ name?: string; value?: string; inline?: boolean }>;
+    }>;
 }
 
 export interface DiscordChannelChunk {
@@ -63,11 +70,29 @@ function formatMessageDoc(channelId: string, msg: DiscordIngestMessage): string 
             const title = cleanLine(embed.title ?? '');
             const description = cleanLine(embed.description ?? '');
             const url = cleanLine(embed.url ?? '');
-            const parts = [`Embed ${i + 1}`];
-            if (title) parts.push(`title="${title}"`);
-            if (description) parts.push(`description="${description}"`);
-            if (url) parts.push(`url=${url}`);
-            return parts.join(' | ');
+            const author = cleanLine(embed.author?.name ?? '');
+            const footer = cleanLine(embed.footer?.text ?? '');
+            const fieldLines = (embed.fields ?? [])
+                .map((field) => {
+                    const fieldName = cleanLine(field.name ?? '');
+                    const fieldValue = cleanLine(field.value ?? '');
+                    if (!fieldName && !fieldValue) return '';
+                    const inlineLabel = field.inline ? ' (inline)' : '';
+                    return `- ${fieldName || 'field'}${inlineLabel}: ${fieldValue || '—'}`;
+                })
+                .filter(Boolean);
+
+            const lines: string[] = [`Embed ${i + 1}`];
+            if (author) lines.push(`author: ${author}`);
+            if (title) lines.push(`title: ${title}`);
+            if (description) lines.push(`description: ${description}`);
+            if (url) lines.push(`url: ${url}`);
+            if (fieldLines.length) {
+                lines.push('fields:');
+                lines.push(...fieldLines);
+            }
+            if (footer) lines.push(`footer: ${footer}`);
+            return lines.join('\n');
         })
         .filter(Boolean);
     if (embedText.length) {

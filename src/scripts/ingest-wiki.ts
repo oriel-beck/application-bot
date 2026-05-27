@@ -189,7 +189,9 @@ async function main() {
         .split(',')
         .map((id) => id.trim())
         .filter(Boolean);
-    const configChannelKeys = (process.env.BDFD_INGEST_CHANNEL_KEYS ?? 'tips,wiki,faq')
+    const configChannelKeys = (
+        process.env.BDFD_INGEST_CHANNEL_KEYS ?? 'tips,variable_guides,limiter_guides,faq'
+    )
         .split(',')
         .map((key) => key.trim())
         .filter(Boolean);
