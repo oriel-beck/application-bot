@@ -19,7 +19,7 @@
 
 | File | Purpose |
 |------|---------|
-| `interaction-handlers/resolve.ts` | Resolve forum thread/tag flow; clears AI conversation + transcript for the thread. |
+| `interaction-handlers/resolve.ts` | Resolve forum thread/tag flow; clears AI conversation + transcript for the thread, with guardrails for missing `Manage Threads` / Discord missing-access errors in international support. |
 | `interaction-handlers/toggle-tag.ts` | Toggle configured support tags. |
 
 ## Preconditions

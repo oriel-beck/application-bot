@@ -1,7 +1,7 @@
 import { hasRole } from "@lib/precondition-util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from "@sapphire/framework";
-import { ButtonInteraction, Colors, EmbedBuilder } from "discord.js";
+import { ButtonInteraction, Colors, DiscordAPIError, EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import { cleanupClosedSupportChannel } from "@lib/bdfd-ai/cleanup-channel.js";
 import { ForumCustomIDs } from "@lib/constants/custom-ids.js";
 import {
@@ -43,9 +43,32 @@ export class ResolveSupportPostHandler extends InteractionHandler {
                 });
             }
 
+            const botMember = interaction.guild?.members.me;
+            const channelPermissions = botMember ? interaction.channel.permissionsFor(botMember) : null;
+
+            if (!channelPermissions?.has(PermissionFlagsBits.ManageThreads)) {
+                return interaction.reply({
+                    content: "I do not have permission to manage this thread. Please grant me `Manage Threads` and try again.",
+                    ephemeral: true,
+                });
+            }
+
             await interaction.deferUpdate();
-            await interaction.message.delete();
-            await interaction.channel.setAppliedTags([expectedResolved]);
+
+            try {
+                await interaction.channel.setAppliedTags([expectedResolved]);
+            } catch (error) {
+                if (error instanceof DiscordAPIError && (error.code === 50001 || error.code === 50013)) {
+                    return interaction.followUp({
+                        content: "I cannot access this thread to mark it as resolved. Please check my forum/thread permissions and try again.",
+                        ephemeral: true,
+                    });
+                }
+
+                throw error;
+            }
+
+            await interaction.message.edit({ components: [] }).catch(() => null);
 
             if (isInternational && strings) {
                 await interaction.channel.send({
@@ -70,7 +93,19 @@ export class ResolveSupportPostHandler extends InteractionHandler {
             }
 
             const owner = await interaction.channel.fetchOwner().catch(() => null);
-            await interaction.channel.edit({ locked: true, archived: true });
+
+            try {
+                await interaction.channel.edit({ locked: true, archived: true });
+            } catch (error) {
+                if (error instanceof DiscordAPIError && (error.code === 50001 || error.code === 50013)) {
+                    await interaction.followUp({
+                        content: "The post was marked as resolved, but I could not lock/archive it due to missing access.",
+                        ephemeral: true,
+                    }).catch(() => null);
+                } else {
+                    throw error;
+                }
+            }
 
             const guildName = interaction.guild?.name ?? "the server";
             const dmContent = isInternational && strings
