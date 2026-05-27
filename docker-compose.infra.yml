@@ -1,14 +1,17 @@
-# Local / all-in-one stack — Postgres, Redis, Chroma, bot, ingestor.
+# VPS — shared Postgres/Redis on external network `infra`.
+#
+#   docker compose -f docker-compose.infra.yml up --build
 
 name: application-bot
 
 volumes:
-  postgres_db: {}
-  redis_data: {}
   chroma_data: {}
 
 networks:
   appbot: {}
+  infra:
+    external: true
+    name: infra
 
 services:
   appbot:
@@ -20,11 +23,10 @@ services:
       CHROMA_URL: http://chroma:8000
       REDIS_HOST: redis
     depends_on:
-      - postgres
-      - redis
       - chroma
     networks:
       - appbot
+      - infra
 
   chroma:
     image: chromadb/chroma:latest
@@ -48,27 +50,3 @@ services:
     networks:
       - appbot
     restart: "no"
-
-  postgres:
-    image: postgres
-    restart: unless-stopped
-    volumes:
-      - postgres_db:/var/lib/postgresql/data
-    env_file:
-      - .env
-    ports:
-      - 5432
-    networks:
-      - appbot
-
-  redis:
-    image: bitnami/redis
-    restart: unless-stopped
-    volumes:
-      - redis_data:/bitnami/redis/data
-    networks:
-      - appbot
-    ports:
-      - 6379
-    environment:
-      ALLOW_EMPTY_PASSWORD: "yes"

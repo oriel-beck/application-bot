@@ -4,9 +4,12 @@ Hopefully v5 will be stateless....
 ## Requirements
 - Docker
 - Docker compose
+- Existing Docker network `infra` on the VPS with:
+  - Postgres available as `postgres:5432`
+  - Redis available as `redis:6379`
 
 ## Bot setup
-1) Create a .env file, all values are required.
+1) Copy `.env.example` to `.env` and fill all required values.
 ```env
 BOT_TOKEN=*****
 POSTGRES_USER=appbot
@@ -69,4 +72,10 @@ CHROMA_URL=http://chroma:8000
 ```
 
 ## Startup
-To start, run in the main directory `docker compose up --build` and wait for the bot to connect.
+### Local (includes Postgres + Redis)
+`docker compose -f docker-compose.yml up --build`
+
+### VPS / shared infra (uses existing Postgres + Redis)
+1) Ensure the shared infra stack is running on the VPS (`postgres` and `redis` reachable on network `infra`).
+2) Start with:
+`docker compose -f docker-compose.infra.yml up --build`
