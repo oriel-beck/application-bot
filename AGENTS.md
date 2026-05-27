@@ -31,7 +31,7 @@ The bot is oriented around **guild applications** (questions/answers, staff deci
 
 | Source | Purpose |
 |--------|---------|
-| **`.env`** | `BOT_TOKEN`, Postgres (`POSTGRES_*`), `OWNER`, `REDIS_HOST`, etc. (see `README.md`). |
+| **`.env`** | `BOT_TOKEN`, `DATABASE_URL` (app + drizzle-kit), `POSTGRES_*` (Postgres container init in compose), `OWNER`, `REDIS_HOST`, etc. (see `README.md`). |
 | **`config.json`** (repo root, cwd at runtime) | Guild IDs for channels/roles/tags/categories and initial `guild` string. Typed in `src/lib/config/config.d.ts`. **README** example may lag the TypeScript type (e.g. `wiki`, `categories`) — trust **`config.d.ts`** as source of truth for required shape. |
 
 Config is read asynchronously in `register.ts` and assigned to `container.config`.
@@ -39,10 +39,10 @@ Config is read asynchronously in `register.ts` and assigned to `container.config
 ## Database
 
 - **Schema:** `src/schema.ts` — Drizzle tables/enums (applications, blacklist, settings, questions, transcript/messages, etc.).
-- **Migrations:** `drizzle/*.sql` + `drizzle/meta/`; config in `drizzle.config.ts` (host `postgres` matches Docker service name).
+- **Migrations:** `drizzle/*.sql` + `drizzle/meta/`; config in `drizzle.config.ts` uses `DATABASE_URL` (host `postgres` in Docker).
 - **Runtime DB handle:** `container.drizzle` (declared in `db-register.ts` module augmentation).
 
-`db-register.ts` uses connection string host **`postgres`** — aligned with **`docker compose`**, not typical bare-metal localhost without adjustment.
+`db-register.ts` connects via **`DATABASE_URL`** (typically `postgresql://…@postgres:5432/…` in Docker). For local Postgres, point `DATABASE_URL` at `localhost` and adjust compose or run the DB separately.
 
 ## Redis
 

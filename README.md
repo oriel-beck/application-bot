@@ -12,6 +12,7 @@ Hopefully v5 will be stateless....
 1) Copy `.env.example` to `.env` and fill all required values.
 ```env
 BOT_TOKEN=*****
+DATABASE_URL=postgresql://appbot:*****@postgres:5432/appbot
 POSTGRES_USER=appbot
 POSTGRES_PASSWORD=*****
 POSTGRES_DB=appbot

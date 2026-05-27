@@ -6,8 +6,13 @@ const { Pool } = pkg;
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import * as schema from '../schema.js';
 
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+    throw new Error("DATABASE_URL is required (e.g. postgresql://user:pass@postgres:5432/dbname)");
+}
+
 const pool = new Pool({
-    connectionString: `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@postgres:5432/${process.env.POSTGRES_DB}`,
+    connectionString: databaseUrl,
 });
 
 const db = drizzle(pool, { schema });
