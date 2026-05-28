@@ -59,7 +59,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         }
 
         interaction.reply({
-            content: `Denied application from <@${application.user.toString()}> ${!!reason ? `with the reason: ${reason}` : 'with no reason'}`
+            content: `Denied application from <@${application.user.toString()}> ${reason ? `with the reason: ${reason}` : 'with no reason'}`
         });
 
         this.deletePendingApplication(application);
@@ -89,7 +89,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         await member.roles.add(this.container.config.roles.trial_support).catch((err) => console.log(err));
 
         interaction.reply({
-            content: `Accepted application from <@${application.user.toString()}> ${!!reason ? `with the reason: ${reason}` : 'with no reason'}`
+            content: `Accepted application from <@${application.user.toString()}> ${reason ? `with the reason: ${reason}` : 'with no reason'}`
         });
 
         this.deletePendingApplication(application);
@@ -143,7 +143,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         const user = await this.container.client.users.fetch(userid).catch(() => null);
         const channel = await user?.createDM().catch(() => null);
         channel?.send({
-            content: `Your application has been **${type.toUpperCase()}**${!!reason ? `\nReason: ${reason}` : ''}`
+            content: `Your application has been **${type.toUpperCase()}**${reason ? `\nReason: ${reason}` : ''}`
         }).catch(() => null);
     }
 }
