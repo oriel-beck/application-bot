@@ -1,5 +1,5 @@
 # Application Bot v4
-Hopefully v5 will be stateless....
+Hopefully v5 will be stateless...
 
 ## Requirements
 - Docker
@@ -67,6 +67,9 @@ CHROMA_URL=http://chroma:8000
         "greek": "1035934918984880279",
         "hungarian": "1038808977942790265",
         "other": "1079791338695954563"
+    },
+    "categories": {
+        "tickets": ""
     },
     "guild": "THE_INITIAL_GUILD"
 }
