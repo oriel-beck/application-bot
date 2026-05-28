@@ -6,7 +6,7 @@ RAG-powered AI assistant for support forum threads, international support thread
 
 ## Trigger
 
-1. **`/ai`** — slash command with a `message` option; any guild channel (public reply). Uses `ignoreAiEnabled` + `skipChannelTracking`: no `ai_enabled` gate, **no** per-channel usage limit, **no** conversation memory (each invoke is standalone).
+1. **`/ai`** — slash command with a `message` option; restricted to configured bot command channels (`channels.bot_commands_1` / `channels.bot_commands_2`) for regular users. In support/intl forum posts and ticket channels, only the post/ticket author may use it (staff + support-in-training bypass both restrictions). Uses `ignoreAiEnabled` + `skipChannelTracking`: no `ai_enabled` gate, **no** per-channel usage limit, **no** conversation memory (each invoke is standalone).
 2. **Reply to a bot message** — support/intl threads and tickets only; requires `ai_enabled` (`listeners/message-create.ts`). Counts toward channel limit and persists turns.
 
 Both paths share `processAiRequest` in `src/lib/bdfd-ai/process-request.ts`.
@@ -21,7 +21,7 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 
 | Path | Role |
 |------|------|
-| `commands/ai.ts` | User-facing `/ai` command (any channel, public reply, ignores toggle) |
+| `commands/ai.ts` | User-facing `/ai` command (channel/author/role gated, public reply, ignores toggle) |
 | `commands/ai-toggle.ts` | Owner `/ai-toggle` — enable/disable guild AI |
 | `commands/ai-limit.ts` | Owner `/ai-limit` — limits, usage, clear conversation |
 | `listeners/message-create.ts` | Reply-to-bot flow |

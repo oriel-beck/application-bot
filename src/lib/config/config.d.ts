@@ -19,6 +19,8 @@ export interface ChannelConfig {
     variable_guides?: string;
     limiter_guides?: string;
     faq?: string;
+    bot_commands_1?: string;
+    bot_commands_2?: string;
     wiki: string;
     share_your_bot: string;
 }
