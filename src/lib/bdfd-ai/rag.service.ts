@@ -1,11 +1,13 @@
 import OpenAI from 'openai';
 import { ChromaClient, type Collection } from 'chromadb';
+import { API_FUNCTION_TOP_K, searchApiFunctionDocs } from './api-function-search.js';
 import {
     type BdscriptFunctionIndex,
     checkBdscriptFunctions,
+    ensureFunctionIndex,
     formatFunctionCheckResults,
-    loadBdscriptFunctionIndex,
 } from './bdscript-function-index.js';
+import { buildRepairPrompt, findInvalidFunctions } from './bdscript-validation.js';
 import { BDFD_BASICS } from './bdfd-basics.js';
 import type { ChatTurn } from './types.js';
 import { extractUrls, fetchExternalContent } from './external-content.js';
@@ -19,11 +21,16 @@ const INITIAL_TOP_K = 6;
 const SYSTEM_PROMPT = `You are an expert assistant for BDFD (Bot Designer for Discord), **BDScript only**.
 You help users debug BDScript. You do not support BDFD JavaScript (BDJS) — never suggest \`ban()\`, \`setResponse()\`, or other non-$ JavaScript-mode APIs.
 
-You receive an initial <wiki_context> with wiki guides and/or **BDFD API** definitions ("BDFD API: $name" = functions in reply code; "BDFD API callback: $name" = trigger-field callbacks). API entries give official syntax and parameters; wiki entries may include examples. You also have tools:
-- **search_wiki** — fetch more wiki excerpts when context is incomplete.
-- **check_bdscript_functions** — verify $function names exist before using them.
+You receive:
+- **<relevant_functions>** — official BDFD API definitions retrieved for this question (prefer these for syntax).
+- **<wiki_context>** — wiki guides and examples.
+- **<bdfd_basics>** — always-applied BDFD rules.
 
-**Hard rule:** Only mention BDScript $functions that **check_bdscript_functions** reports as existing, or that already appear in your accumulated wiki excerpts / <bdfd_basics>.
+You also have tools:
+- **search_wiki** — fetch more wiki excerpts when context is incomplete.
+- **check_bdscript_functions** — verify $function names exist.
+
+**Hard rule:** Only mention BDScript $functions that appear in relevant_functions, wiki_context, or bdfd_basics, or that check_bdscript_functions confirms exist.
 If a function is not found, do not use it. If docs are insufficient after searching, say so and link https://wiki.botdesignerdiscord.com/
 
 Wiki excerpts use plain triple-backtick fences for real BDScript. "[Discord UI preview omitted" lines are not code.
@@ -53,7 +60,12 @@ export class RagService {
             this.collection = await this.chroma.getOrCreateCollection({
                 name: WIKI_COLLECTION,
             });
-            this.functionIndex = await loadBdscriptFunctionIndex();
+            this.functionIndex = await ensureFunctionIndex();
+            if (this.functionIndex.size === 0) {
+                console.error('[bdfd-ai] No BDScript functions indexed; AI support disabled.');
+                return;
+            }
+
             this.ready = true;
             console.log(
                 `[bdfd-ai] RAG service ready (${this.functionIndex.size} BDScript functions indexed)`
@@ -67,8 +79,8 @@ export class RagService {
         return this.ready;
     }
 
-    private buildSystemContent(wikiChunks: Set<string>): string {
-        return `${SYSTEM_PROMPT}\n\n<bdfd_basics>\n${BDFD_BASICS}\n</bdfd_basics>\n\n<wiki_context>\n${formatWikiChunks(wikiChunks)}\n</wiki_context>`;
+    private buildSystemContent(wikiChunks: Set<string>, apiFunctionChunks: Set<string>): string {
+        return `${SYSTEM_PROMPT}\n\n<bdfd_basics>\n${BDFD_BASICS}\n</bdfd_basics>\n\n<relevant_functions>\n${formatWikiChunks(apiFunctionChunks)}\n</relevant_functions>\n\n<wiki_context>\n${formatWikiChunks(wikiChunks)}\n</wiki_context>`;
     }
 
     private async runTool(
@@ -124,9 +136,46 @@ export class RagService {
         return `Error: unknown tool ${name}`;
     }
 
+    private async repairResponse(
+        draft: string,
+        messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+        invalidNames: string[]
+    ): Promise<string> {
+        if (!this.openai) {
+            throw new Error('RAG service not ready');
+        }
+
+        const repair = await this.openai.chat.completions.create({
+            model: CHAT_MODEL,
+            messages: [
+                ...messages,
+                { role: 'assistant', content: draft },
+                { role: 'user', content: buildRepairPrompt(invalidNames, this.functionIndex) },
+            ],
+            max_tokens: 1024,
+            temperature: 0,
+        });
+
+        return repair.choices[0]?.message?.content?.trim() ?? draft;
+    }
+
+    private async validateAndRepair(
+        response: string,
+        messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]
+    ): Promise<string> {
+        const invalid = findInvalidFunctions(response, this.functionIndex);
+        if (!invalid.length) {
+            return response;
+        }
+
+        console.warn(`[bdfd-ai] Invalid functions in draft: ${invalid.map((n) => `$${n}`).join(', ')}`);
+        return this.repairResponse(response, messages, invalid);
+    }
+
     private async completeWithTools(
         messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-        wikiChunks: Set<string>
+        wikiChunks: Set<string>,
+        apiFunctionChunks: Set<string>
     ): Promise<string> {
         if (!this.openai) {
             throw new Error('RAG service not ready');
@@ -148,7 +197,8 @@ export class RagService {
             }
 
             if (!choice.tool_calls?.length) {
-                return choice.content?.trim() ?? 'I could not generate a response.';
+                const draft = choice.content?.trim() ?? 'I could not generate a response.';
+                return this.validateAndRepair(draft, messages);
             }
 
             messages.push(choice);
@@ -164,7 +214,7 @@ export class RagService {
 
             messages[0] = {
                 role: 'system',
-                content: this.buildSystemContent(wikiChunks),
+                content: this.buildSystemContent(wikiChunks, apiFunctionChunks),
             };
         }
 
@@ -175,14 +225,15 @@ export class RagService {
                 {
                     role: 'user',
                     content:
-                        'Provide your final answer now. Use only $functions you verified or that appear in wiki_context.',
+                        'Provide your final answer now. Use only $functions from relevant_functions or wiki_context. Invalid names will be rejected.',
                 },
             ],
             max_tokens: 1024,
             temperature: 0,
         });
 
-        return final.choices[0]?.message?.content?.trim() ?? 'I could not generate a response.';
+        const draft = final.choices[0]?.message?.content?.trim() ?? 'I could not generate a response.';
+        return this.validateAndRepair(draft, messages);
     }
 
     async query(userMessage: string, history: ChatTurn[]): Promise<string> {
@@ -196,14 +247,18 @@ export class RagService {
             externalContext = await fetchExternalContent(urls);
         }
 
-        const wikiChunks = new Set<string>(
-            await searchWikiDocuments(this.collection, this.openai, userMessage, INITIAL_TOP_K)
-        );
+        const [wikiResults, apiResults] = await Promise.all([
+            searchWikiDocuments(this.collection, this.openai, userMessage, INITIAL_TOP_K),
+            searchApiFunctionDocs(this.collection, this.openai, userMessage, API_FUNCTION_TOP_K),
+        ]);
+
+        const wikiChunks = new Set(wikiResults);
+        const apiFunctionChunks = new Set(apiResults);
 
         const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
             {
                 role: 'system',
-                content: this.buildSystemContent(wikiChunks),
+                content: this.buildSystemContent(wikiChunks, apiFunctionChunks),
             },
         ];
 
@@ -220,6 +275,6 @@ export class RagService {
 
         messages.push({ role: 'user', content: userMessage });
 
-        return this.completeWithTools(messages, wikiChunks);
+        return this.completeWithTools(messages, wikiChunks, apiFunctionChunks);
     }
 }

@@ -1,6 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Collection } from 'chromadb';
+import {
+    fetchBdfdCallbackList,
+    fetchBdfdFunctionList,
+    registerBdscriptCallbacksFromApi,
+    registerBdscriptFunctionsFromApi,
+} from './bdfd-api.js';
 
 export interface BdscriptFunctionRecord {
     url: string;
@@ -70,6 +76,41 @@ export async function loadBdscriptFunctionIndex(cwd = process.cwd()): Promise<Bd
         console.warn(`[bdfd-ai] ${INDEX_FILENAME} not found — run wiki ingest to build the function index`);
         return new Map();
     }
+}
+
+export function bdscriptFunctionNames(index: BdscriptFunctionIndex): Set<string> {
+    return new Set(index.keys());
+}
+
+/** Load index from disk; if empty, populate from BDFD public API lists. */
+export async function ensureFunctionIndex(cwd = process.cwd()): Promise<BdscriptFunctionIndex> {
+    const index = await loadBdscriptFunctionIndex(cwd);
+    if (index.size > 0) {
+        return index;
+    }
+
+    console.warn(
+        '[bdfd-ai] Function index empty — fetching BDFD public API function_list and callback_list'
+    );
+
+    try {
+        const [functions, callbacks] = await Promise.all([
+            fetchBdfdFunctionList(),
+            fetchBdfdCallbackList(),
+        ]);
+        registerBdscriptFunctionsFromApi(functions, index);
+        registerBdscriptCallbacksFromApi(callbacks, index);
+
+        if (index.size === 0) {
+            console.error('[bdfd-ai] Function index still empty after API fetch');
+        } else {
+            console.log(`[bdfd-ai] Built function index from API (${index.size} names)`);
+        }
+    } catch (err) {
+        console.error('[bdfd-ai] Failed to fetch BDFD API for function index:', err);
+    }
+
+    return index;
 }
 
 export interface FunctionCheckResult {

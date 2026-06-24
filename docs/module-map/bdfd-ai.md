@@ -36,7 +36,10 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 |------|------|
 | `process-request.ts` | Gates, thinking UI, RAG call, save turns |
 | `response-utils.ts` | Embeds (footer disclaimer on successful replies); over 4096 chars attach `bdfd-ai-response.txt` |
-| `rag.service.ts` | Chroma + OpenAI (`container.rag`) |
+| `rag.service.ts` | Chroma + OpenAI (`container.rag`); parallel wiki + API retrieval, post-validation, auto-repair |
+| `api-function-search.ts` | Chroma query filtered to `source: bdfd-api` for targeted function docs |
+| `bdscript-validation.ts` | Extract/validate `$function` names; alias hints for repair pass |
+| `bdscript-function-index.ts` | Function name index; `ensureFunctionIndex()` API fallback when JSON empty |
 | `discord-ingest.ts` | Optional Discord channel history ingest (guides/FAQ channels) |
 | `channel-utils.ts` | Channel kind + author resolution |
 | `cleanup-channel.ts` | `cleanupClosedSupportChannel` on resolve / ticket close |
@@ -55,4 +58,4 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 - If `BDFD_INGEST_CHANNEL_IDS` is not set, ingest auto-falls back to `config.json` channel keys from `BDFD_INGEST_CHANNEL_KEYS` (default: `tips,variable_guides,limiter_guides,faq`) and uses `config.guild` as guild fallback for jump-link URLs.
 - Optional: `BDFD_INGEST_GUILD_ID` (overrides `config.guild`), `BDFD_INGEST_MAX_MESSAGES_PER_CHANNEL` (default `500`).
 - Env: `OPENAI_API_KEY`, `CHROMA_URL` (+ optional Discord ingest env above). **Re-run ingest** after ingest/rule changes.
-- RAG (`rag.service.ts`): initial wiki search + **tool loop** (`search_wiki`, `check_bdscript_functions`, max 4 rounds). `json/bdscript-functions.json` is built at ingest (`bdscript-function-index.ts`) for fast function existence checks.
+- RAG (`rag.service.ts`): parallel **wiki search** (top 6) + **API function search** (top 8, `source: bdfd-api`) before generation; **tool loop** (`search_wiki`, `check_bdscript_functions`, max 4 rounds); **server-side validation** of all `$function` names in the final answer with one silent **auto-repair** pass when invalid names are detected (`bdscript-validation.ts`). `json/bdscript-functions.json` is built at ingest; if empty at startup, `ensureFunctionIndex()` fetches BDFD public API lists.
