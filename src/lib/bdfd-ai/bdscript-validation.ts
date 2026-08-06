@@ -2,10 +2,10 @@ import type { BdscriptFunctionIndex } from './bdscript-function-index.js';
 import { bdscriptFunctionNames, normalizeBdscriptFunctionName } from './bdscript-function-index.js';
 
 const BDSCRIPT_FUNCTION_PATTERN = /\$([A-Za-z][A-Za-z0-9]*)/g;
-const CODE_FENCE_PATTERN = /```(?:[^\n`]*)\n?([\s\S]*?)```/g;
-/** `$func[...[@user]...]` / `$func[...[amount]...]` — inner `]` not escaped as `\]`. */
-const UNESCAPED_PLACEHOLDER_IN_FUNC =
-    /\$[A-Za-z][A-Za-z0-9]*\[[^\n]*\[(?:@)?[A-Za-z][A-Za-z0-9]*\]/;
+const CODE_FENCE_PATTERN = /```([^\n`]*)\n?([\s\S]*?)```/g;
+/** `[word]` / `[@user]` — closing `]` is not escaped. */
+const PLACEHOLDER_BRACKET = /^\[(@?[A-Za-z][A-Za-z0-9]*)\]/;
+const FUNCTION_OPEN = /^\$[A-Za-z][A-Za-z0-9]*\[/;
 
 /** Common hallucinated names → verified BDFD function. */
 const HALLUCINATION_ALIASES: Record<string, string> = {
@@ -45,7 +45,7 @@ export function findCallbacksMisusedInReplyCode(
     const misused = new Set<string>();
 
     for (const match of text.matchAll(CODE_FENCE_PATTERN)) {
-        const body = match[1] ?? '';
+        const body = match[2] ?? '';
         const names = extractBdscriptFunctions(body);
         if (!names.length) continue;
 
@@ -68,11 +68,101 @@ export function findCallbacksMisusedInReplyCode(
 }
 
 /**
- * True when reply text has placeholder-like `[word]` / `[@user]` inside a `$function[...]`
- * without escaping the closing `]` (a common `$argsCheck` format-string bug).
+ * Escape literal `]` in placeholder-like `[word]` / `[@user]` inside `$function[...]` args.
+ * Idempotent for already-escaped `\]`. Does not touch `;` (needs arity to distinguish separators).
  */
-export function hasUnescapedLiteralBrackets(text: string): boolean {
-    return UNESCAPED_PLACEHOLDER_IN_FUNC.test(text);
+function repairFunctionArgs(code: string, start: number): { text: string; end: number } {
+    let out = '';
+    let i = start;
+    let depth = 1;
+
+    while (i < code.length && depth > 0) {
+        const ch = code[i]!;
+
+        if (ch === '\\' && i + 1 < code.length && (code[i + 1] === ';' || code[i + 1] === ']')) {
+            out += ch + code[i + 1];
+            i += 2;
+            continue;
+        }
+
+        if (ch === '$') {
+            const open = FUNCTION_OPEN.exec(code.slice(i));
+            if (open) {
+                out += open[0];
+                i += open[0].length;
+                const nested = repairFunctionArgs(code, i);
+                out += nested.text;
+                i = nested.end;
+                continue;
+            }
+        }
+
+        const placeholder = PLACEHOLDER_BRACKET.exec(code.slice(i));
+        if (placeholder) {
+            out += `[${placeholder[1]}\\]`;
+            i += placeholder[0].length;
+            continue;
+        }
+
+        if (ch === '[') {
+            depth++;
+            out += ch;
+            i++;
+            continue;
+        }
+
+        if (ch === ']') {
+            depth--;
+            out += ch;
+            i++;
+            continue;
+        }
+
+        out += ch;
+        i++;
+    }
+
+    return { text: out, end: i };
+}
+
+/** Repair `$function[...]` escaping inside a BDScript snippet (fence body or code line). */
+export function repairBdscriptCode(code: string): string {
+    let out = '';
+    let i = 0;
+
+    while (i < code.length) {
+        if (code[i] === '$') {
+            const open = FUNCTION_OPEN.exec(code.slice(i));
+            if (open) {
+                out += open[0];
+                i += open[0].length;
+                const args = repairFunctionArgs(code, i);
+                out += args.text;
+                i = args.end;
+                continue;
+            }
+        }
+
+        out += code[i];
+        i++;
+    }
+
+    return out;
+}
+
+/**
+ * Deterministically escape placeholder `]` in BDScript within an assistant reply
+ * (code fences + lines that start with `$`). No model round-trip.
+ */
+export function repairBdscriptEscaping(text: string): string {
+    const withFences = text.replace(CODE_FENCE_PATTERN, (_m, lang: string, body: string) => {
+        return `\`\`\`${lang}\n${repairBdscriptCode(body)}\`\`\``;
+    });
+
+    return withFences
+        .split('\n')
+        .map((line) => (/^\s*\$[A-Za-z]/.test(line) ? repairBdscriptCode(line) : line))
+        .join('\n');
 }
 
 function scoreNameSimilarity(a: string, b: string): number {
@@ -126,8 +216,7 @@ export function suggestFunctionAlternatives(
 export function buildRepairPrompt(
     invalidNames: string[],
     index: BdscriptFunctionIndex,
-    misusedCallbacks: string[] = [],
-    needsBracketEscaping = false
+    misusedCallbacks: string[] = []
 ): string {
     const parts: string[] = [];
 
@@ -160,15 +249,6 @@ export function buildRepairPrompt(
             'Rewrite the **full** answer with labeled parts:',
             '- **Trigger:** put callbacks here (alone in a fence is fine)',
             '- **Reply code:** BDScript $functions only — no callbacks in the same fence as reply functions'
-        );
-    }
-
-    if (needsBracketEscaping) {
-        if (parts.length) parts.push('');
-        parts.push(
-            'Your previous answer left literal `]` unescaped inside `$function[...]` arguments (e.g. `[@user]` / `[amount]` in an `$argsCheck` message).',
-            'Bare `]` closes the function early. Rewrite the **full** answer escaping every literal `]` as `\\]` and every literal `;` as `\\;`.',
-            'Correct example: `$argsCheck[2;❌ Incorrect format, format: !pay [@user\\] [amount\\]]`'
         );
     }
 

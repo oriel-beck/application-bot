@@ -15,7 +15,7 @@ import {
     buildRepairPrompt,
     findCallbacksMisusedInReplyCode,
     findInvalidFunctions,
-    hasUnescapedLiteralBrackets,
+    repairBdscriptEscaping,
 } from './bdscript-validation.js';
 import { BDFD_BASICS } from './bdfd-basics.js';
 import type { ChatTurn } from './types.js';
@@ -160,8 +160,7 @@ export class RagService {
         draft: string,
         messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
         invalidNames: string[],
-        misusedCallbacks: string[],
-        needsBracketEscaping: boolean
+        misusedCallbacks: string[]
     ): Promise<string> {
         if (!this.openai) {
             throw new Error('RAG service not ready');
@@ -174,12 +173,7 @@ export class RagService {
                 { role: 'assistant', content: draft },
                 {
                     role: 'user',
-                    content: buildRepairPrompt(
-                        invalidNames,
-                        this.functionIndex,
-                        misusedCallbacks,
-                        needsBracketEscaping
-                    ),
+                    content: buildRepairPrompt(invalidNames, this.functionIndex, misusedCallbacks),
                 },
             ],
             max_tokens: 1024,
@@ -195,32 +189,27 @@ export class RagService {
     ): Promise<string> {
         const invalid = findInvalidFunctions(response, this.functionIndex);
         const misusedCallbacks = findCallbacksMisusedInReplyCode(response, this.functionIndex);
-        const needsBracketEscaping = hasUnescapedLiteralBrackets(response);
-        if (!invalid.length && !misusedCallbacks.length && !needsBracketEscaping) {
-            return response;
+
+        let result = response;
+        if (invalid.length || misusedCallbacks.length) {
+            if (invalid.length) {
+                console.warn(
+                    `[bdfd-ai] Invalid functions in draft: ${invalid.map((n) => `$${n}`).join(', ')}`
+                );
+            }
+            if (misusedCallbacks.length) {
+                console.warn(
+                    `[bdfd-ai] Callbacks misused in reply code: ${misusedCallbacks.map((n) => `$${n}`).join(', ')}`
+                );
+            }
+            result = await this.repairResponse(response, messages, invalid, misusedCallbacks);
         }
 
-        if (invalid.length) {
-            console.warn(
-                `[bdfd-ai] Invalid functions in draft: ${invalid.map((n) => `$${n}`).join(', ')}`
-            );
+        const escaped = repairBdscriptEscaping(result);
+        if (escaped !== result) {
+            console.warn('[bdfd-ai] Escaped literal ] inside $function arguments');
         }
-        if (misusedCallbacks.length) {
-            console.warn(
-                `[bdfd-ai] Callbacks misused in reply code: ${misusedCallbacks.map((n) => `$${n}`).join(', ')}`
-            );
-        }
-        if (needsBracketEscaping) {
-            console.warn('[bdfd-ai] Unescaped ] inside $function arguments in draft');
-        }
-
-        return this.repairResponse(
-            response,
-            messages,
-            invalid,
-            misusedCallbacks,
-            needsBracketEscaping
-        );
+        return escaped;
     }
 
     private async completeWithTools(
