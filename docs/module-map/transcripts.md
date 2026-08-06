@@ -14,13 +14,11 @@
 | File | Purpose |
 |------|---------|
 | `interaction-handlers/list/list-dir.ts` | Pagination: First / Prev / page / Next / Last (`tr:list:dir`) |
-| `interaction-handlers/list/list-manage.ts` | Open actions view for a channel (`tr:list:mng`) |
 | `interaction-handlers/list/list-export.ts` | Ephemeral `.txt` follow-up (`tr:list:exp`) |
 | `interaction-handlers/list/list-delete.ts` | Delete transcript and refresh list (`tr:list:del`) |
-| `interaction-handlers/list/list-back.ts` | Return to list (`tr:list:back`) |
 
 Custom IDs: `TranscriptCustomIDs` in `src/lib/constants/custom-ids.ts` (`tr:list:*`).  
-List UI utils: `src/lib/command-utils/transcript/list/transcript-list.utils.ts` (`PAGE_SIZE = 10`).
+List UI utils: `src/lib/command-utils/transcript/list/transcript-list.utils.ts` (`PAGE_SIZE = 8`; each row = context + Export/Delete ActionRow).
 
 Manager helpers: `getAll()`, **`listWithCounts()`** (channel + author + message count).
 

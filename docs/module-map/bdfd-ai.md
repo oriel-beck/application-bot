@@ -29,8 +29,8 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 | `commands/ai-toggle.ts` | Owner `/ai-toggle` — enable/disable guild AI |
 | `commands/ai-limit.ts` | Owner `/ai-limit` — limits, usage, clear conversation |
 | `commands/ai-sweep.ts` | Owner `/ai-sweep` — manually run the 7-day inactive channel cleanup |
-| `commands/ai-conversations.ts` | Owner `/ai-conversations` — Components V2 browser (usage/limit + Manage → Reset usage / Delete) |
-| `interaction-handlers/list/*.ts` | List pagination + manage/reset/delete/back (`ai:list:*`) |
+| `commands/ai-conversations.ts` | Owner `/ai-conversations` — Components V2 browser (each row: usage/limit + Reset usage / Delete) |
+| `interaction-handlers/list/*.ts` | List pagination + reset/delete (`ai:list:*`) |
 | `listeners/message-create.ts` | Reply-to-bot flow |
 | `listeners/ticket-intro.ts` | One-time ticket intro (only when AI enabled) |
 | `listeners/thread-update.ts` | Cleanup when support/intl thread is archived or locked |
@@ -41,7 +41,7 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 | `preconditions/BdfdAiEnabled.ts` | Unused by `/ai`; reserved for future gated commands |
 
 Custom IDs: `AiConversationCustomIDs` in `src/lib/constants/custom-ids.ts`.  
-List UI utils: `src/lib/command-utils/bdfd-ai/list/ai-conversation-list.utils.ts` (`PAGE_SIZE = 10`, First/Prev/page/Next/Last).
+List UI utils: `src/lib/command-utils/bdfd-ai/list/ai-conversation-list.utils.ts` (`PAGE_SIZE = 8`, First/Prev/page/Next/Last; per-row Reset usage / Delete).
 
 ## Shared lib (`src/lib/bdfd-ai/`)
 

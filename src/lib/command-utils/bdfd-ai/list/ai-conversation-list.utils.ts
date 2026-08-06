@@ -5,12 +5,11 @@ import {
     ButtonStyle,
     ContainerBuilder,
     MessageFlags,
-    SectionBuilder,
-    SeparatorBuilder,
     TextDisplayBuilder,
 } from 'discord.js';
 
-export const AI_CONVERSATION_LIST_PAGE_SIZE = 10;
+/** TextDisplay + ActionRow + 2 buttons ≈ 4 comps/row; fits 8 with header + pagination under 40. */
+export const AI_CONVERSATION_LIST_PAGE_SIZE = 8;
 
 export type AiConversationListDir = 'first' | 'prev' | 'next' | 'last' | 'noop';
 
@@ -110,6 +109,28 @@ function buildPaginationRow(pageIndex: number, totalPages: number): ActionRowBui
     );
 }
 
+/** Load channel summaries with Redis usage/limit for the list UI. */
+export async function loadAiConversationListRows(
+    channels: { channelId: string; turnCount: number }[],
+    getUsage: (channelId: string) => Promise<number>,
+    getLimit: (channelId: string) => Promise<number>,
+): Promise<AiConversationListRow[]> {
+    return Promise.all(
+        channels.map(async (ch) => {
+            const [usage, limit] = await Promise.all([
+                getUsage(ch.channelId),
+                getLimit(ch.channelId),
+            ]);
+            return {
+                channelId: ch.channelId,
+                usage,
+                limit,
+                turnCount: ch.turnCount,
+            };
+        }),
+    );
+}
+
 export async function buildAiConversationListMessage(
     channels: { channelId: string; turnCount: number }[],
     pageIndex: number,
@@ -136,94 +157,38 @@ export async function buildAiConversationListMessage(
             new TextDisplayBuilder().setContent('No AI conversations found.'),
         );
     } else {
-        container.addSeparatorComponents(new SeparatorBuilder());
         for (const item of rows) {
-            container.addSectionComponents(
-                new SectionBuilder()
-                    .addTextDisplayComponents(
-                        new TextDisplayBuilder().setContent(
-                            `**${item.usage}/${item.limit}** · <#${item.channelId}>`,
-                        ),
-                    )
-                    .setButtonAccessory(
+            container
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(
+                        `**${item.usage}/${item.limit}** · <#${item.channelId}>`,
+                    ),
+                )
+                .addActionRowComponents(
+                    new ActionRowBuilder<ButtonBuilder>().addComponents(
                         new ButtonBuilder()
                             .setCustomId(
-                                `${AiConversationCustomIDs.buttons.manage}:${item.channelId}:${safePage}`,
+                                `${AiConversationCustomIDs.buttons.reset}:${item.channelId}:${safePage}`,
                             )
-                            .setLabel('Manage')
+                            .setLabel('Reset usage')
                             .setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder()
+                            .setCustomId(
+                                `${AiConversationCustomIDs.buttons.delete}:${item.channelId}:${safePage}`,
+                            )
+                            .setLabel('Delete')
+                            .setStyle(ButtonStyle.Danger),
                     ),
-            );
+                );
         }
     }
 
     if (totalPages > 1) {
-        container
-            .addSeparatorComponents(new SeparatorBuilder())
-            .addActionRowComponents(buildPaginationRow(safePage, totalPages));
+        container.addActionRowComponents(buildPaginationRow(safePage, totalPages));
     }
 
     return {
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
     };
-}
-
-export function buildAiConversationActionsMessage(
-    channelId: string,
-    page: number,
-    usage: number,
-    limit: number,
-    turnCount: number,
-) {
-    const container = new ContainerBuilder()
-        .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(
-                `# AI conversation\n**${usage}/${limit}** usage · **${turnCount}** turns · <#${channelId}> (\`${channelId}\`)`,
-            ),
-        )
-        .addSeparatorComponents(new SeparatorBuilder())
-        .addActionRowComponents(
-            new ActionRowBuilder<ButtonBuilder>().addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`${AiConversationCustomIDs.buttons.reset}:${channelId}:${page}`)
-                    .setLabel('Reset usage')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId(`${AiConversationCustomIDs.buttons.delete}:${channelId}:${page}`)
-                    .setLabel('Delete')
-                    .setStyle(ButtonStyle.Danger),
-                new ButtonBuilder()
-                    .setCustomId(`${AiConversationCustomIDs.buttons.back}:${page}`)
-                    .setLabel('Back')
-                    .setStyle(ButtonStyle.Secondary),
-            ),
-        );
-
-    return {
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-    };
-}
-
-/** Load channel summaries with Redis usage/limit for the list UI. */
-export async function loadAiConversationListRows(
-    channels: { channelId: string; turnCount: number }[],
-    getUsage: (channelId: string) => Promise<number>,
-    getLimit: (channelId: string) => Promise<number>,
-): Promise<AiConversationListRow[]> {
-    return Promise.all(
-        channels.map(async (ch) => {
-            const [usage, limit] = await Promise.all([
-                getUsage(ch.channelId),
-                getLimit(ch.channelId),
-            ]);
-            return {
-                channelId: ch.channelId,
-                usage,
-                limit,
-                turnCount: ch.turnCount,
-            };
-        }),
-    );
 }

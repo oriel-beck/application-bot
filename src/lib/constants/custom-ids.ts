@@ -68,10 +68,8 @@ export const ShareCustomIDs = Object.freeze({
 export const TranscriptCustomIDs = Object.freeze({
     buttons: {
         listDir: 'tr:list:dir',
-        manage: 'tr:list:mng',
         export: 'tr:list:exp',
         delete: 'tr:list:del',
-        back: 'tr:list:back',
     },
 });
 
@@ -79,9 +77,7 @@ export const TranscriptCustomIDs = Object.freeze({
 export const AiConversationCustomIDs = Object.freeze({
     buttons: {
         listDir: 'ai:list:dir',
-        manage: 'ai:list:mng',
         reset: 'ai:list:rst',
         delete: 'ai:list:del',
-        back: 'ai:list:back',
     },
 });

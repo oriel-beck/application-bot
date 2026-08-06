@@ -5,12 +5,11 @@ import {
     ButtonStyle,
     ContainerBuilder,
     MessageFlags,
-    SectionBuilder,
-    SeparatorBuilder,
     TextDisplayBuilder,
 } from 'discord.js';
 
-export const TRANSCRIPT_LIST_PAGE_SIZE = 10;
+/** TextDisplay + ActionRow + 2 buttons ≈ 4 comps/row; fits 8 with header + pagination under 40. */
+export const TRANSCRIPT_LIST_PAGE_SIZE = 8;
 
 export interface TranscriptListRow {
     channelId: string;
@@ -129,63 +128,35 @@ export function buildTranscriptListMessage(items: TranscriptListRow[], pageIndex
             new TextDisplayBuilder().setContent('No transcripts found.'),
         );
     } else {
-        container.addSeparatorComponents(new SeparatorBuilder());
         for (const item of slice) {
-            container.addSectionComponents(
-                new SectionBuilder()
-                    .addTextDisplayComponents(
-                        new TextDisplayBuilder().setContent(
-                            `**${item.messageCount}** messages · <#${item.channelId}>`,
-                        ),
-                    )
-                    .setButtonAccessory(
+            container
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(
+                        `**${item.messageCount}** messages · <#${item.channelId}>`,
+                    ),
+                )
+                .addActionRowComponents(
+                    new ActionRowBuilder<ButtonBuilder>().addComponents(
                         new ButtonBuilder()
                             .setCustomId(
-                                `${TranscriptCustomIDs.buttons.manage}:${item.channelId}:${safePage}`,
+                                `${TranscriptCustomIDs.buttons.export}:${item.channelId}:${safePage}`,
                             )
-                            .setLabel('Manage')
+                            .setLabel('Export')
                             .setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder()
+                            .setCustomId(
+                                `${TranscriptCustomIDs.buttons.delete}:${item.channelId}:${safePage}`,
+                            )
+                            .setLabel('Delete')
+                            .setStyle(ButtonStyle.Danger),
                     ),
-            );
+                );
         }
     }
 
     if (totalPages > 1) {
-        container
-            .addSeparatorComponents(new SeparatorBuilder())
-            .addActionRowComponents(buildPaginationRow(safePage, totalPages));
+        container.addActionRowComponents(buildPaginationRow(safePage, totalPages));
     }
-
-    return {
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-    };
-}
-
-export function buildTranscriptActionsMessage(channelId: string, page: number, messageCount: number) {
-    const container = new ContainerBuilder()
-        .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(
-                `# Transcript\n**${messageCount}** messages · <#${channelId}> (\`${channelId}\`)`,
-            ),
-        )
-        .addSeparatorComponents(new SeparatorBuilder())
-        .addActionRowComponents(
-            new ActionRowBuilder<ButtonBuilder>().addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`${TranscriptCustomIDs.buttons.export}:${channelId}:${page}`)
-                    .setLabel('Export')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId(`${TranscriptCustomIDs.buttons.delete}:${channelId}:${page}`)
-                    .setLabel('Delete')
-                    .setStyle(ButtonStyle.Danger),
-                new ButtonBuilder()
-                    .setCustomId(`${TranscriptCustomIDs.buttons.back}:${page}`)
-                    .setLabel('Back')
-                    .setStyle(ButtonStyle.Secondary),
-            ),
-        );
 
     return {
         components: [container],
