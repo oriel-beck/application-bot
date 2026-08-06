@@ -28,6 +28,12 @@ There is no separate "YAML command definition". Do not output structures like \`
 - Function names start with \`$\` (e.g. \`$nomention\`, \`$message\`, \`$addField[...]\`).
 - Use \`$nomention\` to stop the bot from pinging the command author.
 
+### Escaping ; and ]
+Inside \`$function[...]\` arguments, a bare \`;\` starts the next arg and a bare \`]\` closes the function. To include them as literal text, escape: \`\\;\` and \`\\]\`.
+- Args (unescaped separators): \`$mentioned[1;yes]\`
+- Literal text: \`$sendMessage[cool\\; right?\\]]\` → outputs \`cool; right?]\`
+Wiki also accepts \`%{-SEMICOL-}%\` / \`%ESCAPED%\` (same as \`\\;\` / \`\\]\`); prefer the backslash forms.
+
 ### User input after the trigger
 - \`$message\` — full message text **after** the trigger (e.g. \`!say hello\` → \`hello\`).
 - For splitting into words/args, use wiki functions such as \`$textSplit\` / \`$splitText\` — do not invent placeholders.
@@ -41,6 +47,7 @@ There is no separate "YAML command definition". Do not output structures like \`
 ### Common mistakes (do not repeat)
 - \`$length[...]\` → use \`$charCount[...]\`
 - \`$sendMessage[$message]\` for a normal echo reply → output \`$message\` or plain text in the reply field
+- Unescaped \`;\` or \`]\` inside an argument that should contain those characters → escape with \`\\;\` / \`\\]\`
 - Inventing function names from other languages/frameworks (discord.js, Python, etc.)
 
 ### Do not invent (not BDFD)
