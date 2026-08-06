@@ -5,7 +5,7 @@ import { InteractionContextType, MessageFlags } from 'discord.js';
 
 @ApplyOptions<Command.Options>({
     name: 'ai-sweep',
-    description: 'Run the inactive AI/transcript channel cleanup sweep (owner only).',
+    description: 'Clear inactive AI conversations (7+ days; does not delete transcripts).',
     preconditions: ['OwnerOnly'],
 })
 export class AiSweepCommand extends Command {
@@ -14,7 +14,7 @@ export class AiSweepCommand extends Command {
 
         const cleaned = await sweepInactiveSupportChannels();
         return interaction.editReply({
-            content: `Inactive channel sweep finished. Cleaned **${cleaned}** channel${cleaned === 1 ? '' : 's'}.`,
+            content: `Inactive AI sweep finished. Cleaned **${cleaned}** channel${cleaned === 1 ? '' : 's'} (transcripts kept).`,
         });
     }
 

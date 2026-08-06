@@ -15,11 +15,11 @@ Both paths share `processAiRequest` in `src/lib/bdfd-ai/process-request.ts`.
 
 Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alternating **user** / **assistant** rows per channel. Each new question loads prior turns (up to 20) so follow-ups stay in context. Owner `/ai-limit` action **Clear AI conversation** or `/ai-conversations` **Delete** wipes a channel’s history. **`/ai` does not read or write this table.**
 
-**Auto-cleanup** (`cleanup-channel.ts`): AI conversation + Redis usage/intro keys (and transcript rows when applicable) are cleared when:
-- a support/intl post is resolved (Resolve button or `/forum solve`)
-- a support/intl thread is archived, locked, or deleted (`listeners/thread-update.ts`, `listeners/thread-delete.ts`)
+**Auto-cleanup** (`cleanup-channel.ts`): AI conversation + Redis usage/intro keys are cleared when:
+- a support/intl post is resolved (Resolve button or `/forum solve`) — also deletes transcript rows
+- a support/intl thread is archived, locked, or deleted — also deletes transcript rows
 - a ticket channel is deleted (`transcripts` `channelDelete` — transcript rows only if the closing DM was sent)
-- a channel has had no AI/transcript activity for 7 days (`listeners/ready-sweep.ts` daily, or owner `/ai-sweep`)
+- a channel has had **no AI activity** for 7 days (`listeners/ready-sweep.ts` daily, or owner `/ai-sweep`) — **AI only; transcripts are kept**
 
 ## Pieces
 
@@ -28,7 +28,7 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 | `commands/ai.ts` | User-facing `/ai` command (channel/author/role gated, public reply, ignores toggle) |
 | `commands/ai-toggle.ts` | Owner `/ai-toggle` — enable/disable guild AI |
 | `commands/ai-limit.ts` | Owner `/ai-limit` — limits, usage, clear conversation |
-| `commands/ai-sweep.ts` | Owner `/ai-sweep` — manually run the 7-day inactive channel cleanup |
+| `commands/ai-sweep.ts` | Owner `/ai-sweep` — clear AI state for channels inactive 7+ days (transcripts kept) |
 | `commands/ai-conversations.ts` | Owner `/ai-conversations` — Components V2 browser (each row: usage/limit + Reset usage / Delete) |
 | `interaction-handlers/list/*.ts` | List pagination + reset/delete (`ai:list:*`) |
 | `listeners/message-create.ts` | Reply-to-bot flow |

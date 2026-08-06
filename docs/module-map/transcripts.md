@@ -31,6 +31,8 @@ Manager helpers: `getAll()`, **`listWithCounts()`** (channel + author + message 
 | `listeners/messageDelete.ts` | Handle deletions. |
 | `listeners/channelDelete.ts` | DM transcript on ticket delete; always clears AI state via `cleanupClosedSupportChannel`; deletes transcript rows only if the DM succeeded. |
 
+Transcripts are **not** removed by the 7-day AI inactive sweep (`sweepInactiveSupportChannels`). They are deleted only via `/transcript` commands, list Delete, ticket channel delete (after successful DM), or support thread resolve/archive/delete.
+
 ## Schema
 
 Transcript/message tables in `src/schema.ts` (aligned with manager). `messages` includes `"createdAt"` (migration `0002_aspiring_kabuki.sql`).

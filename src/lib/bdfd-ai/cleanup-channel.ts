@@ -32,19 +32,19 @@ export async function cleanupClosedSupportChannel(
     await Promise.all(tasks.map((task) => task.catch((err) => console.error('[bdfd-ai] cleanup failed:', err))));
 }
 
-/** Wipe AI (+ transcript) for channels with no activity for a week. Returns cleaned channel count. */
+/**
+ * Wipe inactive AI conversation/Redis state (7 days).
+ * Does **not** delete ticket transcripts — those are only removed on explicit
+ * close/resolve/channel-delete flows or `/transcript` commands.
+ */
 export async function sweepInactiveSupportChannels(
     maxAgeMs = INACTIVE_CHANNEL_MAX_AGE_MS
 ): Promise<number> {
     const before = new Date(Date.now() - maxAgeMs);
-    const [aiChannels, transcriptChannels] = await Promise.all([
-        container.aiConversation.listInactiveChannelIds(before),
-        container.transcripts.listInactiveChannelIds(before),
-    ]);
+    const channelIds = await container.aiConversation.listInactiveChannelIds(before);
 
-    const channelIds = new Set([...aiChannels, ...transcriptChannels]);
     for (const channelId of channelIds) {
-        await cleanupClosedSupportChannel(channelId, { deleteTranscript: true });
+        await cleanupClosedSupportChannel(channelId, { deleteTranscript: false });
     }
-    return channelIds.size;
+    return channelIds.length;
 }
