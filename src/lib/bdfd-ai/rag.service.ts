@@ -15,6 +15,7 @@ import {
     buildRepairPrompt,
     findCallbacksMisusedInReplyCode,
     findInvalidFunctions,
+    hasUnescapedLiteralBrackets,
 } from './bdscript-validation.js';
 import { BDFD_BASICS } from './bdfd-basics.js';
 import type { ChatTurn } from './types.js';
@@ -41,6 +42,7 @@ You also have tools:
 
 **Hard rule:** Only mention BDScript $functions that appear in relevant_functions, wiki_context, or bdfd_basics, or that check_bdscript_functions confirms exist as **functions**.
 **Hard rule:** Callbacks from relevant_callbacks / check results are **triggers only**. When showing a callback command, label **Trigger** (callback) and **Reply code** (BDScript functions only). Never put callbacks inside reply-code fences.
+**Hard rule:** Inside \`$function[...]\` args, escape literal \`;\` as \`\\;\` and literal \`]\` as \`\\]\`. Usage hints like \`[@user]\` / \`[amount]\` inside \`$argsCheck\` (or any message arg) must be \`[@user\\]\` / \`[amount\\]\`.
 If a function is not found, do not use it. If docs are insufficient after searching, say so and link https://wiki.botdesignerdiscord.com/
 
 Wiki excerpts use plain triple-backtick fences for real BDScript. "[Discord UI preview omitted" lines are not code.
@@ -158,7 +160,8 @@ export class RagService {
         draft: string,
         messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
         invalidNames: string[],
-        misusedCallbacks: string[]
+        misusedCallbacks: string[],
+        needsBracketEscaping: boolean
     ): Promise<string> {
         if (!this.openai) {
             throw new Error('RAG service not ready');
@@ -171,7 +174,12 @@ export class RagService {
                 { role: 'assistant', content: draft },
                 {
                     role: 'user',
-                    content: buildRepairPrompt(invalidNames, this.functionIndex, misusedCallbacks),
+                    content: buildRepairPrompt(
+                        invalidNames,
+                        this.functionIndex,
+                        misusedCallbacks,
+                        needsBracketEscaping
+                    ),
                 },
             ],
             max_tokens: 1024,
@@ -187,7 +195,8 @@ export class RagService {
     ): Promise<string> {
         const invalid = findInvalidFunctions(response, this.functionIndex);
         const misusedCallbacks = findCallbacksMisusedInReplyCode(response, this.functionIndex);
-        if (!invalid.length && !misusedCallbacks.length) {
+        const needsBracketEscaping = hasUnescapedLiteralBrackets(response);
+        if (!invalid.length && !misusedCallbacks.length && !needsBracketEscaping) {
             return response;
         }
 
@@ -201,8 +210,17 @@ export class RagService {
                 `[bdfd-ai] Callbacks misused in reply code: ${misusedCallbacks.map((n) => `$${n}`).join(', ')}`
             );
         }
+        if (needsBracketEscaping) {
+            console.warn('[bdfd-ai] Unescaped ] inside $function arguments in draft');
+        }
 
-        return this.repairResponse(response, messages, invalid, misusedCallbacks);
+        return this.repairResponse(
+            response,
+            messages,
+            invalid,
+            misusedCallbacks,
+            needsBracketEscaping
+        );
     }
 
     private async completeWithTools(

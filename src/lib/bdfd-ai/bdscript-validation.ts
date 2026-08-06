@@ -3,6 +3,9 @@ import { bdscriptFunctionNames, normalizeBdscriptFunctionName } from './bdscript
 
 const BDSCRIPT_FUNCTION_PATTERN = /\$([A-Za-z][A-Za-z0-9]*)/g;
 const CODE_FENCE_PATTERN = /```(?:[^\n`]*)\n?([\s\S]*?)```/g;
+/** `$func[...[@user]...]` / `$func[...[amount]...]` — inner `]` not escaped as `\]`. */
+const UNESCAPED_PLACEHOLDER_IN_FUNC =
+    /\$[A-Za-z][A-Za-z0-9]*\[[^\n]*\[(?:@)?[A-Za-z][A-Za-z0-9]*\]/;
 
 /** Common hallucinated names → verified BDFD function. */
 const HALLUCINATION_ALIASES: Record<string, string> = {
@@ -64,6 +67,14 @@ export function findCallbacksMisusedInReplyCode(
     return [...misused];
 }
 
+/**
+ * True when reply text has placeholder-like `[word]` / `[@user]` inside a `$function[...]`
+ * without escaping the closing `]` (a common `$argsCheck` format-string bug).
+ */
+export function hasUnescapedLiteralBrackets(text: string): boolean {
+    return UNESCAPED_PLACEHOLDER_IN_FUNC.test(text);
+}
+
 function scoreNameSimilarity(a: string, b: string): number {
     const left = a.toLowerCase();
     const right = b.toLowerCase();
@@ -115,7 +126,8 @@ export function suggestFunctionAlternatives(
 export function buildRepairPrompt(
     invalidNames: string[],
     index: BdscriptFunctionIndex,
-    misusedCallbacks: string[] = []
+    misusedCallbacks: string[] = [],
+    needsBracketEscaping = false
 ): string {
     const parts: string[] = [];
 
@@ -148,6 +160,15 @@ export function buildRepairPrompt(
             'Rewrite the **full** answer with labeled parts:',
             '- **Trigger:** put callbacks here (alone in a fence is fine)',
             '- **Reply code:** BDScript $functions only — no callbacks in the same fence as reply functions'
+        );
+    }
+
+    if (needsBracketEscaping) {
+        if (parts.length) parts.push('');
+        parts.push(
+            'Your previous answer left literal `]` unescaped inside `$function[...]` arguments (e.g. `[@user]` / `[amount]` in an `$argsCheck` message).',
+            'Bare `]` closes the function early. Rewrite the **full** answer escaping every literal `]` as `\\]` and every literal `;` as `\\;`.',
+            'Correct example: `$argsCheck[2;❌ Incorrect format, format: !pay [@user\\] [amount\\]]`'
         );
     }
 

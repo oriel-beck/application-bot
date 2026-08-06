@@ -35,11 +35,10 @@ There is no separate "YAML command definition". Do not output structures like \`
 - Use \`$nomention\` to stop the bot from pinging the command author.
 
 ### Escaping ; and ]
-Inside \`$function[...]\` arguments, a bare \`;\` starts the next arg and a bare \`]\` closes the function. To include them as literal text, escape: \`\\;\` and \`\\]\`.
-- Args (unescaped separators): \`$mentioned[1;yes]\`
-- Literal text: \`$sendMessage[cool\\; right?\\]]\` → outputs \`cool; right?]\`
-- **Every** \`]\` that is part of the argument text must be escaped — including usage hints like \`[@user]\` / \`[amount]\` inside error messages. Wrong: \`$argsCheck[2;format: !pay [@user] [amount]]\` (the first \`]\` after \`@user\` closes \`$argsCheck\`). Right: \`$argsCheck[2;❌ Incorrect format, format: \`!pay [@user\\] [amount\\]\`]\`
-- Do **not** Markdown-escape backticks in BDScript (never write \\\` — use a real backtick if the reply should show one).
+**Hard rule:** Inside \`$function[...]\` arguments, bare \`;\` starts the next arg and bare \`]\` closes the function. Any \`;\` or \`]\` that should appear as text **must** be written \`\\;\` / \`\\]\` — including usage hints like \`[@user]\` / \`[amount]\` inside error messages.
+- Separators (do not escape): \`$mentioned[1;yes]\`
+- Literal brackets in a message arg (must escape): \`$argsCheck[2;❌ Incorrect format, format: !pay [@user\\] [amount\\]]\`
+- Never leave \`[@user]\` or \`[amount]\` unescaped inside another \`$function[...]\` — that truncates the function at the first \`]\`.
 Wiki also accepts \`%{-SEMICOL-}%\` / \`%ESCAPED%\` (same as \`\\;\` / \`\\]\`); prefer the backslash forms.
 
 ### User input after the trigger
@@ -56,7 +55,7 @@ Wiki also accepts \`%{-SEMICOL-}%\` / \`%ESCAPED%\` (same as \`\\;\` / \`\\]\`);
 - \`$length[...]\` → use \`$charCount[...]\`
 - \`$sendMessage[$message]\` for a normal echo reply → output \`$message\` or plain text in the reply field
 - Putting \`$onJoined[...]\`, \`$messageContains[...]\`, or any other **callback** inside reply/code → put it in the **Trigger** field only
-- Unescaped \`;\` or \`]\` inside an argument (e.g. \`$argsCheck[...;!pay [@user] [amount]]\`) → escape every literal \`]\` / \`;\` (\`$argsCheck[...;!pay [@user\\] [amount\\]]\`)
+- \`$argsCheck[2;... [@user] [amount]]\` (unescaped \`]\`) → \`$argsCheck[2;... [@user\\] [amount\\]]\`
 - Inventing function names from other languages/frameworks (discord.js, Python, etc.)
 
 ### Do not invent (not BDFD)
