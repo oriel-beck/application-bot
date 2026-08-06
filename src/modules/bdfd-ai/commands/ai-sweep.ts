@@ -1,7 +1,7 @@
 import { sweepInactiveSupportChannels } from '@lib/bdfd-ai/cleanup-channel.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { MessageFlags } from 'discord.js';
+import { InteractionContextType, MessageFlags } from 'discord.js';
 
 @ApplyOptions<Command.Options>({
     name: 'ai-sweep',
@@ -20,7 +20,10 @@ export class AiSweepCommand extends Command {
 
     public registerApplicationCommands(registry: Command.Registry) {
         registry.registerChatInputCommand((builder) =>
-            builder.setName(this.name).setDescription(this.description).setDMPermission(false)
+            builder
+                .setName(this.name)
+                .setDescription(this.description)
+                .setContexts(InteractionContextType.Guild)
         );
     }
 }
