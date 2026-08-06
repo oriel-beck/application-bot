@@ -10,32 +10,36 @@ import { AttachmentBuilder, ChannelType, DMChannel, NonThreadGuildBasedChannel }
 export class ChannelDeleteListener extends Listener<typeof Events.ChannelDelete> {
     async run(channel: DMChannel | NonThreadGuildBasedChannel) {
         if (channel.type !== ChannelType.GuildText || channel.parentId != this.container.config.categories.tickets) return;
+
         const transcript = await this.container.transcripts.get(channel.id, true);
-        if (!transcript) return;
+        let sent = false;
 
-        const users = new Map<string, string>();
-        const author = await this.container.client.users.fetch(transcript.transcript.author.toString()).then((u) => {
-            users.set(u.id, u.displayName);
-            return u;
-        }).catch(() => null);
-        if (!author) return;
-
-        let text = `Transcript of ${channel.name}\nTicket author: ${author?.displayName || "UNKNOWN"}`;
-        for (const message of transcript.messages) {
-            const user = users.get(message.user.toString()) || await this.container.client.users.fetch(message.user.toString()).then((u) => {
+        if (transcript) {
+            const users = new Map<string, string>();
+            const author = await this.container.client.users.fetch(transcript.transcript.author.toString()).then((u) => {
                 users.set(u.id, u.displayName);
-                return u.displayName;
-            }).catch(() => "UNKNOWN");
-            text += `\n\n${user}: ${message.message}`;
-        }
-        
-        const attachment = new AttachmentBuilder(Buffer.from(text), { name: `${channel.name}.txt` });
-        const sent = await author.send({
-            content: "Here is your ticket transcript, thank you for choosing BDFD ❤️",
-            files: [attachment]
-        }).catch((err) => console.error("Failed to DM transcript", err));
+                return u;
+            }).catch(() => null);
 
-        // don't delete transcript unless sent so it can be recovered; always clear AI state
-        await cleanupClosedSupportChannel(channel.id, { deleteTranscript: !!sent });
+            if (author) {
+                let text = `Transcript of ${channel.name}\nTicket author: ${author.displayName || "UNKNOWN"}`;
+                for (const message of transcript.messages) {
+                    const user = users.get(message.user.toString()) || await this.container.client.users.fetch(message.user.toString()).then((u) => {
+                        users.set(u.id, u.displayName);
+                        return u.displayName;
+                    }).catch(() => "UNKNOWN");
+                    text += `\n\n${user}: ${message.message}`;
+                }
+
+                const attachment = new AttachmentBuilder(Buffer.from(text), { name: `${channel.name}.txt` });
+                sent = !!(await author.send({
+                    content: "Here is your ticket transcript, thank you for choosing BDFD ❤️",
+                    files: [attachment]
+                }).catch((err) => console.error("Failed to DM transcript", err)));
+            }
+        }
+
+        // AI always cleared; keep transcript rows if DM failed so they can be recovered
+        await cleanupClosedSupportChannel(channel.id, { deleteTranscript: sent });
     }
 }

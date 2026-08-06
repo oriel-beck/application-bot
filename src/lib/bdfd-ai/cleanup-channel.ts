@@ -1,6 +1,7 @@
 import { container } from '@sapphire/framework';
 
 export const AI_INTRO_KEY_PREFIX = 'bdfd-ai:intro:';
+export const INACTIVE_CHANNEL_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface CleanupClosedSupportChannelOptions {
     /** Remove ticket transcript rows from Postgres (cascade deletes messages) */
@@ -29,4 +30,20 @@ export async function cleanupClosedSupportChannel(
     }
 
     await Promise.all(tasks.map((task) => task.catch((err) => console.error('[bdfd-ai] cleanup failed:', err))));
+}
+
+/** Wipe AI (+ transcript) for channels with no activity for a week. */
+export async function sweepInactiveSupportChannels(
+    maxAgeMs = INACTIVE_CHANNEL_MAX_AGE_MS
+): Promise<void> {
+    const before = new Date(Date.now() - maxAgeMs);
+    const [aiChannels, transcriptChannels] = await Promise.all([
+        container.aiConversation.listInactiveChannelIds(before),
+        container.transcripts.listInactiveChannelIds(before),
+    ]);
+
+    const channelIds = new Set([...aiChannels, ...transcriptChannels]);
+    for (const channelId of channelIds) {
+        await cleanupClosedSupportChannel(channelId, { deleteTranscript: true });
+    }
 }

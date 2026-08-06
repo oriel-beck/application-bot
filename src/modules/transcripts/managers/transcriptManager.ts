@@ -1,6 +1,11 @@
 import { BaseManager } from "@lib/managers/base.manager.js";
-import { and, eq } from "drizzle-orm";
+import { and, eq, lt, max } from "drizzle-orm";
 import { messagesTable, transcriptTable } from "../../../schema.js";
+
+/** Discord snowflake for an instant (no worker/process bits). */
+function snowflakeAt(date: Date): bigint {
+    return BigInt(date.getTime() - 1_420_070_400_000) << 22n;
+}
 
 interface TransriptMessageCreatePayload {
     id: string;
@@ -85,6 +90,18 @@ export default class TranscriptManager extends BaseManager {
 
     public async getAll() {
         return await this.drizzle.select().from(transcriptTable);
+    }
+
+    /** Channels whose newest stored message snowflake is older than `before`. */
+    public async listInactiveChannelIds(before: Date): Promise<string[]> {
+        const cutoff = snowflakeAt(before);
+        const rows = await this.drizzle
+            .select({ channel: messagesTable.channel })
+            .from(messagesTable)
+            .groupBy(messagesTable.channel)
+            .having(lt(max(messagesTable.id), cutoff));
+
+        return rows.map((row) => row.channel.toString());
     }
 
     public async addMessage(payload: TransriptMessageCreatePayload) {

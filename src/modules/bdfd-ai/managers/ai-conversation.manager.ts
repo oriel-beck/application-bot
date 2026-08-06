@@ -1,5 +1,5 @@
 import { BaseManager } from '@lib/managers/base.manager.js';
-import { asc, desc, eq } from 'drizzle-orm';
+import { asc, desc, eq, lt, max } from 'drizzle-orm';
 import { aiConversationTurnsTable } from '../../../schema.js';
 import type { ChatTurn } from '@lib/bdfd-ai/types.js';
 
@@ -59,6 +59,17 @@ export default class AiConversationManager extends BaseManager {
     public async addExchange(channelId: string, userContent: string, assistantContent: string) {
         await this.addTurn(channelId, 'user', userContent);
         await this.addTurn(channelId, 'assistant', assistantContent);
+    }
+
+    /** Channels whose newest turn is older than `before` */
+    public async listInactiveChannelIds(before: Date): Promise<string[]> {
+        const rows = await this.drizzle
+            .select({ channel: aiConversationTurnsTable.channel })
+            .from(aiConversationTurnsTable)
+            .groupBy(aiConversationTurnsTable.channel)
+            .having(lt(max(aiConversationTurnsTable.createdAt), before));
+
+        return rows.map((row) => row.channel.toString());
     }
 
     /** Trim oldest turns when a channel exceeds max stored turns */

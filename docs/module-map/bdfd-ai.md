@@ -15,7 +15,11 @@ Both paths share `processAiRequest` in `src/lib/bdfd-ai/process-request.ts`.
 
 Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alternating **user** / **assistant** rows per channel. Each new question loads prior turns (up to 20) so follow-ups stay in context. Owner `/ai-limit` action **Clear AI conversation** wipes a channel’s history. **`/ai` does not read or write this table.**
 
-**Auto-cleanup** (`cleanup-channel.ts`): when a support post is resolved (Resolve button or `/forum solve`) or a ticket channel is deleted, AI conversation + Redis usage/intro keys are cleared; transcript rows are deleted too (tickets: transcript only if the closing DM was sent successfully).
+**Auto-cleanup** (`cleanup-channel.ts`): AI conversation + Redis usage/intro keys (and transcript rows when applicable) are cleared when:
+- a support/intl post is resolved (Resolve button or `/forum solve`)
+- a support/intl thread is archived, locked, or deleted (`listeners/thread-update.ts`, `listeners/thread-delete.ts`)
+- a ticket channel is deleted (`transcripts` `channelDelete` — transcript rows only if the closing DM was sent)
+- a channel has had no AI/transcript activity for 7 days (`listeners/ready-sweep.ts`, daily)
 
 ## Pieces
 
@@ -26,6 +30,9 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 | `commands/ai-limit.ts` | Owner `/ai-limit` — limits, usage, clear conversation |
 | `listeners/message-create.ts` | Reply-to-bot flow |
 | `listeners/ticket-intro.ts` | One-time ticket intro (only when AI enabled) |
+| `listeners/thread-update.ts` | Cleanup when support/intl thread is archived or locked |
+| `listeners/thread-delete.ts` | Cleanup when support/intl thread is deleted |
+| `listeners/ready-sweep.ts` | Daily sweep of channels inactive for 7 days |
 | `managers/ai-rate.manager.ts` | Per-channel usage limit, thinking lock |
 | `managers/ai-conversation.manager.ts` | Persisted turn history (`container.aiConversation`) |
 | `preconditions/BdfdAiEnabled.ts` | Unused by `/ai`; reserved for future gated commands |
@@ -44,7 +51,7 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 | `bdfd-api.ts` | Public API `function_list` / `callback_list` → Chroma chunks + index registration |
 | `discord-ingest.ts` | Optional Discord channel history ingest (guides/FAQ channels) |
 | `channel-utils.ts` | Channel kind + author resolution |
-| `cleanup-channel.ts` | `cleanupClosedSupportChannel` on resolve / ticket close |
+| `cleanup-channel.ts` | `cleanupClosedSupportChannel` + inactive sweep |
 
 ## Settings
 
