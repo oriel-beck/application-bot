@@ -8,9 +8,12 @@ import {
     registerBdscriptFunctionsFromApi,
 } from './bdfd-api.js';
 
+export type BdscriptNameKind = 'function' | 'callback';
+
 export interface BdscriptFunctionRecord {
     url: string;
     file: string;
+    kind: BdscriptNameKind;
 }
 
 export type BdscriptFunctionIndex = Map<string, BdscriptFunctionRecord>;
@@ -18,6 +21,7 @@ export type BdscriptFunctionIndex = Map<string, BdscriptFunctionRecord>;
 const INDEX_FILENAME = 'bdscript-functions.json';
 const BDSCRIPT_FILE_PREFIX = 'src/bdscript/';
 const WIKI_CALLBACK_PREFIX = 'src/callbacks/';
+const API_CALLBACK_FILE_PREFIX = 'api/bdfd/callback/';
 
 export function normalizeBdscriptFunctionName(name: string): string {
     return name.trim().replace(/^\$/, '');
@@ -26,6 +30,25 @@ export function normalizeBdscriptFunctionName(name: string): string {
 export function wikiUrlFromPath(filePath: string): string {
     const wikiPath = filePath.replace(/^src\//, '').replace(/\.md$/, '.html');
     return `https://wiki.botdesignerdiscord.com/${wikiPath}`;
+}
+
+/** Infer function vs callback from wiki/API file path (callback paths checked first). */
+export function inferBdscriptKind(filePath: string): BdscriptNameKind {
+    if (
+        filePath.startsWith(WIKI_CALLBACK_PREFIX) ||
+        filePath.startsWith(API_CALLBACK_FILE_PREFIX)
+    ) {
+        return 'callback';
+    }
+    return 'function';
+}
+
+function recordFor(filePath: string): BdscriptFunctionRecord {
+    return {
+        url: wikiUrlFromPath(filePath),
+        file: filePath,
+        kind: inferBdscriptKind(filePath),
+    };
 }
 
 /** Register BDScript function names from a wiki page (ingest + index build). */
@@ -43,21 +66,21 @@ export function registerBdscriptFunctionsFromMarkdown(
             filePath.startsWith(BDSCRIPT_FILE_PREFIX) ||
             filePath.startsWith(WIKI_CALLBACK_PREFIX)
         ) {
-            index.set(name, { url: wikiUrlFromPath(filePath), file: filePath });
+            index.set(name, recordFor(filePath));
         }
     }
 
     if (filePath.startsWith(BDSCRIPT_FILE_PREFIX) && filePath.endsWith('.md')) {
         const base = filePath.slice(BDSCRIPT_FILE_PREFIX.length, -3);
         if (!index.has(base)) {
-            index.set(base, { url: wikiUrlFromPath(filePath), file: filePath });
+            index.set(base, recordFor(filePath));
         }
     }
 
     if (filePath.startsWith(WIKI_CALLBACK_PREFIX) && filePath.endsWith('.md')) {
         const base = filePath.slice(WIKI_CALLBACK_PREFIX.length, -3);
         if (!index.has(base)) {
-            index.set(base, { url: wikiUrlFromPath(filePath), file: filePath });
+            index.set(base, recordFor(filePath));
         }
     }
 }
@@ -70,8 +93,19 @@ export async function loadBdscriptFunctionIndex(cwd = process.cwd()): Promise<Bd
     const path = join(cwd, 'json', INDEX_FILENAME);
     try {
         const raw = await readFile(path, 'utf-8');
-        const data = JSON.parse(raw) as Record<string, BdscriptFunctionRecord>;
-        return new Map(Object.entries(data));
+        const data = JSON.parse(raw) as Record<
+            string,
+            Partial<BdscriptFunctionRecord> & Pick<BdscriptFunctionRecord, 'url' | 'file'>
+        >;
+        const index: BdscriptFunctionIndex = new Map();
+        for (const [name, rec] of Object.entries(data)) {
+            index.set(name, {
+                url: rec.url,
+                file: rec.file,
+                kind: rec.kind ?? inferBdscriptKind(rec.file),
+            });
+        }
+        return index;
     } catch {
         console.warn(`[bdfd-ai] ${INDEX_FILENAME} not found — run wiki ingest to build the function index`);
         return new Map();
@@ -117,6 +151,7 @@ export interface FunctionCheckResult {
     input: string;
     normalized: string;
     exists: boolean;
+    kind?: BdscriptNameKind;
     url?: string;
     file?: string;
 }
@@ -141,6 +176,7 @@ export async function checkBdscriptFunctions(
                 input,
                 normalized,
                 exists: true,
+                kind: hit.kind,
                 url: hit.url,
                 file: hit.file,
             });
@@ -150,6 +186,7 @@ export async function checkBdscriptFunctions(
         let exists = false;
         let url: string | undefined;
         let file: string | undefined;
+        let kind: BdscriptNameKind | undefined;
 
         if (collection) {
             const candidates = [
@@ -167,9 +204,10 @@ export async function checkBdscriptFunctions(
                     if ((got.ids?.length ?? 0) > 0) {
                         exists = true;
                         file = candidate;
+                        kind = inferBdscriptKind(candidate);
                         url =
                             candidate.startsWith(BDSCRIPT_FILE_PREFIX) ||
-                            candidate.startsWith('src/callbacks/')
+                            candidate.startsWith(WIKI_CALLBACK_PREFIX)
                                 ? wikiUrlFromPath(candidate)
                                 : 'https://wiki.botdesignerdiscord.com/resources/api.html';
                         break;
@@ -180,17 +218,27 @@ export async function checkBdscriptFunctions(
             }
         }
 
-        results.push({ input, normalized, exists, url, file });
+        results.push({ input, normalized, exists, kind, url, file });
     }
 
     return results;
+}
+
+function formatKindLabel(kind: BdscriptNameKind | undefined): string {
+    if (kind === 'callback') {
+        return ' (callback — command trigger only, not reply code)';
+    }
+    if (kind === 'function') {
+        return ' (function)';
+    }
+    return '';
 }
 
 export function formatFunctionCheckResults(results: FunctionCheckResult[]): string {
     return results
         .map((r) => {
             if (r.exists) {
-                return `$${r.normalized}: exists${r.url ? ` (${r.url})` : ''}`;
+                return `$${r.normalized}: exists${formatKindLabel(r.kind)}${r.url ? ` (${r.url})` : ''}`;
             }
             return `$${r.normalized || r.input}: not found in BDScript wiki/API index`;
         })

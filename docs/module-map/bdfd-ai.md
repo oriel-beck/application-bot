@@ -36,10 +36,12 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 |------|------|
 | `process-request.ts` | Gates, thinking UI, RAG call, save turns |
 | `response-utils.ts` | Embeds (footer disclaimer on successful replies); over 4096 chars attach `bdfd-ai-response.txt` |
-| `rag.service.ts` | Chroma + OpenAI (`container.rag`); parallel wiki + API retrieval, post-validation, auto-repair |
-| `api-function-search.ts` | Chroma query filtered to `source: bdfd-api` for targeted function docs |
-| `bdscript-validation.ts` | Extract/validate `$function` names; alias hints for repair pass |
-| `bdscript-function-index.ts` | Function name index; `ensureFunctionIndex()` API fallback when JSON empty |
+| `rag.service.ts` | Chroma + OpenAI (`container.rag`); parallel wiki + API retrieval (functions vs callbacks split), post-validation, auto-repair |
+| `api-function-search.ts` | Chroma query filtered to `source: bdfd-api`; returns hits with `kind` (`function` / `callback`) |
+| `bdscript-validation.ts` | Extract/validate `$function` names; flag callbacks mixed into reply-code fences; alias hints for repair pass |
+| `bdscript-function-index.ts` | Name index with `kind: function \| callback`; `ensureFunctionIndex()` API fallback when JSON empty |
+| `bdfd-basics.ts` | Always-on BDFD primer (callbacks = trigger only, not reply code) |
+| `bdfd-api.ts` | Public API `function_list` / `callback_list` → Chroma chunks + index registration |
 | `discord-ingest.ts` | Optional Discord channel history ingest (guides/FAQ channels) |
 | `channel-utils.ts` | Channel kind + author resolution |
 | `cleanup-channel.ts` | `cleanupClosedSupportChannel` on resolve / ticket close |
@@ -53,9 +55,9 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 - Script: `src/scripts/ingest-wiki.ts` → `node dist/src/scripts/ingest-wiki.js` (also in compose).
 - Before chunking, `wiki-markdown.ts` strips `discord yaml` preview fences.
 - Ingest skips **`src/javascript/`** (deprecated BDJS) via `wiki-ingest.ts`; each run **recreates** the Chroma collection so old BDJS chunks are removed.
-- Ingest also pulls **[BDFD public API](https://wiki.botdesignerdiscord.com/resources/api.html)** `function_list` and `callback_list` (`bdfd-api.ts`) — one Chroma chunk per function/callback; merges names into `bdscript-functions.json`.
+- Ingest also pulls **[BDFD public API](https://wiki.botdesignerdiscord.com/resources/api.html)** `function_list` and `callback_list` (`bdfd-api.ts`) — one Chroma chunk per function/callback (`kind` metadata); merges names into `bdscript-functions.json` with `kind: function | callback`. Callback chunks state they belong in the **command trigger** field, not reply code. **Re-run ingest** after changing API chunk format so Chroma picks up the stronger callback wording.
 - Optional Discord ingest source (`discord-ingest.ts`): set `BDFD_INGEST_CHANNEL_IDS` (comma-separated channel IDs) and token via `BDFD_INGEST_BOT_TOKEN` (falls back to `BOT_TOKEN`) to index message history from guide/FAQ channels.
 - If `BDFD_INGEST_CHANNEL_IDS` is not set, ingest auto-falls back to `config.json` channel keys from `BDFD_INGEST_CHANNEL_KEYS` (default: `tips,variable_guides,limiter_guides,faq`) and uses `config.guild` as guild fallback for jump-link URLs.
 - Optional: `BDFD_INGEST_GUILD_ID` (overrides `config.guild`), `BDFD_INGEST_MAX_MESSAGES_PER_CHANNEL` (default `500`).
 - Env: `OPENAI_API_KEY`, `CHROMA_URL` (+ optional Discord ingest env above). **Re-run ingest** after ingest/rule changes.
-- RAG (`rag.service.ts`): parallel **wiki search** (top 6) + **API function search** (top 8, `source: bdfd-api`) before generation; **tool loop** (`search_wiki`, `check_bdscript_functions`, max 4 rounds); **server-side validation** of all `$function` names in the final answer with one silent **auto-repair** pass when invalid names are detected (`bdscript-validation.ts`). `json/bdscript-functions.json` is built at ingest; if empty at startup, `ensureFunctionIndex()` fetches BDFD public API lists.
+- RAG (`rag.service.ts`): parallel **wiki search** (top 6) + **API search** (top 8, `source: bdfd-api`, split into `<relevant_functions>` / `<relevant_callbacks>`) before generation; **tool loop** (`search_wiki`, `check_bdscript_functions` reports function vs callback, max 4 rounds); **server-side validation** of `$function` names plus callbacks misused inside reply-code fences, with one silent **auto-repair** pass (`bdscript-validation.ts`). `json/bdscript-functions.json` is built at ingest; if empty at startup, `ensureFunctionIndex()` fetches BDFD public API lists.

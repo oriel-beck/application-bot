@@ -6,6 +6,8 @@
 
 import {
     type BdscriptFunctionIndex,
+    type BdscriptNameKind,
+    inferBdscriptKind,
     wikiUrlFromPath,
 } from './bdscript-function-index.js';
 
@@ -59,6 +61,7 @@ export interface BdfdApiWikiChunk {
         heading: string;
         url: string;
         source: 'bdfd-api';
+        kind: BdscriptNameKind;
     };
 }
 
@@ -266,6 +269,7 @@ export function bdfdApiFunctionsToChunks(functions: BdfdApiFunction[]): BdfdApiW
                 heading: variants.map((v) => v.tag).join(' · '),
                 url: 'https://wiki.botdesignerdiscord.com/resources/api.html',
                 source: 'bdfd-api',
+                kind: 'function',
             },
         });
     }
@@ -281,7 +285,7 @@ function formatBdfdApiCallbackDocMerged(variants: BdfdApiCallback[], name: strin
 
     return (
         `## BDFD API callback: $${name}\n\n` +
-        '_Official BDFD public API callback definition. Multiple syntax variants are listed when the API defines overloads._\n\n' +
+        '_Official BDFD public API callback definition. Callbacks are used in the **command trigger** field, not in reply code. Multiple syntax variants are listed when the API defines overloads._\n\n' +
         `${variantBlocks.join('\n\n---\n\n')}\n\n` +
         `**Wiki:** ${wikiUrlFromPath(wikiCallbackPath(name))}`
     )
@@ -302,6 +306,7 @@ export function bdfdApiCallbacksToChunks(callbacks: BdfdApiCallback[]): BdfdApiW
                 heading: variants.map((v) => v.name).join(' · '),
                 url: 'https://wiki.botdesignerdiscord.com/resources/api.html',
                 source: 'bdfd-api',
+                kind: 'callback',
             },
         });
     }
@@ -321,9 +326,11 @@ export function registerBdscriptFunctionsFromApi(
         if (!name) continue;
 
         if (!index.has(name)) {
+            const file = `${API_FUNCTION_FILE_PREFIX}${name}`;
             index.set(name, {
                 url: wikiUrlFromPath(`src/bdscript/${name}.md`),
-                file: `${API_FUNCTION_FILE_PREFIX}${name}`,
+                file,
+                kind: inferBdscriptKind(file),
             });
             added++;
         }
@@ -344,9 +351,11 @@ export function registerBdscriptCallbacksFromApi(
         if (!name) continue;
 
         if (!index.has(name)) {
+            const file = `${API_CALLBACK_FILE_PREFIX}${name}`;
             index.set(name, {
                 url: wikiUrlFromPath(wikiCallbackPath(name)),
-                file: `${API_CALLBACK_FILE_PREFIX}${name}`,
+                file,
+                kind: inferBdscriptKind(file),
             });
             added++;
         }

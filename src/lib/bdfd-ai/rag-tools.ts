@@ -29,14 +29,15 @@ export const WIKI_AGENT_TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
         function: {
             name: 'check_bdscript_functions',
             description:
-                'Verify BDScript $function names exist in the wiki before using them in your answer. Always check functions you plan to mention.',
+                'Verify BDScript $function or callback names exist. Returns whether each name is a function (reply code) or a callback (command trigger only, not reply code). Always check names you plan to mention.',
             parameters: {
                 type: 'object',
                 properties: {
                     names: {
                         type: 'array',
                         items: { type: 'string' },
-                        description: 'Function names with or without $, e.g. ["message", "$addField"]',
+                        description:
+                            'Names with or without $, e.g. ["message", "$addField", "$onJoined"]',
                     },
                 },
                 required: ['names'],
