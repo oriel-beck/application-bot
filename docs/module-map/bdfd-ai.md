@@ -13,7 +13,7 @@ Both paths share `processAiRequest` in `src/lib/bdfd-ai/process-request.ts`.
 
 ## Conversation memory
 
-Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alternating **user** / **assistant** rows per channel. Each new question loads prior turns (up to 20) so follow-ups stay in context. Owner `/ai-limit` action **Clear AI conversation** wipes a channel’s history. **`/ai` does not read or write this table.**
+Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alternating **user** / **assistant** rows per channel. Each new question loads prior turns (up to 20) so follow-ups stay in context. Owner `/ai-limit` action **Clear AI conversation** or `/ai-conversations` **Delete** wipes a channel’s history. **`/ai` does not read or write this table.**
 
 **Auto-cleanup** (`cleanup-channel.ts`): AI conversation + Redis usage/intro keys (and transcript rows when applicable) are cleared when:
 - a support/intl post is resolved (Resolve button or `/forum solve`)
@@ -29,14 +29,19 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 | `commands/ai-toggle.ts` | Owner `/ai-toggle` — enable/disable guild AI |
 | `commands/ai-limit.ts` | Owner `/ai-limit` — limits, usage, clear conversation |
 | `commands/ai-sweep.ts` | Owner `/ai-sweep` — manually run the 7-day inactive channel cleanup |
+| `commands/ai-conversations.ts` | Owner `/ai-conversations` — Components V2 browser (usage/limit + Manage → Reset usage / Delete) |
+| `interaction-handlers/list/*.ts` | List pagination + manage/reset/delete/back (`ai:list:*`) |
 | `listeners/message-create.ts` | Reply-to-bot flow |
 | `listeners/ticket-intro.ts` | One-time ticket intro (only when AI enabled) |
 | `listeners/thread-update.ts` | Cleanup when support/intl thread is archived or locked |
 | `listeners/thread-delete.ts` | Cleanup when support/intl thread is deleted |
 | `listeners/ready-sweep.ts` | Daily sweep of channels inactive for 7 days |
 | `managers/ai-rate.manager.ts` | Per-channel usage limit, thinking lock |
-| `managers/ai-conversation.manager.ts` | Persisted turn history (`container.aiConversation`) |
+| `managers/ai-conversation.manager.ts` | Persisted turn history (`container.aiConversation`); **`listChannels()`** for the browser |
 | `preconditions/BdfdAiEnabled.ts` | Unused by `/ai`; reserved for future gated commands |
+
+Custom IDs: `AiConversationCustomIDs` in `src/lib/constants/custom-ids.ts`.  
+List UI utils: `src/lib/command-utils/bdfd-ai/list/ai-conversation-list.utils.ts` (`PAGE_SIZE = 10`, First/Prev/page/Next/Last).
 
 ## Shared lib (`src/lib/bdfd-ai/`)
 

@@ -60,7 +60,28 @@ export const ForumCustomIDs = Object.freeze({
     supportResolve: 'forum:support',
 });
 
-/** Share-your-bot sticky additions button. */
 export const ShareCustomIDs = Object.freeze({
     stickyAdditions: 'share:sticky:additions',
+});
+
+/** Transcript list browser (Components V2). */
+export const TranscriptCustomIDs = Object.freeze({
+    buttons: {
+        listDir: 'tr:list:dir',
+        manage: 'tr:list:mng',
+        export: 'tr:list:exp',
+        delete: 'tr:list:del',
+        back: 'tr:list:back',
+    },
+});
+
+/** AI conversation list browser (Components V2). */
+export const AiConversationCustomIDs = Object.freeze({
+    buttons: {
+        listDir: 'ai:list:dir',
+        manage: 'ai:list:mng',
+        reset: 'ai:list:rst',
+        delete: 'ai:list:del',
+        back: 'ai:list:back',
+    },
 });

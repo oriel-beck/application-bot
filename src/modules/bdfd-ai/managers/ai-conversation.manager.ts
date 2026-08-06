@@ -1,9 +1,15 @@
 import { BaseManager } from '@lib/managers/base.manager.js';
-import { asc, desc, eq, lt, max } from 'drizzle-orm';
+import { asc, count, desc, eq, lt, max } from 'drizzle-orm';
 import { aiConversationTurnsTable } from '../../../schema.js';
 import type { ChatTurn } from '@lib/bdfd-ai/types.js';
 
 const DEFAULT_HISTORY_LIMIT = 20;
+
+export interface AiConversationChannelSummary {
+    channelId: string;
+    turnCount: number;
+    lastAt: Date;
+}
 
 export default class AiConversationManager extends BaseManager {
     constructor() {
@@ -59,6 +65,27 @@ export default class AiConversationManager extends BaseManager {
     public async addExchange(channelId: string, userContent: string, assistantContent: string) {
         await this.addTurn(channelId, 'user', userContent);
         await this.addTurn(channelId, 'assistant', assistantContent);
+    }
+
+    /** All channels with stored turns, newest activity first. */
+    public async listChannels(): Promise<AiConversationChannelSummary[]> {
+        const rows = await this.drizzle
+            .select({
+                channel: aiConversationTurnsTable.channel,
+                turnCount: count(),
+                lastAt: max(aiConversationTurnsTable.createdAt),
+            })
+            .from(aiConversationTurnsTable)
+            .groupBy(aiConversationTurnsTable.channel)
+            .orderBy(desc(max(aiConversationTurnsTable.createdAt)));
+
+        return rows
+            .filter((row) => row.lastAt != null)
+            .map((row) => ({
+                channelId: row.channel.toString(),
+                turnCount: Number(row.turnCount),
+                lastAt: row.lastAt!,
+            }));
     }
 
     /** Channels whose newest turn is older than `before` */

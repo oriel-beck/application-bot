@@ -1,6 +1,12 @@
 import { BaseManager } from "@lib/managers/base.manager.js";
-import { and, eq, lt, max } from "drizzle-orm";
+import { and, count, eq, lt, max, sql } from "drizzle-orm";
 import { messagesTable, transcriptTable } from "../../../schema.js";
+
+export interface TranscriptChannelSummary {
+    channelId: string;
+    authorId: string;
+    messageCount: number;
+}
 
 /** Discord snowflake for an instant (no worker/process bits). */
 function snowflakeAt(date: Date): bigint {
@@ -90,6 +96,26 @@ export default class TranscriptManager extends BaseManager {
 
     public async getAll() {
         return await this.drizzle.select().from(transcriptTable);
+    }
+
+    /** All transcripts with message counts (0 if none). */
+    public async listWithCounts(): Promise<TranscriptChannelSummary[]> {
+        const rows = await this.drizzle
+            .select({
+                channel: transcriptTable.channel,
+                author: transcriptTable.author,
+                messageCount: count(messagesTable.id),
+            })
+            .from(transcriptTable)
+            .leftJoin(messagesTable, eq(messagesTable.channel, transcriptTable.channel))
+            .groupBy(transcriptTable.channel, transcriptTable.author)
+            .orderBy(sql`${max(messagesTable.id)} DESC NULLS LAST`);
+
+        return rows.map((row) => ({
+            channelId: row.channel.toString(),
+            authorId: row.author.toString(),
+            messageCount: Number(row.messageCount),
+        }));
     }
 
     /** Channels whose newest stored message snowflake is older than `before`. */
