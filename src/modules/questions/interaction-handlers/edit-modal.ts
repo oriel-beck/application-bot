@@ -1,7 +1,7 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { QuestionCustomIDs } from "@lib/constants/custom-ids.js";
-import type { ModalSubmitInteraction } from "discord.js";
+import { MessageFlags, type ModalSubmitInteraction } from "discord.js";
 
 const PREFIX = `${QuestionCustomIDs.modals.edit}:`;
 
@@ -18,13 +18,13 @@ export class EditModalHandler extends InteractionHandler {
         if (!edit) {
             return interaction.reply({
                 content: `Failed to edit question \`${id}\`.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         return interaction.reply({
             content: `Edited question \`${id}\`.`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 

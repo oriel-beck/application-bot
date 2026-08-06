@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, MessageFlags } from 'discord.js';
 
 @ApplyOptions<Command.Options>({
     name: 'ai-toggle',
@@ -24,7 +24,7 @@ export class AiToggleCommand extends Command {
                     : 'AI assistant is now **disabled**. Existing conversations are kept in the database.'
             );
 
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     public registerApplicationCommands(registry: Command.Registry) {

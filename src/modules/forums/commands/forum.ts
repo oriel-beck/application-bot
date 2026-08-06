@@ -1,9 +1,8 @@
 import { cleanupClosedSupportChannel } from "@lib/bdfd-ai/cleanup-channel.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { Subcommand } from "@sapphire/plugin-subcommands";
-import { Colors, EmbedBuilder } from "discord.js";
-import {
-    detectInternationalSupportLanguage,
+import { Colors, EmbedBuilder, MessageFlags } from "discord.js";
+import { detectInternationalSupportLanguage,
     formatInternationalResolvedDm,
     getInternationalSupportStrings,
     isInternationalSupportForum,
@@ -31,13 +30,13 @@ export class SlashCommand extends Subcommand {
             const success = await interaction.channel.members.remove(interaction.options.getUser("member", true).id, `Removed by ${interaction.user.globalName || interaction.user.username}`).catch(() => null);
             if (success) return interaction.reply({
                 content: `Removed ${interaction.options.getUser("member", true)} from the current post.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         return interaction.reply({
             content: `Failed to remove ${interaction.options.getUser("member", true)} from the current post.`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -54,12 +53,12 @@ export class SlashCommand extends Subcommand {
             const success = interaction.channel.setAppliedTags([resolvedTag]).catch(() => null);
             if (!success) return interaction.reply({
                 content: "Failed to resolve post.",
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
 
             const reply = await interaction.reply({
                 content: "Resolving post...",
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
 
             await interaction.channel.send({
@@ -97,7 +96,7 @@ export class SlashCommand extends Subcommand {
 
         return await interaction.reply({
             content: "Resolved the post.",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 

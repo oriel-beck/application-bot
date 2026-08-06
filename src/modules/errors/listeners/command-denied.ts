@@ -1,3 +1,4 @@
+import { MessageFlags } from 'discord.js';
 import { ApplyOptions } from "@sapphire/decorators";
 import { Events, Listener, UserError, type ChatInputCommandDeniedPayload } from "@sapphire/framework";
 
@@ -9,7 +10,7 @@ export class CommandDeniedListener extends Listener<typeof Events.ChatInputComma
     run(error: UserError, payload: ChatInputCommandDeniedPayload) {
         payload.interaction.reply({
             content: error.message,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }

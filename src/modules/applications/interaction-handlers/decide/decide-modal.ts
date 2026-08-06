@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { ChannelType, type ModalSubmitInteraction } from "discord.js";
+import { ChannelType, type ModalSubmitInteraction, MessageFlags } from "discord.js";
 import { hasRole } from "@lib/precondition-util.js";
 import { ApplicationState } from "@lib/constants/application.js";
 import { ApplicationCustomIDs } from "@lib/constants/custom-ids.js";
@@ -15,7 +15,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         if (!hasRole(interaction.member!, this.container.config.roles.mod)) {
             return interaction.reply({
                 content: 'You are missing permissions to use this.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -29,7 +29,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         if (!app) {
             return interaction.reply({
                 content: 'This application does not exist in the database.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -54,7 +54,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         if (!res) {
             return interaction.reply({
                 content: 'Application not found.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -74,7 +74,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         if (!res) {
             return interaction.reply({
                 content: 'Application not found.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -107,7 +107,7 @@ export class DecisionButtonHandler extends InteractionHandler {
         if (!res) {
             return interaction.reply({
                 content: 'Application not found.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 

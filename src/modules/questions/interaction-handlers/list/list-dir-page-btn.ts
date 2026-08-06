@@ -6,7 +6,7 @@ import { QuestionCustomIDs } from "@lib/constants/custom-ids.js";
 import { hasRole } from "@lib/precondition-util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ButtonInteraction } from "discord.js";
+import { MessageFlags, type ButtonInteraction } from "discord.js";
 import type { Question } from "@lib/types.js";
 
 @ApplyOptions<InteractionHandler.Options>({
@@ -17,7 +17,7 @@ export class QuestionListDirPageHandler extends InteractionHandler {
         if (!hasRole(interaction.member!, this.container.config.roles.mod)) {
             return interaction.reply({
                 content: "You are missing permissions to use this.",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -35,7 +35,7 @@ export class QuestionListDirPageHandler extends InteractionHandler {
         if (!Number.isInteger(pageIndex) || pageIndex < 0) {
             return interaction.reply({
                 content: "Invalid list navigation.",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 

@@ -4,7 +4,7 @@ import { applicationExists } from "@lib/util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { ApplicationState } from "@lib/constants/application.js";
-import { StringSelectMenuInteraction } from "discord.js";
+import { StringSelectMenuInteraction, MessageFlags } from "discord.js";
 import type { Application } from "@lib/types.js";
 
 const LIST_SEL_RE = /^app:list:sel:\d+$/;
@@ -17,7 +17,7 @@ export class ListSelectHandler extends InteractionHandler {
         if (!hasRole(interaction.member!, this.container.config.roles.mod)) {
             return interaction.reply({
                 content: 'You are missing permissions to use this.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
         
@@ -28,7 +28,7 @@ export class ListSelectHandler extends InteractionHandler {
         if (!app || !applicationExists(app)) {
             return interaction.reply({
                 content: 'This user does not have an application.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 

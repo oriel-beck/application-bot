@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Subcommand } from "@sapphire/plugin-subcommands";
-import { AttachmentBuilder, ChannelType, TextChannel } from "discord.js";
+import { AttachmentBuilder, ChannelType, MessageFlags, TextChannel } from "discord.js";
 
 @ApplyOptions<Subcommand.Options>({
     name: "transcript",
@@ -28,23 +28,23 @@ export class SlashCommand extends Subcommand {
         let channel = interaction.options.getChannel("channel", false, [ChannelType.GuildText]);
         if (!channelId && !channel) return interaction.reply({
             content: "Please provide a channel ID or a channel!",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
         if (!channel && channelId) channel = await interaction.guild?.channels.fetch(channelId) as TextChannel;
         if (!channel) return interaction.reply({
             content: "Failed to get the channel",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         const deleted = await this.container.transcripts.delete(channel.id)
         if (!deleted.rowCount) return interaction.reply({
             content: "I could not find any transcript for this channel",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         return interaction.reply({
             content: "Deleted transcript and messages for the provided channel",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -52,11 +52,11 @@ export class SlashCommand extends Subcommand {
         const category = await interaction.guild?.channels.fetch(this.container.config.categories.tickets);
         if (!category || category.type !== ChannelType.GuildCategory) return interaction.reply({
             content: "I was unable to get the tickets category",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         await interaction.deferReply({
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         const channelSet = new Set(category.children.cache.map(c => c.id));
@@ -69,9 +69,8 @@ export class SlashCommand extends Subcommand {
             }
         }
 
-        return interaction.reply({
-            content: `Deleted ${deleted} transcipts`,
-            ephemeral: true
+        return interaction.editReply({
+            content: `Deleted ${deleted} transcripts`
         });
     }
 
@@ -80,18 +79,18 @@ export class SlashCommand extends Subcommand {
         let channel = interaction.options.getChannel("channel", false, [ChannelType.GuildText]);
         if (!channelId && !channel) return interaction.reply({
             content: "Please provide a channel ID or a channel!",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
         if (!channel && channelId) channel = await interaction.guild?.channels.fetch(channelId) as TextChannel;
         if (!channel) return interaction.reply({
             content: "Failed to get the channel",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         const transcript = await this.container.transcripts.get(channel.id);
         if (!transcript) return interaction.reply({
             content: "I could not find any transcript for this channel",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         const users = new Map<string, string>();

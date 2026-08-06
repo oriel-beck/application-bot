@@ -39,7 +39,6 @@ export class QuestionListSelectHandler extends InteractionHandler {
         return interaction.reply({
             embeds: generateQuestionShowEmbed(question),
             components: generateQuestionShowComponents(question),
-            ephemeral: false,
         });
     }
 

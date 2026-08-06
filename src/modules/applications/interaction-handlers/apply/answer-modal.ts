@@ -3,7 +3,7 @@ import { applicationExists } from "@lib/util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { ApplyCustomIDs } from "@lib/constants/custom-ids.js";
-import type { ModalSubmitInteraction } from "discord.js";
+import { MessageFlags, type ModalSubmitInteraction } from "discord.js";
 import type { Application } from "@lib/types.js";
 
 @ApplyOptions<InteractionHandler.Options>({
@@ -21,7 +21,7 @@ export class AnswerModalHandler extends InteractionHandler {
         if (!app || !applicationExists(app)) {
             return interaction.followUp({
                 content: 'The application no longer exist.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -35,7 +35,7 @@ export class AnswerModalHandler extends InteractionHandler {
         if (!update) {
             return interaction.followUp({
                 content: 'Failed to update the application.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 

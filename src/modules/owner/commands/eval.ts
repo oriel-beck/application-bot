@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { Colors } from 'discord.js';
+import { Colors, MessageFlags } from 'discord.js';
 import { inspect } from 'util';
 
 const EVAL_EMBED_MAX_DESCRIPTION = 3900;
@@ -24,7 +24,7 @@ function truncateInspectForEmbedDescription(inspected: string): string {
 export class SlashCommand extends Command {
   public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     const ephemeral = !!interaction.options.getBoolean('ephemeral', false);
-    await interaction.deferReply({ ephemeral });
+    await interaction.deferReply({ flags: ephemeral ? MessageFlags.Ephemeral : undefined });
 
     if (process.env.NODE_ENV === 'production' && process.env.EVAL_ENABLED !== 'true') {
       return interaction.editReply({

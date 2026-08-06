@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { ChannelType, EmbedBuilder } from 'discord.js';
+import { ChannelType, EmbedBuilder, MessageFlags } from 'discord.js';
 import { DEFAULT_AI_LIMIT } from '../managers/ai-rate.manager.js';
 
 @ApplyOptions<Command.Options>({
@@ -20,7 +20,7 @@ export class AiLimitCommand extends Command {
         ) {
             return interaction.reply({
                 content: 'Channel must be a ticket channel or support thread.',
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -37,14 +37,14 @@ export class AiLimitCommand extends Command {
                     `Channel: <#${channelId}>\nUsage: **${usage}** / **${limit}**${custom ? ' (custom limit)' : ' (default)'}`
                 );
 
-            return interaction.reply({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
 
         if (action === 'reset-usage') {
             await this.container.aiRate.resetUsage(channelId);
             return interaction.reply({
                 content: `Reset AI usage for <#${channelId}>.`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -52,7 +52,7 @@ export class AiLimitCommand extends Command {
             await this.container.aiConversation.delete(channelId);
             return interaction.reply({
                 content: `Cleared saved AI conversation for <#${channelId}>.`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -60,7 +60,7 @@ export class AiLimitCommand extends Command {
         if (limit < 1 || limit > 500) {
             return interaction.reply({
                 content: 'Limit must be between 1 and 500.',
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -68,7 +68,7 @@ export class AiLimitCommand extends Command {
             await this.container.aiRate.setLimit(channelId, limit);
             return interaction.reply({
                 content: `Set AI limit for <#${channelId}> to **${limit}** responses.`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -76,11 +76,11 @@ export class AiLimitCommand extends Command {
             await this.container.aiRate.clearLimit(channelId);
             return interaction.reply({
                 content: `Cleared custom AI limit for <#${channelId}> (default **${DEFAULT_AI_LIMIT}**).`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
-        return interaction.reply({ content: 'Unknown action.', ephemeral: true });
+        return interaction.reply({ content: 'Unknown action.', flags: MessageFlags.Ephemeral });
     }
 
     public registerApplicationCommands(registry: Command.Registry) {

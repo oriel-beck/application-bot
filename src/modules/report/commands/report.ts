@@ -1,6 +1,6 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
-import { ChannelType } from 'discord.js';
+import { ChannelType, MessageFlags } from 'discord.js';
 import { generateReportEmbed, generateReportComponents, generateReportModal } from "@lib/command-utils/report/report.util.js";
 @ApplyOptions<Command.Options>({
     name: 'report',
@@ -14,13 +14,13 @@ export class SlashCommand extends Command {
         if (interaction.user.id === user.id) {
             return interaction.reply({
                 content: 'Why would you report yourself?',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         interaction.reply({
             content: 'Sent the report to the mod team.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         const reportChannel = this.container.client.channels.cache.get(this.container.config.channels.report);
@@ -40,7 +40,7 @@ export class SlashCommand extends Command {
             if (interaction.user.id === interaction.targetUser.id) {
                 return interaction.reply({
                     content: 'Why would you report yourself?',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -51,7 +51,7 @@ export class SlashCommand extends Command {
             if (interaction.user.id === interaction.targetMessage.author.id) {
                 return interaction.reply({
                     content: 'Why would you report yourself?',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 

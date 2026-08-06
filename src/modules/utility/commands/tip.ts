@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { ChatInputCommand, Command } from "@sapphire/framework";
-import { ChatInputCommandInteraction, Colors, EmbedBuilder } from "discord.js";
+import { ChatInputCommandInteraction, Colors, EmbedBuilder, MessageFlags } from "discord.js";
 
 @ApplyOptions<Command.Options>({
     name: 'tip',
@@ -12,7 +12,7 @@ export class SlashCommand extends Command {
         
         if (!this.container.tips.tips.has(tip)) return interaction.reply({
             content: "That tip does not exist.",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         const tipMessage = this.container.tips.tips.get(tip);

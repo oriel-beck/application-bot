@@ -3,7 +3,7 @@ import { isCurrentApplicationMessage } from "@lib/util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { ApplyCustomIDs } from "@lib/constants/custom-ids.js";
-import { ChannelType, Colors, type ButtonInteraction } from "discord.js";
+import { ChannelType, Colors, type ButtonInteraction, MessageFlags } from "discord.js";
 import type { Application } from "@lib/types.js";
 import { ApplicationState } from "@lib/constants/application.js";
 
@@ -13,7 +13,7 @@ import { ApplicationState } from "@lib/constants/application.js";
 export class DoneButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
         await interaction.deferReply({
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         const getApp = await this.container.applications.get(interaction.user.id).then((res) => res.at(0)).catch(() => null) as Application;

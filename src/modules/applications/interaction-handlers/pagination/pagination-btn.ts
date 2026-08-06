@@ -4,7 +4,7 @@ import { ApplicationCustomIDs } from "@lib/constants/custom-ids.js";
 import { hasRole } from "@lib/precondition-util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { ButtonInteraction } from "discord.js";
+import { MessageFlags, type ButtonInteraction } from "discord.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.Button
@@ -14,7 +14,7 @@ export class PaginationButtonHandler extends InteractionHandler {
         if (!hasRole(interaction.member!, this.container.config.roles.mod)) {
             return interaction.reply({
                 content: 'You are missing permissions to use this.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -27,7 +27,7 @@ export class PaginationButtonHandler extends InteractionHandler {
         if (!app) {
             return interaction.reply({
                 content: 'This application does not exist in the database.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 

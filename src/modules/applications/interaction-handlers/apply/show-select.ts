@@ -4,7 +4,7 @@ import { Application } from "@lib/types.js";
 import { applicationExists } from "@lib/util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import type { StringSelectMenuInteraction } from "discord.js";
+import { MessageFlags, type StringSelectMenuInteraction } from "discord.js";
 
 @ApplyOptions<InteractionHandler.Options>({
     interactionHandlerType: InteractionHandlerTypes.SelectMenu
@@ -17,7 +17,7 @@ export class SelectSelectHandler extends InteractionHandler {
         if (!app || !applicationExists(app)) {
             return interaction.reply({
                 content: 'This application is no longer active.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 

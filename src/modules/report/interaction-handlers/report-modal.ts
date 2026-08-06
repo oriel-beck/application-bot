@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { ChannelType, type ModalSubmitInteraction } from "discord.js";
+import { ChannelType, type ModalSubmitInteraction, MessageFlags } from "discord.js";
 import { generateReportEmbed, generateReportComponents } from "@lib/command-utils/report/report.util.js";
 import { ReportCustomIDs } from "@lib/constants/custom-ids.js";
 
@@ -21,12 +21,12 @@ export class ReportModalHandler extends InteractionHandler {
             await interaction.reply({
                 content:
                     'The report channel is missing or not a text channel, so your report could not be delivered. Please contact the staff team directly.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             return;
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         let reportedUser;
         try {

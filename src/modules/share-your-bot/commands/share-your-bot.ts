@@ -2,7 +2,7 @@ import { generateStickyMessageComponents, generateStickyMessageEmbed } from '@li
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { Subcommand } from '@sapphire/plugin-subcommands';
-import { ChannelType } from 'discord.js';
+import { ChannelType, MessageFlags } from 'discord.js';
 @ApplyOptions<Subcommand.Options>({
     name: 'shareyourbot',
     description: 'Controls the share your bot channel',
@@ -23,7 +23,7 @@ export class SlashCommand extends Subcommand {
         const shareBotChannel = interaction.client?.channels.cache.get(this.container.config.channels.share_your_bot);
         if (shareBotChannel?.type !== ChannelType.GuildText) return interaction.reply({
             content: `<#${this.container.config.channels.share_your_bot}> is not a valid text channel`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         const oldMessage = await this.container.redis.get("share-your-bot-sticky-message");
@@ -45,7 +45,7 @@ export class SlashCommand extends Subcommand {
         const shareBotChannel = interaction.client?.channels.cache.get(this.container.config.channels.share_your_bot);
         if (!shareBotChannel?.isTextBased()) return interaction.reply({
             content: `<#${this.container.config.channels.share_your_bot}> is not a valid text channel`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         const secondsRaw = interaction.options.getNumber("seconds", false);
@@ -56,7 +56,7 @@ export class SlashCommand extends Subcommand {
             await this.container.cooldown.deleteCooldown(user.id);
             return interaction.reply({
                 content: `Reset ${user}'s cooldown.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -67,7 +67,7 @@ export class SlashCommand extends Subcommand {
         ) {
             return interaction.reply({
                 content: "Seconds must be a positive whole number when setting a cooldown.",
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -75,7 +75,7 @@ export class SlashCommand extends Subcommand {
 
         return interaction.reply({
             content: `Set ${user}'s cooldown to ${secondsRaw} seconds.`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 

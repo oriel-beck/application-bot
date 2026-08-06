@@ -3,7 +3,7 @@ import { isCurrentApplicationMessage } from "@lib/util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
 import { ApplyCustomIDs } from "@lib/constants/custom-ids.js";
-import type { ButtonInteraction } from "discord.js";
+import { MessageFlags, type ButtonInteraction } from "discord.js";
 import type { Application } from "@lib/types.js";
 
 @ApplyOptions<InteractionHandler.Options>({
@@ -19,7 +19,7 @@ export class AnswerButtonHandler extends InteractionHandler {
         if (!application || !isCurrentApplicationMessage(application, interaction.message.id)) {
             return interaction.reply({
                 content: 'This application no longer exist.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 

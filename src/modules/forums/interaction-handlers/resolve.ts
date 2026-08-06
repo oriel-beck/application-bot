@@ -1,11 +1,10 @@
 import { hasRole } from "@lib/precondition-util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from "@sapphire/framework";
-import { ButtonInteraction, Colors, DiscordAPIError, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { ButtonInteraction, Colors, DiscordAPIError, EmbedBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { cleanupClosedSupportChannel } from "@lib/bdfd-ai/cleanup-channel.js";
 import { ForumCustomIDs } from "@lib/constants/custom-ids.js";
-import {
-    detectInternationalSupportLanguage,
+import { detectInternationalSupportLanguage,
     formatInternationalResolvedDm,
     getInternationalSupportStrings,
     isInternationalSupportForum,
@@ -27,7 +26,7 @@ export class ResolveSupportPostHandler extends InteractionHandler {
             if (!hasRole(interaction.member!, this.container.config.roles.staff) && !hasRole(interaction.member!, this.container.config.roles.trial_support) && interaction.channel.ownerId !== interaction.user.id) {
                 return interaction.reply({
                     content: strings?.noPermission ?? "You are missing permissions to use this.",
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
             }
 
@@ -39,7 +38,7 @@ export class ResolveSupportPostHandler extends InteractionHandler {
             if (tag !== expectedResolved) {
                 return interaction.reply({
                     content: strings?.internalError ?? "Internal error, this is not a valid tag for this interaction handler",
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
             }
 
@@ -49,7 +48,7 @@ export class ResolveSupportPostHandler extends InteractionHandler {
             if (!channelPermissions?.has(PermissionFlagsBits.ManageThreads)) {
                 return interaction.reply({
                     content: "I do not have permission to manage this thread. Please grant me `Manage Threads` and try again.",
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
             }
 
@@ -61,7 +60,7 @@ export class ResolveSupportPostHandler extends InteractionHandler {
                 if (error instanceof DiscordAPIError && (error.code === 50001 || error.code === 50013)) {
                     return interaction.followUp({
                         content: "I cannot access this thread to mark it as resolved. Please check my forum/thread permissions and try again.",
-                        ephemeral: true,
+                        flags: MessageFlags.Ephemeral,
                     });
                 }
 
@@ -100,7 +99,7 @@ export class ResolveSupportPostHandler extends InteractionHandler {
                 if (error instanceof DiscordAPIError && (error.code === 50001 || error.code === 50013)) {
                     await interaction.followUp({
                         content: "The post was marked as resolved, but I could not lock/archive it due to missing access.",
-                        ephemeral: true,
+                        flags: MessageFlags.Ephemeral,
                     }).catch(() => null);
                 } else {
                     throw error;
@@ -120,7 +119,7 @@ export class ResolveSupportPostHandler extends InteractionHandler {
 
         return interaction.reply({
             content: "This cannot be used outside of a forum post.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
         });
     }
 

@@ -1,3 +1,4 @@
+import { MessageFlags } from 'discord.js';
 import { generateApplicationComponents, generateApplicationEmbed } from '@lib/command-utils/application/embeds/application-embed.utils.js';
 import { generateApplicationListComponents, generateApplicationListEmbed } from '@lib/command-utils/application/list/application-list.utils.js';
 import { generateModal } from '@lib/command-utils/application/modals/application-modals.utils.js';
@@ -48,14 +49,14 @@ export class SlashCommand extends Subcommand {
     if (!app?.at(0)) {
       return interaction.reply({
         content: 'This application does not exist in the database.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
     if (app.at(0)?.state !== ApplicationState.pending) {
       return interaction.reply({
         content: 'This is not a pending application.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -69,14 +70,14 @@ export class SlashCommand extends Subcommand {
     if (!app?.at(0)) {
       return interaction.reply({
         content: 'This application does not exist in the database.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
     if (app.at(0)?.state !== ApplicationState.pending) {
       return interaction.reply({
         content: 'This is not a pending application.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -90,7 +91,7 @@ export class SlashCommand extends Subcommand {
     if (!app?.at(0)) {
       return interaction.reply({
         content: 'This application does not exist in the database.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 

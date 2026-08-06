@@ -1,3 +1,4 @@
+import { MessageFlags } from 'discord.js';
 import { generateApplyComponents, generateApplyEmbed } from '@lib/command-utils/apply/apply.utils.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
@@ -10,7 +11,7 @@ import { Command } from '@sapphire/framework';
 export class SlashCommand extends Command {
   public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     await interaction.deferReply({
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
 
     const dm = await interaction.user.createDM().catch(() => null);

@@ -1,7 +1,7 @@
 import { hasRole } from "@lib/precondition-util.js";
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from "@sapphire/framework";
-import { ButtonInteraction } from "discord.js";
+import { ButtonInteraction, MessageFlags } from "discord.js";
 import { generatePostHelpEmbed } from "../util.js";
 import { ForumCustomIDs } from "@lib/constants/custom-ids.js";
 
@@ -15,7 +15,7 @@ export class ToggleTagHandler extends InteractionHandler {
         if (interaction.channel?.isThread() && interaction.channel.parent?.isThreadOnly()) {
             if (!hasRole(interaction.member!, this.container.config.roles.staff) && !hasRole(interaction.member!, this.container.config.roles.trial_support) && interaction.channel.ownerId !== interaction.user.id) return interaction.reply({
                 content: "You are missing permissions to use this.",
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
 
             const tag = interaction.customId.slice(PREFIX.length);
@@ -23,7 +23,7 @@ export class ToggleTagHandler extends InteractionHandler {
 
             if (appliedTags.length === 1 && appliedTags[0] === tag) return interaction.reply({
                 content: "You cannot have less than 1 tag applied at a time.",
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
 
             if (appliedTags.includes(tag)) {
@@ -42,7 +42,7 @@ export class ToggleTagHandler extends InteractionHandler {
         } else {
             return interaction.reply({
                 content: "This cannot be used outside of a forum post.",
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             })
         }
     }

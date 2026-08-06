@@ -1,7 +1,7 @@
 
 import { ApplyOptions } from "@sapphire/decorators";
 import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { Colors, type ButtonInteraction } from "discord.js";
+import { Colors, type ButtonInteraction, MessageFlags } from "discord.js";
 import { ApplyCustomIDs } from "../../../../lib/constants/custom-ids.js";
 
 @ApplyOptions<InteractionHandler.Options>({
@@ -9,7 +9,7 @@ import { ApplyCustomIDs } from "../../../../lib/constants/custom-ids.js";
 })
 export class CancelButtonHandler extends InteractionHandler {
     public async run(interaction: ButtonInteraction) {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const deleted = await this.container.applications.delete(interaction.user.id).catch(() => null);
 

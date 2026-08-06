@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Command } from "@sapphire/framework";
-import { AttachmentBuilder, ChatInputCommandInteraction, TextBasedChannel } from "discord.js";
+import { AttachmentBuilder, ChatInputCommandInteraction, TextBasedChannel, MessageFlags } from "discord.js";
 
 @ApplyOptions<Command.Options>({
     name: 'wiki',
@@ -13,22 +13,22 @@ export class SlashCommand extends Command {
         const regex = message_url.match(/^https:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/channels\/(\d{17,})\/(\d{17,})\/(\d{17,})$/i)
         if (!regex) return interaction.reply({
             content: "This is not a valid url.",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         if (regex[1] !== interaction.guild?.id) return interaction.reply({
             content: "This is not a valid wiki url.",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         if (regex[2] !== this.container.config.channels.wiki) return interaction.reply({
             content: "This is not a valid wiki url.",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         const channel = interaction.guild.channels.cache.get(this.container.config.channels.wiki) as TextBasedChannel;
         
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const msg = await channel.messages.fetch(regex[3]).catch(() => null);
 
         if (!msg) return interaction.editReply({

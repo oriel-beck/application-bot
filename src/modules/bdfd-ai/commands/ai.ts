@@ -5,7 +5,7 @@ import {
     getBdfdAiChannelKind,
     resolveChannelAuthorId,
 } from '@lib/bdfd-ai/channel-utils.js';
-import type { TextChannel, ThreadChannel } from 'discord.js';
+import { MessageFlags, type TextChannel, type ThreadChannel } from 'discord.js';
 import { processAiRequest } from '@lib/bdfd-ai/process-request.js';
 
 @ApplyOptions<Command.Options>({
@@ -18,7 +18,7 @@ export class AiCommand extends Command {
         if (!channel?.isTextBased() || channel.isDMBased()) {
             return interaction.reply({
                 content: 'This command can only be used in server channels.',
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -42,7 +42,7 @@ export class AiCommand extends Command {
                 return interaction.reply({
                     content:
                         'You can only use `/ai` here if you are the ticket/post author, staff, or support in training.',
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
             }
         }
@@ -51,7 +51,7 @@ export class AiCommand extends Command {
             return interaction.reply({
                 content:
                     'You can only use `/ai` in the configured bot command channels unless you are staff or support in training.',
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
 
