@@ -11,6 +11,6 @@
 
 ## Shared command-utils
 
-- `src/lib/command-utils/about/about.utils.ts`
+- `src/lib/command-utils/about/about.utils.ts` — `/about` embed; exports `PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL` (GitHub Pages legal HTML).
 
 Settings are used by applications (e.g. `ApplicationsEnabled` / toggle in `application.ts`).

@@ -98,8 +98,9 @@ Discord rejects `github.com/.../blob/...` links (“URL is not allowed”). Host
 1. Push these files to the default branch.
 2. Repo **Settings → Pages → Build and deployment**: Source **Deploy from a branch**, Branch **`main`** (or your default), Folder **`/docs`**.
 3. Wait a minute, then use:
+   - Home: `https://oriel-beck.github.io/application-bot/`
    - Privacy: `https://oriel-beck.github.io/application-bot/legal/privacy-policy.html`
    - Terms: `https://oriel-beck.github.io/application-bot/legal/terms-of-service.html`
-   - Index: `https://oriel-beck.github.io/application-bot/legal/`
+   - Legal index: `https://oriel-beck.github.io/application-bot/legal/`
 
 Also paste those same URLs into the app’s **General Information** Privacy Policy / Terms of Service fields if present.

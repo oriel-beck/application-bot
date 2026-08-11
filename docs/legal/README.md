@@ -8,6 +8,7 @@
 
 Discord’s portal often blocks `github.com` blob/raw links. After enabling Pages on the `/docs` folder, use:
 
+- Home: `https://oriel-beck.github.io/application-bot/` ([docs/index.html](../index.html))
 - `https://oriel-beck.github.io/application-bot/legal/privacy-policy.html`
 - `https://oriel-beck.github.io/application-bot/legal/terms-of-service.html`
 
