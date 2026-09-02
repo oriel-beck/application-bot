@@ -14,6 +14,19 @@ const HALLUCINATION_ALIASES: Record<string, string> = {
     len: 'charCount',
 };
 
+/** Thrown when a response still fails validation after all repair attempts. */
+export class BdscriptValidationError extends Error {
+    constructor(
+        public readonly invalidNames: string[],
+        public readonly misusedCallbacks: string[]
+    ) {
+        super(
+            `BDScript validation failed after retries: invalid=[${invalidNames.join(', ')}] misusedCallbacks=[${misusedCallbacks.join(', ')}]`
+        );
+        this.name = 'BdscriptValidationError';
+    }
+}
+
 export function extractBdscriptFunctions(text: string): string[] {
     const seen = new Set<string>();
     const names: string[] = [];

@@ -12,6 +12,7 @@ import {
     formatFunctionCheckResults,
 } from './bdscript-function-index.js';
 import {
+    BdscriptValidationError,
     buildRepairPrompt,
     findCallbacksMisusedInReplyCode,
     findInvalidFunctions,
@@ -183,33 +184,42 @@ export class RagService {
         return repair.choices[0]?.message?.content?.trim() ?? draft;
     }
 
+    /** Repair attempts after the initial draft; 3 validation checks total. */
+    private static readonly MAX_VALIDATION_RETRIES = 2;
+
     private async validateAndRepair(
         response: string,
         messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]
     ): Promise<string> {
-        const invalid = findInvalidFunctions(response, this.functionIndex);
-        const misusedCallbacks = findCallbacksMisusedInReplyCode(response, this.functionIndex);
+        let draft = response;
 
-        let result = response;
-        if (invalid.length || misusedCallbacks.length) {
-            if (invalid.length) {
-                console.warn(
-                    `[bdfd-ai] Invalid functions in draft: ${invalid.map((n) => `$${n}`).join(', ')}`
-                );
+        for (let attempt = 0; attempt <= RagService.MAX_VALIDATION_RETRIES; attempt++) {
+            const invalid = findInvalidFunctions(draft, this.functionIndex);
+            const misusedCallbacks = findCallbacksMisusedInReplyCode(draft, this.functionIndex);
+
+            if (!invalid.length && !misusedCallbacks.length) {
+                const escaped = repairBdscriptEscaping(draft);
+                if (escaped !== draft) {
+                    console.warn('[bdfd-ai] Escaped literal ] inside $function arguments');
+                }
+                return escaped;
             }
-            if (misusedCallbacks.length) {
-                console.warn(
-                    `[bdfd-ai] Callbacks misused in reply code: ${misusedCallbacks.map((n) => `$${n}`).join(', ')}`
-                );
+
+            console.warn(
+                `[bdfd-ai] Validation failed (attempt ${attempt + 1}/${RagService.MAX_VALIDATION_RETRIES + 1}): ` +
+                    `invalid=[${invalid.map((n) => `$${n}`).join(', ')}] ` +
+                    `misusedCallbacks=[${misusedCallbacks.map((n) => `$${n}`).join(', ')}]`
+            );
+
+            if (attempt === RagService.MAX_VALIDATION_RETRIES) {
+                throw new BdscriptValidationError(invalid, misusedCallbacks);
             }
-            result = await this.repairResponse(response, messages, invalid, misusedCallbacks);
+
+            draft = await this.repairResponse(draft, messages, invalid, misusedCallbacks);
         }
 
-        const escaped = repairBdscriptEscaping(result);
-        if (escaped !== result) {
-            console.warn('[bdfd-ai] Escaped literal ] inside $function arguments');
-        }
-        return escaped;
+        // Unreachable — loop always returns or throws on its last iteration.
+        throw new BdscriptValidationError([], []);
     }
 
     private async completeWithTools(

@@ -68,6 +68,13 @@ export function buildUnavailableEmbed(): EmbedBuilder {
     );
 }
 
+export function buildValidationFailedEmbed(): EmbedBuilder {
+    return buildAiEmbed(
+        "I couldn't put together a verified answer. Please try asking again with more detail " +
+            '(e.g. the exact command or reply code you\'re working with) — this attempt did not count against your usage limit.'
+    );
+}
+
 export function buildDisabledEmbed(): EmbedBuilder {
     return buildAiEmbed(
         'The AI assistant is currently turned off. Please wait for a staff member to help you.'

@@ -8,10 +8,12 @@ import {
     buildRateLimitEmbed,
     buildThinkingEmbed,
     buildUnavailableEmbed,
+    buildValidationFailedEmbed,
     formatAiPayload,
     startThinkingAnimation,
     THINKING_STATUSES,
 } from './response-utils.js';
+import { BdscriptValidationError } from './bdscript-validation.js';
 
 export type AiRequestSource =
     | { type: 'message'; message: Message<true> }
@@ -156,7 +158,9 @@ export async function processAiRequest(options: ProcessAiRequestOptions): Promis
     } catch (err) {
         console.error('[bdfd-ai] query failed:', err);
         animation.stop();
-        await thinkingSurface.edit({ embeds: [buildUnavailableEmbed()] }).catch(() => null);
+        const embed =
+            err instanceof BdscriptValidationError ? buildValidationFailedEmbed() : buildUnavailableEmbed();
+        await thinkingSurface.edit({ embeds: [embed] }).catch(() => null);
     } finally {
         if (!skipChannelTracking) {
             await container.aiRate.clearThinking(channelId);
