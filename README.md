@@ -39,6 +39,7 @@ CHROMA_URL=http://chroma:8000
     "staff": "",
     "support": "",
     "international_support": "",
+    "bug_reports": "",
     "tips": "",
     "variable_guides": "",
     "limiter_guides": "",
@@ -78,6 +79,15 @@ CHROMA_URL=http://chroma:8000
     "greek": "",
     "hungarian": "",
     "other": ""
+  },
+  "bug_report_tags": {
+    "resolved": "",
+    "website": "",
+    "app": "",
+    "bdl": "",
+    "bdfd_wiki": "",
+    "flowcharts": "",
+    "not_a_bug": ""
   },
   "categories": {
     "tickets": ""

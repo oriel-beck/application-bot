@@ -3,6 +3,7 @@ export interface Config {
   roles: RoleConfig;
   support_tags: SupportTagsConfig;
   international_support_tags: InternationalSupportTagsConfig;
+  bug_report_tags: BugReportTagsConfig;
   categories: CategoriesConfig;
   guild: string;
 }
@@ -15,6 +16,7 @@ export interface ChannelConfig {
   staff: string;
   support: string;
   international_support: string;
+  bug_reports: string;
   tips: string;
   variable_guides?: string;
   limiter_guides?: string;
@@ -57,6 +59,16 @@ export interface InternationalSupportTagsConfig {
   greek: string;
   hungarian: string;
   other: string;
+}
+
+export interface BugReportTagsConfig {
+  resolved: string;
+  website: string;
+  app: string;
+  bdl: string;
+  bdfd_wiki: string;
+  flowcharts: string;
+  not_a_bug: string;
 }
 
 export interface CategoriesConfig {

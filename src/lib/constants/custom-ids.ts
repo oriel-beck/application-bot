@@ -56,7 +56,8 @@ export const ReportCustomIDs = Object.freeze({
 /** Forums module — not loaded from this file in augments; keep prefixes stable. */
 export const ForumCustomIDs = Object.freeze({
   toggleTag: 'forum:tag',
-  supportResolve: 'forum:support'
+  supportResolve: 'forum:support',
+  bugClose: 'forum:bug'
 });
 
 export const ShareCustomIDs = Object.freeze({
