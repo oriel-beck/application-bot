@@ -89,6 +89,12 @@ CHROMA_URL=http://chroma:8000
 2) Start with:
 `docker compose -f docker-compose.infra.yml up --build`
 
+## Lint and format
+- `yarn lint` — run ESLint
+- `yarn lint:fix` — run ESLint with auto-fix
+- `yarn format` — format files with Prettier
+- `yarn format:check` — check formatting without writing
+
 ## Legal
 - [Privacy Policy](docs/legal/privacy-policy.html) ([markdown](docs/legal/privacy-policy.md))
 - [Terms of Service](docs/legal/terms-of-service.html) ([markdown](docs/legal/terms-of-service.md))

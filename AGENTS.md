@@ -93,6 +93,7 @@ Global preconditions (e.g. `StaffOnly`, `OwnerOnly`, `ModOnly`, `RequiredRole`, 
 
 - **Install:** Yarn (see `package.json`, `.yarnrc.yml`).
 - **Compile:** `yarn build` — SWC `src` → `dist` per `.swcrc`.
+- **Lint / format:** `yarn lint` / `yarn lint:fix` (ESLint flat config in `eslint.config.js`); `yarn format` / `yarn format:check` (Prettier).
 - **Docker:** `docker compose up --build` is the documented way to run Postgres + Redis + bot (`docker-compose.yml`, `Dockerfile`).
 - **Drizzle CLI:** `drizzle-kit` in devDependencies; `drizzle.config.ts` points at `./src/schema.ts`.
 
