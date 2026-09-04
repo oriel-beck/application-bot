@@ -7,6 +7,10 @@
    "scripts": {
       "build": "swc src --config-file .swcrc -d dist",
       "start": "node src/index.js",
+      "lint": "eslint .",
+      "lint:fix": "eslint . --fix",
+      "format": "prettier --write .",
+      "format:check": "prettier --check .",
       "docker:pull": "docker compose pull",
       "docker:build": "docker compose build",
       "docker:start": "docker compose up --build",
@@ -33,12 +37,17 @@
       "postgres": "^3.4.9"
    },
    "devDependencies": {
+      "@eslint/js": "^10.0.1",
       "@sapphire/ts-config": "^5.0.3",
       "@swc/cli": "^0.8.1",
       "@swc/core": "^1.16.1",
       "@types/node": "^26.4.1",
       "drizzle-kit": "^0.31.10",
+      "eslint": "^10.9.1",
+      "eslint-config-prettier": "^10.1.8",
+      "prettier": "^3.9.6",
       "typescript": "^7.0.2",
+      "typescript-eslint": "^8.69.0",
       "yarn-upgrade-all": "^0.8.1"
    }
 }
