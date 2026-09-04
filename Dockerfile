@@ -1,4 +1,4 @@
-FROM node:20 AS base
+FROM node:22 AS base
 RUN curl --compressed -o- -L https://yarnpkg.com/install.sh | bash
 
 FROM base AS installer
@@ -13,7 +13,7 @@ COPY src src
 COPY --from=installer /app .
 RUN yarn swc src --config-file .swcrc -d dist
 
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 COPY --from=installer /app .
 COPY --from=builder /app/dist/src src
