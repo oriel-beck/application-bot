@@ -46,7 +46,7 @@ export default class ApplicationManager extends BaseManager {
         return this.drizzle.delete(applicationsTable).where(eq(applicationsTable.user, BigInt(userid))).returning();
     }
 
-    public update(userid: string, field: keyof Application, value: any) {
+    public update(userid: string, field: keyof Application, value: Application[keyof Application]) {
         return this.drizzle.update(applicationsTable).set({ [field]: value }).where(eq(applicationsTable.user, BigInt(userid)));
     }
 

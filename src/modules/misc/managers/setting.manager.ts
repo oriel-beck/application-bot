@@ -31,7 +31,7 @@ export default class SettingManager extends BaseManager {
         return this.drizzle.delete(settingsTable).where(eq(settingsTable.guild, BigInt(guildid)));
     }
 
-    public update(guildid: string, field: keyof Setting, value: any) {
+    public update(guildid: string, field: keyof Setting, value: Setting[keyof Setting]) {
         return this.drizzle.update(settingsTable).set({
             [field]: value
         }).where(eq(settingsTable.guild, BigInt(guildid))).returning();

@@ -88,7 +88,11 @@ export default class TranscriptManager extends BaseManager {
         return { transcript, messages };
     }
 
-    public async update(channel: bigint, field: any, value: any) {
+    public async update(
+        channel: bigint,
+        field: keyof typeof transcriptTable.$inferInsert,
+        value: (typeof transcriptTable.$inferInsert)[keyof typeof transcriptTable.$inferInsert]
+    ) {
         return await this.drizzle.update(transcriptTable).set({
             [field]: value
         }).where(eq(transcriptTable.channel, channel)).returning();

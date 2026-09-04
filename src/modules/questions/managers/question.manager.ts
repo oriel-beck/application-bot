@@ -46,7 +46,7 @@ export default class QuestionManager extends BaseManager {
         return this.drizzle.delete(questionsTable).where(eq(questionsTable.id, id));
     }
 
-    public update(id: string, field: keyof Question, value: any) {
+    public update(id: string, field: keyof Question, value: Question[keyof Question]) {
         return this.drizzle.update(questionsTable).set({
             [field]: value
         }).where(eq(questionsTable.id, id)).returning();
@@ -69,7 +69,7 @@ export default class QuestionManager extends BaseManager {
     }
 
     private randomizeQuestions() {
-        let array = [...this.questions];
+        const array = [...this.questions];
         let currentIndex = array.length, randomIndex;
 
         // While there remain elements to shuffle.

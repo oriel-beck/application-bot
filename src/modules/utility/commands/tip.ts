@@ -1,5 +1,5 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { ChatInputCommand, Command } from "@sapphire/framework";
+import { Command } from "@sapphire/framework";
 import { ChatInputCommandInteraction, Colors, EmbedBuilder, MessageFlags } from "discord.js";
 
 @ApplyOptions<Command.Options>({
@@ -7,20 +7,20 @@ import { ChatInputCommandInteraction, Colors, EmbedBuilder, MessageFlags } from 
     description: 'Gets the appropriate tip from tips-tutorials.'
 })
 export class SlashCommand extends Command {
-    public async chatInputRun(interaction: ChatInputCommandInteraction, context: ChatInputCommand.RunContext) {
+    public async chatInputRun(interaction: ChatInputCommandInteraction) {
         const tip = interaction.options.getNumber("tip", true);
-        
-        if (!this.container.tips.tips.has(tip)) return interaction.reply({
+        const tipMessage = this.container.tips.tips.get(tip);
+
+        if (!tipMessage) return interaction.reply({
             content: "That tip does not exist.",
             flags: MessageFlags.Ephemeral
         });
 
-        const tipMessage = this.container.tips.tips.get(tip);
         const embed = new EmbedBuilder()
             .setTitle(`Tip #${tip}`)
-            .setDescription(tipMessage?.content!)
+            .setDescription(tipMessage.content)
             .setColor(Colors.Blurple)
-            .setURL(tipMessage?.url!)
+            .setURL(tipMessage.url)
 
         return interaction.reply({
             embeds: [embed]

@@ -140,8 +140,15 @@ export class SlashCommand extends Subcommand {
   }
 
   public async toggle(interaction: Subcommand.ChatInputCommandInteraction) {
-    const enabled = await this.container.settings.get(interaction.guild?.id!).then((res) => !!res.at(0)?.enabled).catch(() => null)
-    const toggled = await this.container.settings.update(interaction.guild?.id!, 'enabled', !enabled).catch(() => null);
+    const guildId = interaction.guildId;
+    if (!guildId) {
+      return interaction.reply({
+        content: 'This command can only be used in a server.'
+      });
+    }
+
+    const enabled = await this.container.settings.get(guildId).then((res) => !!res.at(0)?.enabled).catch(() => null)
+    const toggled = await this.container.settings.update(guildId, 'enabled', !enabled).catch(() => null);
 
     if (!toggled) {
       return interaction.reply({

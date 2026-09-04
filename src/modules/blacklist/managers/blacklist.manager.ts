@@ -20,7 +20,7 @@ export default class BlacklistManager extends BaseManager {
         return this.drizzle.delete(blacklistTable).where(eq(blacklistTable.user, BigInt(userid))).returning();
     }
 
-    public update(userid: string, field: keyof Blacklist, value: any) {
+    public update(userid: string, field: keyof Blacklist, value: Blacklist[keyof Blacklist]) {
         return this.drizzle.update(blacklistTable).set({
             user: BigInt(userid),
             [field]: value

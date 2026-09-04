@@ -49,7 +49,7 @@ export class DecisionButtonHandler extends InteractionHandler {
     }
 
     async deny(interaction: ModalSubmitInteraction, application: Application, reason?: string) {
-        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.denied).catch(() => null);
+        const res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.denied).catch(() => null);
 
         if (!res) {
             return interaction.reply({
@@ -69,7 +69,7 @@ export class DecisionButtonHandler extends InteractionHandler {
     }
 
     async accept(interaction: ModalSubmitInteraction, application: Application, reason: string) {
-        let res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.accepted).catch(() => null);
+        const res = await this.container.applications.update(application.user.toString(), 'state', ApplicationState.accepted).catch(() => null);
 
         if (!res) {
             return interaction.reply({
@@ -103,7 +103,7 @@ export class DecisionButtonHandler extends InteractionHandler {
     }
 
     async delete(interaction: ModalSubmitInteraction, application: Application, reason: string) {
-        let res = await this.container.applications.delete(application.user.toString()).catch(() => null);
+        const res = await this.container.applications.delete(application.user.toString()).catch(() => null);
         if (!res) {
             return interaction.reply({
                 content: 'Application not found.',

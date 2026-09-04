@@ -40,7 +40,7 @@ export class ApplicationClient extends SapphireClient {
                         }
 
                         await manager.init();
-                        // @ts-ignore I know better
+                        // @ts-expect-error I know better
                         container[manager.name] = manager;
                         loadedManagers.add(manager.name);
 

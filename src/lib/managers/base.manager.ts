@@ -12,10 +12,10 @@ export abstract class BaseManager {
 
     async init() {}
 
-    public abstract create(...args: any[]): any;
-    public abstract delete(...args: any[]): any;
-    public abstract get(...args: any[]): any;
-    public abstract update(id: string | bigint, field: string, value: any): any;
+    public abstract create(...args: unknown[]): unknown;
+    public abstract delete(...args: unknown[]): unknown;
+    public abstract get(...args: unknown[]): unknown;
+    public abstract update(id: string | bigint, field: string, value: unknown): unknown;
 
     genSelect = (selectedValue = '*', comparisonField: string) => select(this.name, selectedValue, comparisonField);
     genInsert = (...valueNames: string[]) => insert(this.name, valueNames);
