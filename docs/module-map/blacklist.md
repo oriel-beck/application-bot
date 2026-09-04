@@ -6,8 +6,8 @@
 
 ## Commands
 
-| File | Purpose |
-|------|---------|
+| File                    | Purpose                                               |
+| ----------------------- | ----------------------------------------------------- |
 | `commands/blacklist.ts` | Staff blacklist add/remove/reason/show (subcommands). |
 
 ## Shared command-utils

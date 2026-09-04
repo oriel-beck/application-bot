@@ -5,12 +5,12 @@ import { Events, Listener } from '@sapphire/framework';
 import type { AnyThreadChannel } from 'discord.js';
 
 @ApplyOptions<Listener.Options>({
-    event: Events.ThreadDelete,
-    name: 'bdfdAiThreadDelete',
+  event: Events.ThreadDelete,
+  name: 'bdfdAiThreadDelete'
 })
 export class BdfdAiThreadDeleteListener extends Listener<typeof Events.ThreadDelete> {
-    async run(thread: AnyThreadChannel) {
-        if (!getBdfdAiChannelKind(thread)) return;
-        await cleanupClosedSupportChannel(thread.id, { deleteTranscript: true });
-    }
+  async run(thread: AnyThreadChannel) {
+    if (!getBdfdAiChannelKind(thread)) return;
+    await cleanupClosedSupportChannel(thread.id, { deleteTranscript: true });
+  }
 }

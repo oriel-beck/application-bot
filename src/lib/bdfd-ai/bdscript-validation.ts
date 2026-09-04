@@ -9,75 +9,72 @@ const FUNCTION_OPEN = /^\$[A-Za-z][A-Za-z0-9]*\[/;
 
 /** Common hallucinated names → verified BDFD function. */
 const HALLUCINATION_ALIASES: Record<string, string> = {
-    length: 'charCount',
-    strlen: 'charCount',
-    len: 'charCount',
+  length: 'charCount',
+  strlen: 'charCount',
+  len: 'charCount'
 };
 
 /** Thrown when a response still fails validation after all repair attempts. */
 export class BdscriptValidationError extends Error {
-    constructor(
-        public readonly invalidNames: string[],
-        public readonly misusedCallbacks: string[]
-    ) {
-        super(
-            `BDScript validation failed after retries: invalid=[${invalidNames.join(', ')}] misusedCallbacks=[${misusedCallbacks.join(', ')}]`
-        );
-        this.name = 'BdscriptValidationError';
-    }
+  constructor(
+    public readonly invalidNames: string[],
+    public readonly misusedCallbacks: string[]
+  ) {
+    super(
+      `BDScript validation failed after retries: invalid=[${invalidNames.join(', ')}] misusedCallbacks=[${misusedCallbacks.join(', ')}]`
+    );
+    this.name = 'BdscriptValidationError';
+  }
 }
 
 export function extractBdscriptFunctions(text: string): string[] {
-    const seen = new Set<string>();
-    const names: string[] = [];
+  const seen = new Set<string>();
+  const names: string[] = [];
 
-    for (const match of text.matchAll(BDSCRIPT_FUNCTION_PATTERN)) {
-        const name = match[1]!;
-        if (!seen.has(name)) {
-            seen.add(name);
-            names.push(name);
-        }
+  for (const match of text.matchAll(BDSCRIPT_FUNCTION_PATTERN)) {
+    const name = match[1]!;
+    if (!seen.has(name)) {
+      seen.add(name);
+      names.push(name);
     }
+  }
 
-    return names;
+  return names;
 }
 
 export function findInvalidFunctions(text: string, index: BdscriptFunctionIndex): string[] {
-    const known = bdscriptFunctionNames(index);
-    return extractBdscriptFunctions(text).filter((name) => !known.has(name));
+  const known = bdscriptFunctionNames(index);
+  return extractBdscriptFunctions(text).filter((name) => !known.has(name));
 }
 
 /**
  * Callbacks mixed into a reply-code fence (same fence also has BDScript functions).
  * Single-callback-only fences are treated as valid trigger examples.
  */
-export function findCallbacksMisusedInReplyCode(
-    text: string,
-    index: BdscriptFunctionIndex
-): string[] {
-    const misused = new Set<string>();
+export function findCallbacksMisusedInReplyCode(text: string, index: BdscriptFunctionIndex): string[] {
+  const misused = new Set<string>();
 
-    for (const match of text.matchAll(CODE_FENCE_PATTERN)) {
-        const body = match[2] ?? '';
-        const names = extractBdscriptFunctions(body);
-        if (!names.length) continue;
+  for (const match of text.matchAll(CODE_FENCE_PATTERN)) {
+    const body = match[2] ?? '';
+    const names = extractBdscriptFunctions(body);
+    if (!names.length) continue;
 
-        const functions: string[] = [];
-        const callbacks: string[] = [];
-        for (const name of names) {
-            const kind = index.get(name)?.kind;
-            if (kind === 'callback') callbacks.push(name);
-            else if (kind === 'function') functions.push(name);
-        }
-
-        if (functions.length && callbacks.length) {
-            for (const name of callbacks) {
-                misused.add(name);
-            }
-        }
+    const functions: string[] = [];
+    const callbacks: string[] = [];
+    for (const name of names) {
+      const kind = index.get(name)?.kind;
+      if (kind === 'callback') callbacks.push(name);
+      else if (kind === 'function') functions.push(name);
     }
 
-    return [...misused];
+    if (functions.length && callbacks.length) {
+      for (const name of callbacks) {
+        misused.add(name);
+      }
+    }
+  }
+
+  return [...misused];
 }
 
 /**
@@ -85,82 +82,82 @@ export function findCallbacksMisusedInReplyCode(
  * Idempotent for already-escaped `\]`. Does not touch `;` (needs arity to distinguish separators).
  */
 function repairFunctionArgs(code: string, start: number): { text: string; end: number } {
-    let out = '';
-    let i = start;
-    let depth = 1;
+  let out = '';
+  let i = start;
+  let depth = 1;
 
-    while (i < code.length && depth > 0) {
-        const ch = code[i]!;
+  while (i < code.length && depth > 0) {
+    const ch = code[i]!;
 
-        if (ch === '\\' && i + 1 < code.length && (code[i + 1] === ';' || code[i + 1] === ']')) {
-            out += ch + code[i + 1];
-            i += 2;
-            continue;
-        }
-
-        if (ch === '$') {
-            const open = FUNCTION_OPEN.exec(code.slice(i));
-            if (open) {
-                out += open[0];
-                i += open[0].length;
-                const nested = repairFunctionArgs(code, i);
-                out += nested.text;
-                i = nested.end;
-                continue;
-            }
-        }
-
-        const placeholder = PLACEHOLDER_BRACKET.exec(code.slice(i));
-        if (placeholder) {
-            out += `[${placeholder[1]}\\]`;
-            i += placeholder[0].length;
-            continue;
-        }
-
-        if (ch === '[') {
-            depth++;
-            out += ch;
-            i++;
-            continue;
-        }
-
-        if (ch === ']') {
-            depth--;
-            out += ch;
-            i++;
-            continue;
-        }
-
-        out += ch;
-        i++;
+    if (ch === '\\' && i + 1 < code.length && (code[i + 1] === ';' || code[i + 1] === ']')) {
+      out += ch + code[i + 1];
+      i += 2;
+      continue;
     }
 
-    return { text: out, end: i };
+    if (ch === '$') {
+      const open = FUNCTION_OPEN.exec(code.slice(i));
+      if (open) {
+        out += open[0];
+        i += open[0].length;
+        const nested = repairFunctionArgs(code, i);
+        out += nested.text;
+        i = nested.end;
+        continue;
+      }
+    }
+
+    const placeholder = PLACEHOLDER_BRACKET.exec(code.slice(i));
+    if (placeholder) {
+      out += `[${placeholder[1]}\\]`;
+      i += placeholder[0].length;
+      continue;
+    }
+
+    if (ch === '[') {
+      depth++;
+      out += ch;
+      i++;
+      continue;
+    }
+
+    if (ch === ']') {
+      depth--;
+      out += ch;
+      i++;
+      continue;
+    }
+
+    out += ch;
+    i++;
+  }
+
+  return { text: out, end: i };
 }
 
 /** Repair `$function[...]` escaping inside a BDScript snippet (fence body or code line). */
 export function repairBdscriptCode(code: string): string {
-    let out = '';
-    let i = 0;
+  let out = '';
+  let i = 0;
 
-    while (i < code.length) {
-        if (code[i] === '$') {
-            const open = FUNCTION_OPEN.exec(code.slice(i));
-            if (open) {
-                out += open[0];
-                i += open[0].length;
-                const args = repairFunctionArgs(code, i);
-                out += args.text;
-                i = args.end;
-                continue;
-            }
-        }
-
-        out += code[i];
-        i++;
+  while (i < code.length) {
+    if (code[i] === '$') {
+      const open = FUNCTION_OPEN.exec(code.slice(i));
+      if (open) {
+        out += open[0];
+        i += open[0].length;
+        const args = repairFunctionArgs(code, i);
+        out += args.text;
+        i = args.end;
+        continue;
+      }
     }
 
-    return out;
+    out += code[i];
+    i++;
+  }
+
+  return out;
 }
 
 /**
@@ -168,102 +165,100 @@ export function repairBdscriptCode(code: string): string {
  * (code fences + lines that start with `$`). No model round-trip.
  */
 export function repairBdscriptEscaping(text: string): string {
-    const withFences = text.replace(CODE_FENCE_PATTERN, (_m, lang: string, body: string) => {
-        return `\`\`\`${lang}\n${repairBdscriptCode(body)}\`\`\``;
-    });
+  const withFences = text.replace(CODE_FENCE_PATTERN, (_m, lang: string, body: string) => {
+    return `\`\`\`${lang}\n${repairBdscriptCode(body)}\`\`\``;
+  });
 
-    return withFences
-        .split('\n')
-        .map((line) => (/^\s*\$[A-Za-z]/.test(line) ? repairBdscriptCode(line) : line))
-        .join('\n');
+  return withFences
+    .split('\n')
+    .map((line) => (/^\s*\$[A-Za-z]/.test(line) ? repairBdscriptCode(line) : line))
+    .join('\n');
 }
 
 function scoreNameSimilarity(a: string, b: string): number {
-    const left = a.toLowerCase();
-    const right = b.toLowerCase();
-    if (left === right) return 100;
-    if (right.includes(left) || left.includes(right)) return 80;
+  const left = a.toLowerCase();
+  const right = b.toLowerCase();
+  if (left === right) return 100;
+  if (right.includes(left) || left.includes(right)) return 80;
 
-    let matches = 0;
-    const shorter = left.length <= right.length ? left : right;
-    const longer = left.length <= right.length ? right : left;
-    for (const char of shorter) {
-        if (longer.includes(char)) matches++;
-    }
+  let matches = 0;
+  const shorter = left.length <= right.length ? left : right;
+  const longer = left.length <= right.length ? right : left;
+  for (const char of shorter) {
+    if (longer.includes(char)) matches++;
+  }
 
-    return Math.round((matches / longer.length) * 60);
+  return Math.round((matches / longer.length) * 60);
 }
 
 export function suggestFunctionAlternatives(
-    invalidNames: string[],
-    index: BdscriptFunctionIndex
+  invalidNames: string[],
+  index: BdscriptFunctionIndex
 ): Map<string, string[]> {
-    const known = [...index.entries()]
-        .filter(([, rec]) => rec.kind === 'function')
-        .map(([name]) => name);
-    const suggestions = new Map<string, string[]>();
+  const known = [...index.entries()].filter(([, rec]) => rec.kind === 'function').map(([name]) => name);
+  const suggestions = new Map<string, string[]>();
 
-    for (const invalid of invalidNames) {
-        const normalized = normalizeBdscriptFunctionName(invalid);
-        const alias = HALLUCINATION_ALIASES[normalized];
-        if (alias && index.get(alias)?.kind === 'function') {
-            suggestions.set(invalid, [alias]);
-            continue;
-        }
-
-        const ranked = known
-            .map((name) => ({ name, score: scoreNameSimilarity(normalized, name) }))
-            .filter((entry) => entry.score >= 40)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 3)
-            .map((entry) => entry.name);
-
-        if (ranked.length) {
-            suggestions.set(invalid, ranked);
-        }
+  for (const invalid of invalidNames) {
+    const normalized = normalizeBdscriptFunctionName(invalid);
+    const alias = HALLUCINATION_ALIASES[normalized];
+    if (alias && index.get(alias)?.kind === 'function') {
+      suggestions.set(invalid, [alias]);
+      continue;
     }
 
-    return suggestions;
+    const ranked = known
+      .map((name) => ({ name, score: scoreNameSimilarity(normalized, name) }))
+      .filter((entry) => entry.score >= 40)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map((entry) => entry.name);
+
+    if (ranked.length) {
+      suggestions.set(invalid, ranked);
+    }
+  }
+
+  return suggestions;
 }
 
 export function buildRepairPrompt(
-    invalidNames: string[],
-    index: BdscriptFunctionIndex,
-    misusedCallbacks: string[] = []
+  invalidNames: string[],
+  index: BdscriptFunctionIndex,
+  misusedCallbacks: string[] = []
 ): string {
-    const parts: string[] = [];
+  const parts: string[] = [];
 
-    if (invalidNames.length) {
-        const suggestions = suggestFunctionAlternatives(invalidNames, index);
-        const lines = invalidNames.map((name) => {
-            const alts = suggestions.get(name);
-            if (alts?.length) {
-                return `- \`$${name}\` is invalid — use \`$${alts[0]}\` instead`;
-            }
-            return `- \`$${name}\` is not a valid BDScript function`;
-        });
+  if (invalidNames.length) {
+    const suggestions = suggestFunctionAlternatives(invalidNames, index);
+    const lines = invalidNames.map((name) => {
+      const alts = suggestions.get(name);
+      if (alts?.length) {
+        return `- \`$${name}\` is invalid — use \`$${alts[0]}\` instead`;
+      }
+      return `- \`$${name}\` is not a valid BDScript function`;
+    });
 
-        parts.push(
-            'Your previous answer used invalid BDScript function names:',
-            ...lines,
-            '',
-            'Rewrite the **full** answer using only verified BDScript functions from wiki_context and relevant_functions.',
-            'For normal command replies, output plain text or $function results directly — do **not** wrap them in $sendMessage unless sending a separate/extra message.',
-            'String length checks use $charCount[text] — there is no $length.'
-        );
-    }
+    parts.push(
+      'Your previous answer used invalid BDScript function names:',
+      ...lines,
+      '',
+      'Rewrite the **full** answer using only verified BDScript functions from wiki_context and relevant_functions.',
+      'For normal command replies, output plain text or $function results directly — do **not** wrap them in $sendMessage unless sending a separate/extra message.',
+      'String length checks use $charCount[text] — there is no $length.'
+    );
+  }
 
-    if (misusedCallbacks.length) {
-        if (parts.length) parts.push('');
-        parts.push(
-            'Your previous answer mixed **callbacks** into reply-code fences:',
-            ...misusedCallbacks.map((name) => `- \`$${name}\` is a callback (command **trigger** only)`),
-            '',
-            'Rewrite the **full** answer with labeled parts:',
-            '- **Trigger:** put callbacks here (alone in a fence is fine)',
-            '- **Reply code:** BDScript $functions only — no callbacks in the same fence as reply functions'
-        );
-    }
+  if (misusedCallbacks.length) {
+    if (parts.length) parts.push('');
+    parts.push(
+      'Your previous answer mixed **callbacks** into reply-code fences:',
+      ...misusedCallbacks.map((name) => `- \`$${name}\` is a callback (command **trigger** only)`),
+      '',
+      'Rewrite the **full** answer with labeled parts:',
+      '- **Trigger:** put callbacks here (alone in a fence is fine)',
+      '- **Reply code:** BDScript $functions only — no callbacks in the same fence as reply functions'
+    );
+  }
 
-    return parts.join('\n');
+  return parts.join('\n');
 }

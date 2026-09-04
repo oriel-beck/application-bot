@@ -1,39 +1,52 @@
-import { container } from "@sapphire/framework";
-import type { Setting } from "../../../lib/types.js";
-import { BaseManager } from "@lib/managers/base.manager.js";
-import { settingsTable } from "../../../schema.js";
-import { eq } from "drizzle-orm";
+import { container } from '@sapphire/framework';
+import type { Setting } from '../../../lib/types.js';
+import { BaseManager } from '@lib/managers/base.manager.js';
+import { settingsTable } from '../../../schema.js';
+import { eq } from 'drizzle-orm';
 
 export default class SettingManager extends BaseManager {
-    constructor() {
-        super('settings')
-    }
+  constructor() {
+    super('settings');
+  }
 
-    public async init() {
-        await this.drizzle.insert(settingsTable).values({
-            guild: BigInt(container.config.guild),
-            enabled: false
-        }).onConflictDoNothing();
-    }
+  public async init() {
+    await this.drizzle
+      .insert(settingsTable)
+      .values({
+        guild: BigInt(container.config.guild),
+        enabled: false
+      })
+      .onConflictDoNothing();
+  }
 
-    public create(guildid: string) {
-        return this.drizzle.insert(settingsTable).values({
-            guild: BigInt(guildid),
-            enabled: false
-        }).returning();
-    }
+  public create(guildid: string) {
+    return this.drizzle
+      .insert(settingsTable)
+      .values({
+        guild: BigInt(guildid),
+        enabled: false
+      })
+      .returning();
+  }
 
-    public get(guildid: string) {
-        return this.drizzle.select().from(settingsTable).where(eq(settingsTable.guild, BigInt(guildid)));
-    }
+  public get(guildid: string) {
+    return this.drizzle
+      .select()
+      .from(settingsTable)
+      .where(eq(settingsTable.guild, BigInt(guildid)));
+  }
 
-    public delete(guildid: string) {
-        return this.drizzle.delete(settingsTable).where(eq(settingsTable.guild, BigInt(guildid)));
-    }
+  public delete(guildid: string) {
+    return this.drizzle.delete(settingsTable).where(eq(settingsTable.guild, BigInt(guildid)));
+  }
 
-    public update(guildid: string, field: keyof Setting, value: Setting[keyof Setting]) {
-        return this.drizzle.update(settingsTable).set({
-            [field]: value
-        }).where(eq(settingsTable.guild, BigInt(guildid))).returning();
-    }
+  public update(guildid: string, field: keyof Setting, value: Setting[keyof Setting]) {
+    return this.drizzle
+      .update(settingsTable)
+      .set({
+        [field]: value
+      })
+      .where(eq(settingsTable.guild, BigInt(guildid)))
+      .returning();
+  }
 }

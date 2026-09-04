@@ -29,9 +29,9 @@ The bot is oriented around **guild applications** (questions/answers, staff deci
 
 ## Configuration and secrets
 
-| Source | Purpose |
-|--------|---------|
-| **`.env`** | `BOT_TOKEN`, `DATABASE_URL` (app + drizzle-kit), `POSTGRES_*` (Postgres container init in compose), `OWNER`, `REDIS_HOST`, etc. (see `README.md`). |
+| Source                                        | Purpose                                                                                                                                                                                                                                                     |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`.env`**                                    | `BOT_TOKEN`, `DATABASE_URL` (app + drizzle-kit), `POSTGRES_*` (Postgres container init in compose), `OWNER`, `REDIS_HOST`, etc. (see `README.md`).                                                                                                          |
 | **`config.json`** (repo root, cwd at runtime) | Guild IDs for channels/roles/tags/categories and initial `guild` string. Typed in `src/lib/config/config.d.ts`. **README** example may lag the TypeScript type (e.g. `wiki`, `categories`) — trust **`config.d.ts`** as source of truth for required shape. |
 
 Config is read asynchronously in `register.ts` and assigned to `container.config`.
@@ -55,16 +55,16 @@ Config is read asynchronously in `register.ts` and assigned to `container.config
 
 ## `src/lib/` — shared infrastructure
 
-| Area | Role |
-|------|------|
-| `app-client.ts` | Custom `SapphireClient`: loads per-module managers + `registerPath` for each enabled module. |
-| `config/` | Config load + `Config` types. |
-| `db-register.ts` / `redis-register.ts` | Wire ORM and Redis into `container`. |
-| `db.utils.ts` | SQL string helpers exposed as `genSelect` / `genInsert` / etc. on `BaseManager`; managers in this repo **use Drizzle directly** — these helpers may be unused legacy hooks. |
-| `managers/base.manager.ts` | Abstract manager: holds `drizzle`, enforces `create`/`delete`/`get`/`update`, exposes `genSelect` / `genInsert` / `genUpdate` / `genDelete`. |
-| `command-utils/` | Reusable embeds/components/helpers for commands and interactions (grouped by domain: `apply/`, `application/`, `question/`, etc.). |
-| `constants/` | e.g. `custom-ids.ts` — Discord `customId` strings as **colon-separated** segments (`apply:…`, `app:…`, `q:…`, `rpt:…`); also **`ForumCustomIDs`** and **`ShareCustomIDs`** for forums / share-your-bot pieces that import this file. |
-| `precondition-util.ts`, `util.ts` | Shared helpers. |
+| Area                                   | Role                                                                                                                                                                                                                                 |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `app-client.ts`                        | Custom `SapphireClient`: loads per-module managers + `registerPath` for each enabled module.                                                                                                                                         |
+| `config/`                              | Config load + `Config` types.                                                                                                                                                                                                        |
+| `db-register.ts` / `redis-register.ts` | Wire ORM and Redis into `container`.                                                                                                                                                                                                 |
+| `db.utils.ts`                          | SQL string helpers exposed as `genSelect` / `genInsert` / etc. on `BaseManager`; managers in this repo **use Drizzle directly** — these helpers may be unused legacy hooks.                                                          |
+| `managers/base.manager.ts`             | Abstract manager: holds `drizzle`, enforces `create`/`delete`/`get`/`update`, exposes `genSelect` / `genInsert` / `genUpdate` / `genDelete`.                                                                                         |
+| `command-utils/`                       | Reusable embeds/components/helpers for commands and interactions (grouped by domain: `apply/`, `application/`, `question/`, etc.).                                                                                                   |
+| `constants/`                           | e.g. `custom-ids.ts` — Discord `customId` strings as **colon-separated** segments (`apply:…`, `app:…`, `q:…`, `rpt:…`); also **`ForumCustomIDs`** and **`ShareCustomIDs`** for forums / share-your-bot pieces that import this file. |
+| `precondition-util.ts`, `util.ts`      | Shared helpers.                                                                                                                                                                                                                      |
 
 ## `src/modules/` — feature modules
 
@@ -126,4 +126,4 @@ There is **no** separate `docs/module-plans/` tree; long “roadmap” docs were
 
 ---
 
-*Cursor loads `.cursor/rules/*.mdc` for extra guidance; this file remains the detailed repo map.*
+_Cursor loads `.cursor/rules/*.mdc` for extra guidance; this file remains the detailed repo map._

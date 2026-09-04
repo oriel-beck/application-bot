@@ -9,7 +9,7 @@ await rag.init();
 console.log('registered bdfd-ai');
 
 declare module '@sapphire/pieces' {
-    interface Container {
-        rag: RagService;
-    }
+  interface Container {
+    rag: RagService;
+  }
 }

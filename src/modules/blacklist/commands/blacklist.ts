@@ -5,10 +5,7 @@ import type { Blacklist } from '@lib/types.js';
 
 function isPostgresUniqueViolation(error: unknown): boolean {
   return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code: unknown }).code === '23505'
+    typeof error === 'object' && error !== null && 'code' in error && (error as { code: unknown }).code === '23505'
   );
 }
 
@@ -133,44 +130,42 @@ export class SlashCommand extends Subcommand {
         .setName(this.name)
         .setDescription(this.description)
         .setDMPermission(false)
-        .addSubcommand((builder) => builder.setName('add')
-          .setDescription('Blacklists a user.')
-          .addUserOption((option) =>
-            option
-              .setName('user')
-              .setDescription('The user to blacklist.')
-              .setRequired(true))
-          .addStringOption((option) =>
-            option
-              .setName('reason')
-              .setDescription('The reason to blacklist')
-              .setRequired(true)))
-        .addSubcommand((builder) => builder.setName('remove')
-          .setDescription('Unblacklists a user.')
-          .addUserOption((option) =>
-            option
-              .setName('user')
-              .setDescription('The user to unblacklist')
-              .setRequired(true)))
-        .addSubcommand((builder) => builder.setName('reason')
-          .setDescription('Re-reasons a blacklisted user.')
-          .addUserOption((option) =>
-            option
-              .setName('user')
-              .setDescription('The user to re-reason.')
-              .setRequired(true))
-          .addStringOption((option) =>
-            option
-              .setName('reason')
-              .setDescription('The new reason.')
-              .setRequired(true)))
-        .addSubcommand((builder) => builder.setName('show')
-          .setDescription('Show the information of a blacklisted user.')
-          .addUserOption((option) =>
-            option
-              .setName('user')
-              .setDescription('The user to show the blacklist information of.')
-              .setRequired(true)))
+        .addSubcommand((builder) =>
+          builder
+            .setName('add')
+            .setDescription('Blacklists a user.')
+            .addUserOption((option) =>
+              option.setName('user').setDescription('The user to blacklist.').setRequired(true)
+            )
+            .addStringOption((option) =>
+              option.setName('reason').setDescription('The reason to blacklist').setRequired(true)
+            )
+        )
+        .addSubcommand((builder) =>
+          builder
+            .setName('remove')
+            .setDescription('Unblacklists a user.')
+            .addUserOption((option) =>
+              option.setName('user').setDescription('The user to unblacklist').setRequired(true)
+            )
+        )
+        .addSubcommand((builder) =>
+          builder
+            .setName('reason')
+            .setDescription('Re-reasons a blacklisted user.')
+            .addUserOption((option) =>
+              option.setName('user').setDescription('The user to re-reason.').setRequired(true)
+            )
+            .addStringOption((option) => option.setName('reason').setDescription('The new reason.').setRequired(true))
+        )
+        .addSubcommand((builder) =>
+          builder
+            .setName('show')
+            .setDescription('Show the information of a blacklisted user.')
+            .addUserOption((option) =>
+              option.setName('user').setDescription('The user to show the blacklist information of.').setRequired(true)
+            )
+        )
     );
   }
 }

@@ -1,21 +1,21 @@
-import { Precondition } from "@sapphire/framework";
-import type { CommandInteraction } from "discord.js";
+import { Precondition } from '@sapphire/framework';
+import type { CommandInteraction } from 'discord.js';
 
 export class ModOnlyPrecondition extends Precondition {
-    #message = 'You already have an application in progress.';
+  #message = 'You already have an application in progress.';
 
-    public chatInputRun(interaction: CommandInteraction) {
-        return this.checkApplicationInProgress(interaction.user.id)
-    }
+  public chatInputRun(interaction: CommandInteraction) {
+    return this.checkApplicationInProgress(interaction.user.id);
+  }
 
-    private async checkApplicationInProgress(user: string) {
-        const result = await this.container.applications.get(user).catch(() => null);
-        return result?.length ? this.error({ message: this.#message }) : this.ok();
-    }
+  private async checkApplicationInProgress(user: string) {
+    const result = await this.container.applications.get(user).catch(() => null);
+    return result?.length ? this.error({ message: this.#message }) : this.ok();
+  }
 }
 
 declare module '@sapphire/framework' {
-    interface Preconditions {
-        ApplicationInProgress: never;
-    }
+  interface Preconditions {
+    ApplicationInProgress: never;
+  }
 }

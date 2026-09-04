@@ -5,15 +5,15 @@
 
 ## Commands
 
-| File | Purpose |
-|------|---------|
-| `commands/tip.ts` | Tips feature. |
+| File               | Purpose       |
+| ------------------ | ------------- |
+| `commands/tip.ts`  | Tips feature. |
 | `commands/wiki.ts` | Wiki command. |
 
 ## Listeners
 
-| File | Purpose |
-|------|---------|
+| File                 | Purpose                                                      |
+| -------------------- | ------------------------------------------------------------ |
 | `listeners/ready.ts` | On `ClientReady`, calls `container.tips.refreshTips()` once. |
 
 ## Shared command-utils

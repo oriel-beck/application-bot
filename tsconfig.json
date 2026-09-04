@@ -1,5 +1,5 @@
 {
-	"extends": "@sapphire/ts-config",
+  "extends": "@sapphire/ts-config",
   "compilerOptions": {
     "experimentalDecorators": true,
     "outDir": "dist",
@@ -9,7 +9,7 @@
     "skipLibCheck": true,
     "lib": ["ES2022", "DOM"],
     "paths": {
-        "@lib/*": ["./src/lib/*"]
+      "@lib/*": ["./src/lib/*"]
     }
   }
 }

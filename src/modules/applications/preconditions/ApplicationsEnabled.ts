@@ -1,21 +1,21 @@
-import { Precondition } from "@sapphire/framework";
-import type { CommandInteraction } from "discord.js";
+import { Precondition } from '@sapphire/framework';
+import type { CommandInteraction } from 'discord.js';
 
 export class ModOnlyPrecondition extends Precondition {
-    #message = 'Applications are currently disabled.';
+  #message = 'Applications are currently disabled.';
 
-    public chatInputRun(interaction: CommandInteraction) {
-        return this.checkApplicationsEnabled(interaction.guild!.id);
-    }
+  public chatInputRun(interaction: CommandInteraction) {
+    return this.checkApplicationsEnabled(interaction.guild!.id);
+  }
 
-    private async checkApplicationsEnabled(guild: string) {
-        const result = await this.container.settings.get(guild).catch(() => null);
-        return result?.at(0)?.enabled ? this.ok() : this.error({ message: this.#message });
-    }
+  private async checkApplicationsEnabled(guild: string) {
+    const result = await this.container.settings.get(guild).catch(() => null);
+    return result?.at(0)?.enabled ? this.ok() : this.error({ message: this.#message });
+  }
 }
 
 declare module '@sapphire/framework' {
-    interface Preconditions {
-        ApplicationsEnabled: never;
-    }
+  interface Preconditions {
+    ApplicationsEnabled: never;
+  }
 }

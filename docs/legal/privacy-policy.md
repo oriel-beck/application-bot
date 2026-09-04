@@ -90,12 +90,12 @@ We do **not** sell your personal data. We do **not** use Discord message content
 
 Data processed by the Bot may be stored **outside Discord**, including:
 
-| System | Typical contents |
-|--------|------------------|
-| **PostgreSQL** | Applications, questions, blacklist, settings, ticket transcripts/messages, AI conversation turns |
-| **Redis** | Short-lived state (e.g. AI usage limits, share-your-bot cooldowns) |
-| **Chroma** (vector store) | Embeddings / chunks from BDFD wiki, public BDFD API docs, and optionally staff guide/FAQ channel content used for AI retrieval |
-| **OpenAI API** | Questions and relevant context sent to generate AI answers and embeddings for search (processed under OpenAI’s terms and policies) |
+| System                    | Typical contents                                                                                                                   |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **PostgreSQL**            | Applications, questions, blacklist, settings, ticket transcripts/messages, AI conversation turns                                   |
+| **Redis**                 | Short-lived state (e.g. AI usage limits, share-your-bot cooldowns)                                                                 |
+| **Chroma** (vector store) | Embeddings / chunks from BDFD wiki, public BDFD API docs, and optionally staff guide/FAQ channel content used for AI retrieval     |
+| **OpenAI API**            | Questions and relevant context sent to generate AI answers and embeddings for search (processed under OpenAI’s terms and policies) |
 
 Infrastructure is operated by or for the Bot operator (e.g. VPS / Docker-hosted services). Access is limited to the operator and authorized technical staff.
 
@@ -103,9 +103,9 @@ Infrastructure is operated by or for the Bot operator (e.g. VPS / Docker-hosted 
 
 ## 5. Third-party processors
 
-- **Discord** — platform that delivers interactions and message events to the Bot  
-- **OpenAI** — AI inference and embeddings when BDFD AI features are used  
-- Hosting / database providers used to run Postgres, Redis, Chroma, and the Bot process  
+- **Discord** — platform that delivers interactions and message events to the Bot
+- **OpenAI** — AI inference and embeddings when BDFD AI features are used
+- Hosting / database providers used to run Postgres, Redis, Chroma, and the Bot process
 
 Their processing is governed by their own terms and privacy policies in addition to this Policy.
 
@@ -121,13 +121,13 @@ We do not perform server-wide logging of all guild messages. Message content sto
 
 ## 7. Retention
 
-| Data | Retention (typical) |
-|------|---------------------|
+| Data                                | Retention (typical)                                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Applications / blacklist / settings | Kept while needed for staff operations; removable by authorized staff/owner commands or operator action |
-| Ticket transcripts | Kept until deleted via transcript tools, ticket-close flows that remove them, or operator action |
-| AI conversation turns | Cleared on channel cleanup, owner delete, or inactivity sweep; not used as permanent chat archives |
-| Redis keys | Expire according to TTL / feature logic |
-| AI vector index (wiki/guides) | Rebuilt/replaced when documentation ingest is re-run |
+| Ticket transcripts                  | Kept until deleted via transcript tools, ticket-close flows that remove them, or operator action        |
+| AI conversation turns               | Cleared on channel cleanup, owner delete, or inactivity sweep; not used as permanent chat archives      |
+| Redis keys                          | Expire according to TTL / feature logic                                                                 |
+| AI vector index (wiki/guides)       | Rebuilt/replaced when documentation ingest is re-run                                                    |
 
 Exact retention may change as features are maintained; staff tools and operator procedures control deletion.
 

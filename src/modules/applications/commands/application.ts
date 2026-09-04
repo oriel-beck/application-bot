@@ -1,6 +1,12 @@
 import { MessageFlags } from 'discord.js';
-import { generateApplicationComponents, generateApplicationEmbed } from '@lib/command-utils/application/embeds/application-embed.utils.js';
-import { generateApplicationListComponents, generateApplicationListEmbed } from '@lib/command-utils/application/list/application-list.utils.js';
+import {
+  generateApplicationComponents,
+  generateApplicationEmbed
+} from '@lib/command-utils/application/embeds/application-embed.utils.js';
+import {
+  generateApplicationListComponents,
+  generateApplicationListEmbed
+} from '@lib/command-utils/application/list/application-list.utils.js';
 import { generateModal } from '@lib/command-utils/application/modals/application-modals.utils.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
@@ -95,7 +101,7 @@ export class SlashCommand extends Subcommand {
       });
     }
 
-    return interaction.showModal(generateModal(ApplicationState.deleted, user))
+    return interaction.showModal(generateModal(ApplicationState.deleted, user));
   }
 
   public async show(interaction: Subcommand.ChatInputCommandInteraction) {
@@ -117,7 +123,8 @@ export class SlashCommand extends Subcommand {
   public async list(interaction: Subcommand.ChatInputCommandInteraction) {
     await interaction.deferReply();
 
-    const state: ApplicationStateKeys = interaction.options.getString('state', false) as ApplicationStateKeys || ApplicationState.pending;
+    const state: ApplicationStateKeys =
+      (interaction.options.getString('state', false) as ApplicationStateKeys) || ApplicationState.pending;
 
     const allApps = await this.container.applications.getAll(state).catch(() => null);
     if (!allApps) {
@@ -133,9 +140,9 @@ export class SlashCommand extends Subcommand {
       embeds: generateApplicationListEmbed(
         totalCount,
         state,
-        totalCount > 125 ? { pageIndex, perPage, totalPages } : undefined,
+        totalCount > 125 ? { pageIndex, perPage, totalPages } : undefined
       ),
-      components: generateApplicationListComponents(allApps, state, pageIndex, totalCount),
+      components: generateApplicationListComponents(allApps, state, pageIndex, totalCount)
     });
   }
 
@@ -147,18 +154,21 @@ export class SlashCommand extends Subcommand {
       });
     }
 
-    const enabled = await this.container.settings.get(guildId).then((res) => !!res.at(0)?.enabled).catch(() => null)
+    const enabled = await this.container.settings
+      .get(guildId)
+      .then((res) => !!res.at(0)?.enabled)
+      .catch(() => null);
     const toggled = await this.container.settings.update(guildId, 'enabled', !enabled).catch(() => null);
 
     if (!toggled) {
       return interaction.reply({
         content: 'Failed to toggle application state.'
-      })
+      });
     }
 
     return interaction.reply({
       content: `Toggled applications, applications are currently ${enabled ? 'disabled' : 'enabled'}.`
-    })
+    });
   }
 
   public async reset(interaction: Subcommand.ChatInputCommandInteraction) {
@@ -172,7 +182,7 @@ export class SlashCommand extends Subcommand {
 
     return interaction.reply({
       content: 'Reset all applications.'
-    })
+    });
   }
 
   public registerApplicationCommands(registry: Subcommand.Registry) {
@@ -181,63 +191,69 @@ export class SlashCommand extends Subcommand {
         .setName(this.name)
         .setDescription(this.description)
         .setDMPermission(false)
-        .addSubcommand((builder) => builder.setName('deny')
-          .setDescription('Deny an application.')
-          .addUserOption((option) =>
-            option
-              .setName('user')
-              .setDescription('The user to deny the application of.')
-              .setRequired(true)))
-        .addSubcommand((builder) => builder.setName('accept')
-          .setDescription('Accept an application.')
-          .addUserOption((option) =>
-            option
-              .setName('user')
-              .setDescription('The user to accept the application of.')
-              .setRequired(true)))
-        .addSubcommand((builder) => builder.setName('delete')
-          .setDescription('Delete an application.')
-          .addUserOption((option) =>
-            option
-              .setName('user')
-              .setDescription('The user to delete the application of.')
-              .setRequired(true)))
-        .addSubcommand((builder) => builder.setName('show')
-          .setDescription('Show an application.')
-          .addUserOption((option) =>
-            option
-              .setName('user')
-              .setDescription('The user to show the application of.')
-              .setRequired(true)))
-        .addSubcommand((builder) => builder.setName('list')
-          .setDescription('List all applications.')
-          .addStringOption((option) =>
-            option
-              .setName('state')
-              .setDescription('The state to search applications by (default pending).')
-              .setRequired(false)
-              .addChoices(
-                {
-                  name: 'Active Applications',
-                  value: 'active'
-                },
-                {
-                  name: 'Pending Applications',
-                  value: 'pending'
-                },
-                {
-                  name: 'Denied Applications',
-                  value: 'denied'
-                },
-                {
-                  name: 'Accepted Applications',
-                  value: 'accepted'
-                }
-              )))
-        .addSubcommand((builder) => builder.setName('toggle')
-          .setDescription('Enable/Disable the of the applications.'))
-        .addSubcommand((builder) => builder.setName('reset')
-          .setDescription('Deletes all applications.'))
-    )
+        .addSubcommand((builder) =>
+          builder
+            .setName('deny')
+            .setDescription('Deny an application.')
+            .addUserOption((option) =>
+              option.setName('user').setDescription('The user to deny the application of.').setRequired(true)
+            )
+        )
+        .addSubcommand((builder) =>
+          builder
+            .setName('accept')
+            .setDescription('Accept an application.')
+            .addUserOption((option) =>
+              option.setName('user').setDescription('The user to accept the application of.').setRequired(true)
+            )
+        )
+        .addSubcommand((builder) =>
+          builder
+            .setName('delete')
+            .setDescription('Delete an application.')
+            .addUserOption((option) =>
+              option.setName('user').setDescription('The user to delete the application of.').setRequired(true)
+            )
+        )
+        .addSubcommand((builder) =>
+          builder
+            .setName('show')
+            .setDescription('Show an application.')
+            .addUserOption((option) =>
+              option.setName('user').setDescription('The user to show the application of.').setRequired(true)
+            )
+        )
+        .addSubcommand((builder) =>
+          builder
+            .setName('list')
+            .setDescription('List all applications.')
+            .addStringOption((option) =>
+              option
+                .setName('state')
+                .setDescription('The state to search applications by (default pending).')
+                .setRequired(false)
+                .addChoices(
+                  {
+                    name: 'Active Applications',
+                    value: 'active'
+                  },
+                  {
+                    name: 'Pending Applications',
+                    value: 'pending'
+                  },
+                  {
+                    name: 'Denied Applications',
+                    value: 'denied'
+                  },
+                  {
+                    name: 'Accepted Applications',
+                    value: 'accepted'
+                  }
+                )
+            )
+        )
+        .addSubcommand((builder) => builder.setName('toggle').setDescription('Enable/Disable the of the applications.'))
+        .addSubcommand((builder) => builder.setName('reset').setDescription('Deletes all applications.'))
+    );
   }
 }

@@ -1,13 +1,13 @@
-import { ApplyOptions } from "@sapphire/decorators";
-import { Events, Listener, type ListenerOptions } from "@sapphire/framework";
-import type { Client } from "discord.js";
+import { ApplyOptions } from '@sapphire/decorators';
+import { Events, Listener, type ListenerOptions } from '@sapphire/framework';
+import type { Client } from 'discord.js';
 
 @ApplyOptions<ListenerOptions>({
-    event: Events.ClientReady,
-    name: 'globalClientReady'
+  event: Events.ClientReady,
+  name: 'globalClientReady'
 })
 export class ClientReadyListener extends Listener<typeof Events.ClientReady> {
-    run(client: Client): void {
-        console.log(`${client.user?.tag} is ready`);
-    }
+  run(client: Client): void {
+    console.log(`${client.user?.tag} is ready`);
+  }
 }

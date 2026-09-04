@@ -1,64 +1,68 @@
-import { generateApplyComponents, generateApplyEmbed } from "@lib/command-utils/apply/apply.utils.js";
-import { applicationExists } from "@lib/util.js";
-import { ApplyOptions } from "@sapphire/decorators";
-import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { ApplyCustomIDs } from "@lib/constants/custom-ids.js";
-import { MessageFlags, type ModalSubmitInteraction } from "discord.js";
-import type { Application } from "@lib/types.js";
+import { generateApplyComponents, generateApplyEmbed } from '@lib/command-utils/apply/apply.utils.js';
+import { applicationExists } from '@lib/util.js';
+import { ApplyOptions } from '@sapphire/decorators';
+import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
+import { ApplyCustomIDs } from '@lib/constants/custom-ids.js';
+import { MessageFlags, type ModalSubmitInteraction } from 'discord.js';
+import type { Application } from '@lib/types.js';
 
 @ApplyOptions<InteractionHandler.Options>({
-    interactionHandlerType: InteractionHandlerTypes.ModalSubmit
+  interactionHandlerType: InteractionHandlerTypes.ModalSubmit
 })
 export class AnswerModalHandler extends InteractionHandler {
-    public async run(interaction: ModalSubmitInteraction) {
-        await interaction.deferUpdate();
+  public async run(interaction: ModalSubmitInteraction) {
+    await interaction.deferUpdate();
 
-        const questionNum = Number(interaction.customId.split(':').at(-1));
-        const answer = interaction.fields.getTextInputValue('answer');
+    const questionNum = Number(interaction.customId.split(':').at(-1));
+    const answer = interaction.fields.getTextInputValue('answer');
 
-        const app = await this.container.applications.get(interaction.user.id).then((res) => res.at(0)).catch(() => null) as Application;
+    const app = (await this.container.applications
+      .get(interaction.user.id)
+      .then((res) => res.at(0))
+      .catch(() => null)) as Application;
 
-        if (!app || !applicationExists(app)) {
-            return interaction.followUp({
-                content: 'The application no longer exist.',
-                flags: MessageFlags.Ephemeral
-            });
-        }
-
-        let update;
-        if (!app?.answers || !app.answers[questionNum]) {
-            update = await this.container.applications.addAnswer(interaction.user.id, answer).catch(console.log);
-        } else {
-            update = await this.container.applications.editAnswer(interaction.user.id, app.answers[questionNum], answer).catch(console.log);
-        }
-
-        if (!update) {
-            return interaction.followUp({
-                content: 'Failed to update the application.',
-                flags: MessageFlags.Ephemeral
-            });
-        }
-
-
-        const answers = [...(app?.answers || [])];
-        answers[questionNum] = answer;
-
-        if ((!app?.answers || !app.answers[questionNum]) && questionNum + 1 !== app?.questions.length) {
-            // edit to the next question and answer
-            return interaction.message?.edit({
-                embeds: generateApplyEmbed(app!.questions[questionNum + 1], answers[questionNum + 1], questionNum + 1),
-                components: generateApplyComponents(answers, questionNum + 1)
-            });
-        } else {
-            // edit to the current question and answer
-            return interaction.message?.edit({
-                embeds: generateApplyEmbed(app!.questions[questionNum], answer, questionNum),
-                components: generateApplyComponents(answers, questionNum)
-            });
-        }
+    if (!app || !applicationExists(app)) {
+      return interaction.followUp({
+        content: 'The application no longer exist.',
+        flags: MessageFlags.Ephemeral
+      });
     }
 
-    public parse(interaction: ModalSubmitInteraction) {
-        return interaction.customId.startsWith(`${ApplyCustomIDs.modals.answer}:`) ? this.some() : this.none();
+    let update;
+    if (!app?.answers || !app.answers[questionNum]) {
+      update = await this.container.applications.addAnswer(interaction.user.id, answer).catch(console.log);
+    } else {
+      update = await this.container.applications
+        .editAnswer(interaction.user.id, app.answers[questionNum], answer)
+        .catch(console.log);
     }
+
+    if (!update) {
+      return interaction.followUp({
+        content: 'Failed to update the application.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const answers = [...(app?.answers || [])];
+    answers[questionNum] = answer;
+
+    if ((!app?.answers || !app.answers[questionNum]) && questionNum + 1 !== app?.questions.length) {
+      // edit to the next question and answer
+      return interaction.message?.edit({
+        embeds: generateApplyEmbed(app!.questions[questionNum + 1], answers[questionNum + 1], questionNum + 1),
+        components: generateApplyComponents(answers, questionNum + 1)
+      });
+    } else {
+      // edit to the current question and answer
+      return interaction.message?.edit({
+        embeds: generateApplyEmbed(app!.questions[questionNum], answer, questionNum),
+        components: generateApplyComponents(answers, questionNum)
+      });
+    }
+  }
+
+  public parse(interaction: ModalSubmitInteraction) {
+    return interaction.customId.startsWith(`${ApplyCustomIDs.modals.answer}:`) ? this.some() : this.none();
+  }
 }

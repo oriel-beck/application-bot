@@ -28,8 +28,7 @@ export class SlashCommand extends Command {
 
     if (process.env.NODE_ENV === 'production' && process.env.EVAL_ENABLED !== 'true') {
       return interaction.editReply({
-        content:
-          'Eval is disabled in production. Set environment variable `EVAL_ENABLED=true` to enable it.'
+        content: 'Eval is disabled in production. Set environment variable `EVAL_ENABLED=true` to enable it.'
       });
     }
 
@@ -77,31 +76,19 @@ export class SlashCommand extends Command {
       builder
         .setName(this.name)
         .setDescription(this.description)
-        .addStringOption((option) =>
-          option
-            .setName('code')
-            .setDescription('The code to execute.')
-            .setRequired(true))
+        .addStringOption((option) => option.setName('code').setDescription('The code to execute.').setRequired(true))
         .addBooleanOption((option) =>
-          option
-            .setName('hidden')
-            .setDescription('Show hidden properties.')
-            .setRequired(false))
+          option.setName('hidden').setDescription('Show hidden properties.').setRequired(false)
+        )
         .addBooleanOption((option) =>
-          option
-            .setName('async')
-            .setDescription('Run the code asynchronously.')
-            .setRequired(false))
+          option.setName('async').setDescription('Run the code asynchronously.').setRequired(false)
+        )
         .addBooleanOption((option) =>
-          option
-            .setName('ephemeral')
-            .setDescription('Answer with an ephemeral message.')
-            .setRequired(false))
+          option.setName('ephemeral').setDescription('Answer with an ephemeral message.').setRequired(false)
+        )
         .addNumberOption((option) =>
-          option
-            .setName('depth')
-            .setDescription('Set the depth to inspect.')
-            .setRequired(false))
+          option.setName('depth').setDescription('Set the depth to inspect.').setRequired(false)
+        )
     );
   }
 }

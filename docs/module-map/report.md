@@ -5,17 +5,17 @@
 
 ## Commands
 
-| File | Purpose |
-|------|---------|
+| File                 | Purpose                               |
+| -------------------- | ------------------------------------- |
 | `commands/report.ts` | Report slash + context menu variants. |
 
 ## Interaction handlers
 
-| File | Purpose |
-|------|---------|
-| `interaction-handlers/report-modal.ts` | Submit report content. |
-| `interaction-handlers/resolve-button.ts` | Staff resolve. |
-| `interaction-handlers/delete-button.ts` | Remove report message. |
+| File                                     | Purpose                |
+| ---------------------------------------- | ---------------------- |
+| `interaction-handlers/report-modal.ts`   | Submit report content. |
+| `interaction-handlers/resolve-button.ts` | Staff resolve.         |
+| `interaction-handlers/delete-button.ts`  | Remove report message. |
 
 ## Shared command-utils
 

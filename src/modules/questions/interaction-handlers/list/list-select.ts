@@ -1,48 +1,51 @@
-import { generateQuestionShowComponents, generateQuestionShowEmbed } from "@lib/command-utils/question/show/question-show.utils.js";
-import { hasRole } from "@lib/precondition-util.js";
-import { ApplyOptions } from "@sapphire/decorators";
-import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { MessageFlags, type StringSelectMenuInteraction } from "discord.js";
-import type { Question } from "@lib/types.js";
+import {
+  generateQuestionShowComponents,
+  generateQuestionShowEmbed
+} from '@lib/command-utils/question/show/question-show.utils.js';
+import { hasRole } from '@lib/precondition-util.js';
+import { ApplyOptions } from '@sapphire/decorators';
+import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
+import { MessageFlags, type StringSelectMenuInteraction } from 'discord.js';
+import type { Question } from '@lib/types.js';
 
 const LIST_SEL_RE = /^q:list:sel:\d+$/;
 
 @ApplyOptions<InteractionHandler.Options>({
-    interactionHandlerType: InteractionHandlerTypes.SelectMenu,
+  interactionHandlerType: InteractionHandlerTypes.SelectMenu
 })
 export class QuestionListSelectHandler extends InteractionHandler {
-    public async run(interaction: StringSelectMenuInteraction) {
-        if (!hasRole(interaction.member!, this.container.config.roles.mod)) {
-            return interaction.reply({
-                content: "You are missing permissions to use this.",
-                flags: MessageFlags.Ephemeral,
-            });
-        }
-
-        const raw = interaction.values[0]!;
-        const id = raw.replace(/#\d+$/, "") || raw;
-
-        const row = await this.container.questions
-            .get(id)
-            .then((res) => res.at(0))
-            .catch(() => null);
-
-        if (!row) {
-            return interaction.reply({
-                content: "That question could not be found.",
-                flags: MessageFlags.Ephemeral,
-            });
-        }
-
-        const question = row as unknown as Question;
-
-        return interaction.reply({
-            embeds: generateQuestionShowEmbed(question),
-            components: generateQuestionShowComponents(question),
-        });
+  public async run(interaction: StringSelectMenuInteraction) {
+    if (!hasRole(interaction.member!, this.container.config.roles.mod)) {
+      return interaction.reply({
+        content: 'You are missing permissions to use this.',
+        flags: MessageFlags.Ephemeral
+      });
     }
 
-    public parse(interaction: StringSelectMenuInteraction) {
-        return LIST_SEL_RE.test(interaction.customId) ? this.some() : this.none();
+    const raw = interaction.values[0]!;
+    const id = raw.replace(/#\d+$/, '') || raw;
+
+    const row = await this.container.questions
+      .get(id)
+      .then((res) => res.at(0))
+      .catch(() => null);
+
+    if (!row) {
+      return interaction.reply({
+        content: 'That question could not be found.',
+        flags: MessageFlags.Ephemeral
+      });
     }
+
+    const question = row as unknown as Question;
+
+    return interaction.reply({
+      embeds: generateQuestionShowEmbed(question),
+      components: generateQuestionShowComponents(question)
+    });
+  }
+
+  public parse(interaction: StringSelectMenuInteraction) {
+    return LIST_SEL_RE.test(interaction.customId) ? this.some() : this.none();
+  }
 }

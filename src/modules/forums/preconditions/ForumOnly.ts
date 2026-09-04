@@ -1,16 +1,18 @@
-import { Precondition } from "@sapphire/framework";
-import type { CommandInteraction } from "discord.js";
+import { Precondition } from '@sapphire/framework';
+import type { CommandInteraction } from 'discord.js';
 
 export class ForumOnlyPrecondition extends Precondition {
-    #message = 'You can not use this command outside a forum post.';
+  #message = 'You can not use this command outside a forum post.';
 
-    public chatInputRun(interaction: CommandInteraction) {
-        return interaction.channel?.isThread() && interaction.channel.parent?.isThreadOnly() ? this.ok() : this.error({ message: this.#message });
-    }
+  public chatInputRun(interaction: CommandInteraction) {
+    return interaction.channel?.isThread() && interaction.channel.parent?.isThreadOnly()
+      ? this.ok()
+      : this.error({ message: this.#message });
+  }
 }
 
 declare module '@sapphire/framework' {
-    interface Preconditions {
-        ForumOnly: never;
-    }
+  interface Preconditions {
+    ForumOnly: never;
+  }
 }

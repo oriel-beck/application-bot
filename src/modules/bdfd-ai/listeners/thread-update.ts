@@ -5,17 +5,17 @@ import { Events, Listener } from '@sapphire/framework';
 import type { AnyThreadChannel } from 'discord.js';
 
 @ApplyOptions<Listener.Options>({
-    event: Events.ThreadUpdate,
-    name: 'bdfdAiThreadUpdate',
+  event: Events.ThreadUpdate,
+  name: 'bdfdAiThreadUpdate'
 })
 export class BdfdAiThreadUpdateListener extends Listener<typeof Events.ThreadUpdate> {
-    async run(oldThread: AnyThreadChannel, newThread: AnyThreadChannel) {
-        if (!getBdfdAiChannelKind(newThread)) return;
+  async run(oldThread: AnyThreadChannel, newThread: AnyThreadChannel) {
+    if (!getBdfdAiChannelKind(newThread)) return;
 
-        const becameArchived = !oldThread.archived && newThread.archived;
-        const becameLocked = !oldThread.locked && newThread.locked;
-        if (!becameArchived && !becameLocked) return;
+    const becameArchived = !oldThread.archived && newThread.archived;
+    const becameLocked = !oldThread.locked && newThread.locked;
+    if (!becameArchived && !becameLocked) return;
 
-        await cleanupClosedSupportChannel(newThread.id, { deleteTranscript: true });
-    }
+    await cleanupClosedSupportChannel(newThread.id, { deleteTranscript: true });
+  }
 }

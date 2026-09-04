@@ -9,10 +9,7 @@ export default defineConfig(
     files: ['**/*.{js,cjs,mjs,ts,cts,mts}'],
     extends: [eslint.configs.recommended, tseslint.configs.recommended],
     rules: {
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
-      ]
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
     }
   },
   eslintConfigPrettier

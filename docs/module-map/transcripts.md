@@ -5,17 +5,17 @@
 
 ## Commands
 
-| File | Purpose |
-|------|---------|
+| File                     | Purpose                                                                                                                                                                         |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `commands/transcript.ts` | Subcommands: `delete`, `clear-deleted`, `get` (`.txt` export; loads messages via `get(..., true)`), **`list`** (Components V2 browser). Preconditions: `ModOnly` + `OwnerOnly`. |
 
 ## Interaction handlers
 
-| File | Purpose |
-|------|---------|
-| `interaction-handlers/list/list-dir.ts` | Pagination: First / Prev / page / Next / Last (`tr:list:dir`) |
-| `interaction-handlers/list/list-export.ts` | Ephemeral `.txt` follow-up (`tr:list:exp`) |
-| `interaction-handlers/list/list-delete.ts` | Delete transcript and refresh list (`tr:list:del`) |
+| File                                       | Purpose                                                       |
+| ------------------------------------------ | ------------------------------------------------------------- |
+| `interaction-handlers/list/list-dir.ts`    | Pagination: First / Prev / page / Next / Last (`tr:list:dir`) |
+| `interaction-handlers/list/list-export.ts` | Ephemeral `.txt` follow-up (`tr:list:exp`)                    |
+| `interaction-handlers/list/list-delete.ts` | Delete transcript and refresh list (`tr:list:del`)            |
 
 Custom IDs: `TranscriptCustomIDs` in `src/lib/constants/custom-ids.ts` (`tr:list:*`).  
 List UI utils: `src/lib/command-utils/transcript/list/transcript-list.utils.ts` (`PAGE_SIZE = 8`; each row = context + Export/Delete ActionRow).
@@ -24,11 +24,11 @@ Manager helpers: `getAll()`, **`listWithCounts()`** (channel + author + message 
 
 ## Listeners
 
-| File | Purpose |
-|------|---------|
-| `listeners/messageCreate.ts` | Record new messages. |
-| `listeners/messageUpdate.ts` | Record edits. |
-| `listeners/messageDelete.ts` | Handle deletions. |
+| File                         | Purpose                                                                                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `listeners/messageCreate.ts` | Record new messages.                                                                                                                        |
+| `listeners/messageUpdate.ts` | Record edits.                                                                                                                               |
+| `listeners/messageDelete.ts` | Handle deletions.                                                                                                                           |
 | `listeners/channelDelete.ts` | DM transcript on ticket delete; always clears AI state via `cleanupClosedSupportChannel`; deletes transcript rows only if the DM succeeded. |
 
 Transcripts are **not** removed by the 7-day AI inactive sweep (`sweepInactiveSupportChannels`). They are deleted only via `/transcript` commands, list Delete, ticket channel delete (after successful DM), or support thread resolve/archive/delete.

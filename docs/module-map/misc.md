@@ -5,8 +5,8 @@
 
 ## Commands
 
-| File | Purpose |
-|------|---------|
+| File                | Purpose            |
+| ------------------- | ------------------ |
 | `commands/about.ts` | `/about` bot info. |
 
 ## Shared command-utils

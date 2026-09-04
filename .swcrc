@@ -1,28 +1,26 @@
 {
-    "module": {
-        "type": "es6"
+  "module": {
+    "type": "es6"
+  },
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "tsx": false,
+      "decorators": true,
+      "dynamicImport": true
     },
-    "jsc": {
-        "parser": {
-            "syntax": "typescript",
-            "tsx": false,
-            "decorators": true,
-            "dynamicImport": true
-        },
-        "transform": null,
-        "target": "es2022",
-        "loose": false,
-        "externalHelpers": false,
-        // Requires v1.2.50 or upper and requires target to be es2016 or upper.
-        "keepClassNames": true,
-        // Configure module aliases
-        // Keep this in sync with ./tsconfig.json
-        "baseUrl": "./src",
-        "paths": {
-            "@lib/*": [
-                "lib/*"
-            ]
-        }
-    },
-    "isModule": true
+    "transform": null,
+    "target": "es2022",
+    "loose": false,
+    "externalHelpers": false,
+    // Requires v1.2.50 or upper and requires target to be es2016 or upper.
+    "keepClassNames": true,
+    // Configure module aliases
+    // Keep this in sync with ./tsconfig.json
+    "baseUrl": "./src",
+    "paths": {
+      "@lib/*": ["lib/*"]
+    }
+  },
+  "isModule": true
 }

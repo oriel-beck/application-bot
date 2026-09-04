@@ -1,90 +1,94 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command } from '@sapphire/framework';
 import { ChannelType, MessageFlags } from 'discord.js';
-import { generateReportEmbed, generateReportComponents, generateReportModal } from "@lib/command-utils/report/report.util.js";
+import {
+  generateReportEmbed,
+  generateReportComponents,
+  generateReportModal
+} from '@lib/command-utils/report/report.util.js';
 @ApplyOptions<Command.Options>({
-    name: 'report',
-    description: 'Report a user to the mod team for cheating in the staff applications.'
+  name: 'report',
+  description: 'Report a user to the mod team for cheating in the staff applications.'
 })
 export class SlashCommand extends Command {
-    public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
-        const user = interaction.options.getUser('user', true);
-        const reason = interaction.options.getString('reason', true);
+  public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
+    const user = interaction.options.getUser('user', true);
+    const reason = interaction.options.getString('reason', true);
 
-        if (interaction.user.id === user.id) {
-            return interaction.reply({
-                content: 'Why would you report yourself?',
-                flags: MessageFlags.Ephemeral
-            });
-        }
+    if (interaction.user.id === user.id) {
+      return interaction.reply({
+        content: 'Why would you report yourself?',
+        flags: MessageFlags.Ephemeral
+      });
+    }
 
-        interaction.reply({
-            content: 'Sent the report to the mod team.',
-            flags: MessageFlags.Ephemeral
+    interaction.reply({
+      content: 'Sent the report to the mod team.',
+      flags: MessageFlags.Ephemeral
+    });
+
+    const reportChannel = this.container.client.channels.cache.get(this.container.config.channels.report);
+
+    if (reportChannel?.type === ChannelType.GuildText) {
+      return reportChannel.send({
+        embeds: generateReportEmbed(interaction, user, reason),
+        components: generateReportComponents()
+      });
+    }
+
+    return;
+  }
+
+  public contextMenuRun(interaction: Command.ContextMenuCommandInteraction) {
+    if (interaction.isUserContextMenuCommand()) {
+      if (interaction.user.id === interaction.targetUser.id) {
+        return interaction.reply({
+          content: 'Why would you report yourself?',
+          flags: MessageFlags.Ephemeral
         });
+      }
 
-        const reportChannel = this.container.client.channels.cache.get(this.container.config.channels.report);
-
-        if (reportChannel?.type === ChannelType.GuildText) {
-            return reportChannel.send({
-                embeds: generateReportEmbed(interaction, user, reason),
-                components: generateReportComponents()
-            });
-        }
-
-        return;
+      return interaction.showModal(generateReportModal(interaction.targetId));
     }
 
-    public contextMenuRun(interaction: Command.ContextMenuCommandInteraction) {
-        if (interaction.isUserContextMenuCommand()) {
-            if (interaction.user.id === interaction.targetUser.id) {
-                return interaction.reply({
-                    content: 'Why would you report yourself?',
-                    flags: MessageFlags.Ephemeral
-                });
-            }
+    if (interaction.isMessageContextMenuCommand()) {
+      if (interaction.user.id === interaction.targetMessage.author.id) {
+        return interaction.reply({
+          content: 'Why would you report yourself?',
+          flags: MessageFlags.Ephemeral
+        });
+      }
 
-            return interaction.showModal(generateReportModal(interaction.targetId))
-        }
-
-        if (interaction.isMessageContextMenuCommand()) {
-            if (interaction.user.id === interaction.targetMessage.author.id) {
-                return interaction.reply({
-                    content: 'Why would you report yourself?',
-                    flags: MessageFlags.Ephemeral
-                });
-            }
-
-            return interaction.showModal(generateReportModal(interaction.targetMessage.author.id, interaction.targetMessage.id))
-        }
-
-        return;
+      return interaction.showModal(
+        generateReportModal(interaction.targetMessage.author.id, interaction.targetMessage.id)
+      );
     }
 
-    public registerApplicationCommands(registry: Command.Registry) {
-        registry.registerChatInputCommand((builder) =>
-            builder
-                .setName(this.name)
-                .setDescription(this.description)
-                .setDMPermission(false)
-                .addUserOption((option) =>
-                    option.setName('user')
-                        .setDescription('The user to report for cheating in the staff applications.')
-                        .setRequired(true)
-                )
-                .addStringOption((option) =>
-                    option.setName('reason')
-                        .setDescription('The reason to report the user for cheating in the staff applications.')
-                        .setRequired(true)
-                ));
+    return;
+  }
 
-        registry.registerContextMenuCommand((builder) =>
-            builder.setName('Report cheater in the staff apps')
-                .setType(2)
-        );
+  public registerApplicationCommands(registry: Command.Registry) {
+    registry.registerChatInputCommand((builder) =>
+      builder
+        .setName(this.name)
+        .setDescription(this.description)
+        .setDMPermission(false)
+        .addUserOption((option) =>
+          option
+            .setName('user')
+            .setDescription('The user to report for cheating in the staff applications.')
+            .setRequired(true)
+        )
+        .addStringOption((option) =>
+          option
+            .setName('reason')
+            .setDescription('The reason to report the user for cheating in the staff applications.')
+            .setRequired(true)
+        )
+    );
 
-        registry.registerContextMenuCommand((builder) =>
-            builder.setName('Report cheater in the staff apps')
-                .setType(3))
-    }
+    registry.registerContextMenuCommand((builder) => builder.setName('Report cheater in the staff apps').setType(2));
+
+    registry.registerContextMenuCommand((builder) => builder.setName('Report cheater in the staff apps').setType(3));
+  }
 }

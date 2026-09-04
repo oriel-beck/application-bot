@@ -1,36 +1,35 @@
-
-import { ApplyOptions } from "@sapphire/decorators";
-import { InteractionHandler, InteractionHandlerTypes } from "@sapphire/framework";
-import { Colors, type ButtonInteraction, MessageFlags } from "discord.js";
-import { ApplyCustomIDs } from "../../../../lib/constants/custom-ids.js";
+import { ApplyOptions } from '@sapphire/decorators';
+import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
+import { Colors, type ButtonInteraction, MessageFlags } from 'discord.js';
+import { ApplyCustomIDs } from '../../../../lib/constants/custom-ids.js';
 
 @ApplyOptions<InteractionHandler.Options>({
-    interactionHandlerType: InteractionHandlerTypes.Button
+  interactionHandlerType: InteractionHandlerTypes.Button
 })
 export class CancelButtonHandler extends InteractionHandler {
-    public async run(interaction: ButtonInteraction) {
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  public async run(interaction: ButtonInteraction) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-        const deleted = await this.container.applications.delete(interaction.user.id).catch(() => null);
+    const deleted = await this.container.applications.delete(interaction.user.id).catch(() => null);
 
-        if (!deleted) {
-            return interaction.editReply('Failed to cancel application.');
+    if (!deleted) {
+      return interaction.editReply('Failed to cancel application.');
+    }
+
+    interaction.editReply('Cancelled application process.');
+    return interaction.message.edit({
+      content: '',
+      embeds: [
+        {
+          title: 'Application cancelled.',
+          color: Colors.Red
         }
+      ],
+      components: []
+    });
+  }
 
-        interaction.editReply('Cancelled application process.');
-        return interaction.message.edit({
-            content: '',
-            embeds: [
-                {
-                    title: 'Application cancelled.',
-                    color: Colors.Red
-                }
-            ],
-            components: []
-        });
-    }
-
-    public parse(interaction: ButtonInteraction) {
-        return interaction.customId === ApplyCustomIDs.buttons.cancel ? this.some() : this.none()
-    }
+  public parse(interaction: ButtonInteraction) {
+    return interaction.customId === ApplyCustomIDs.buttons.cancel ? this.some() : this.none();
+  }
 }

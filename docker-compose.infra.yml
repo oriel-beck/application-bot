@@ -39,13 +39,13 @@ services:
     volumes:
       - chroma_data:/chroma/chroma
     environment:
-      ANONYMIZED_TELEMETRY: "false"
+      ANONYMIZED_TELEMETRY: 'false'
     networks:
       - appbot
 
   ingestor:
     build: .
-    command: ["node", "src/scripts/ingest-wiki.js"]
+    command: ['node', 'src/scripts/ingest-wiki.js']
     env_file:
       - .env
     environment:
@@ -56,4 +56,4 @@ services:
       - chroma
     networks:
       - appbot
-    restart: "no"
+    restart: 'no'

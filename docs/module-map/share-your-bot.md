@@ -5,18 +5,18 @@
 
 ## Commands
 
-| File | Purpose |
-|------|---------|
+| File                         | Purpose                                 |
+| ---------------------------- | --------------------------------------- |
 | `commands/share-your-bot.ts` | Entry command for sharing bot / promos. |
 
 ## Listeners
 
-| File | Purpose |
-|------|---------|
+| File                         | Purpose                                    |
+| ---------------------------- | ------------------------------------------ |
 | `listeners/messageCreate.ts` | Detects messages in configured channel(s). |
 
 ## Interaction handlers
 
-| File | Purpose |
-|------|---------|
+| File                                | Purpose                                                                                                      |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `interaction-handlers/additions.ts` | Sticky “additions” button (`share:sticky:additions`, `ShareCustomIDs` in `src/lib/constants/custom-ids.ts`). |
