@@ -2,8 +2,6 @@ import { container } from '@sapphire/framework';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder } from 'discord.js';
 import { ForumCustomIDs } from '@lib/constants/custom-ids.js';
 
-const EVIDENCE = '` ● ` Please send videos and/or photos that clearly show the bug.';
-
 export function isBugReportsForum(parentChannelId: string | undefined): boolean {
   return parentChannelId === container.config.channels.bug_reports;
 }
@@ -27,32 +25,26 @@ export function generateBugReportHelpEmbed(appliedTags: string[]) {
   const embed = new EmbedBuilder().setTitle('BDFD Bug Report').setColor(Colors.Blurple);
   if (warning) embed.setDescription(`⚠️ ${warning}`);
 
-  if (appliedTags.includes(tags.website))
-    embed.addFields({
-      name: 'Website',
-      value: EVIDENCE
-    });
+  embed.addFields({
+    name: 'Your report',
+    value:
+      '` ● ` Please describe the problem clearly.\n` ● ` Please send videos and/or photos that clearly show the bug.'
+  });
+
   if (appliedTags.includes(tags.app))
     embed.addFields({
       name: 'App',
       value:
-        '` ● ` Include your phone model (for example iPhone 15 or Samsung Galaxy S24).\n` ● ` Include your Android or iOS version.\n` ● ` Include the BDFD app version.\nHow to find the app version: open the BDFD app → Settings → tap the information (i) icon → copy the app version shown there.\n' +
-        EVIDENCE
-    });
-  if (appliedTags.includes(tags.bdl))
-    embed.addFields({
-      name: 'BDL',
-      value: EVIDENCE
-    });
-  if (appliedTags.includes(tags.bdfd_wiki))
-    embed.addFields({
-      name: 'BDFD Wiki',
-      value: EVIDENCE
-    });
-  if (appliedTags.includes(tags.flowcharts))
-    embed.addFields({
-      name: 'Flowcharts',
-      value: EVIDENCE
+        '` ● ` Include your phone model (for example iPhone 15 or Samsung Galaxy S24).\n' +
+        'How to find your phone model:\n' +
+        'iOS: Settings → General → About → Model Name\n' +
+        'Android: Settings → About phone → Model\n' +
+        '` ● ` Include your Android or iOS version.\n' +
+        'How to find your OS version:\n' +
+        'iOS: Settings → General → About → iOS Version\n' +
+        'Android: Settings → About phone → Android version\n' +
+        '` ● ` Include the BDFD app version.\n' +
+        'How to find the app version: open the BDFD app → Settings → tap the information (i) icon → copy the app version shown there.'
     });
 
   embed.setFooter({
