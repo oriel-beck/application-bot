@@ -16,7 +16,7 @@ The bot is oriented around **guild applications** (questions/answers, staff deci
 
 1. `src/index.ts` constructs `ApplicationClient` from `src/lib/app-client.ts`, sets Discord intents/partials, and passes **`enabledModules`** (whitelist of folder names under `src/modules/`).
 2. Side-effect imports run **before** `login`:
-   - `@lib/config/register.js` — loads `config.json` from **process cwd** into `container.config`.
+   - `@lib/config/register.js` — validates `config.json`, required env vars, and question JSON, then assigns `container.config`.
    - `@sapphire/plugin-subcommands/register`
    - `@lib/db-register.js` — Postgres pool, Drizzle, **`migrate()`** from `/app/drizzle` (Docker path), seeds default guild row in `settings`, sets `container.drizzle`.
    - `@lib/redis-register.js` — `container.redis`.
@@ -29,10 +29,10 @@ The bot is oriented around **guild applications** (questions/answers, staff deci
 
 ## Configuration and secrets
 
-| Source                                        | Purpose                                                                                                                                                                                                                                                     |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`.env`**                                    | `BOT_TOKEN`, `DATABASE_URL` (app + drizzle-kit), `POSTGRES_*` (Postgres container init in compose), `OWNER`, `REDIS_HOST`, etc. (see `README.md`).                                                                                                          |
-| **`config.json`** (repo root, cwd at runtime) | Guild IDs for channels/roles/tags/categories and initial `guild` string. Typed in `src/lib/config/config.d.ts`. **README** example may lag the TypeScript type (e.g. `wiki`, `categories`) — trust **`config.d.ts`** as source of truth for required shape. |
+| Source                                        | Purpose                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **`.env`**                                    | `BOT_TOKEN`, `DATABASE_URL` (app + drizzle-kit), `POSTGRES_*` (Postgres container init in compose), `OWNER`, `REDIS_HOST`, etc. (see `README.md`).                                                                                                                                                                                                                                                     |
+| **`config.json`** (repo root, cwd at runtime) | Guild IDs for channels/roles/tags/categories and initial `guild` string. Typed in `src/lib/config/config.d.ts`. **README** example may lag the TypeScript type (e.g. `wiki`, `categories`) — trust **`config.d.ts`** as source of truth for required shape. Loaded by `@lib/config/register.js`, which runs `assertStartupValid()` (config + env + question JSON) before assigning `container.config`. |
 
 Config is read asynchronously in `register.ts` and assigned to `container.config`.
 
@@ -94,12 +94,13 @@ Global preconditions (e.g. `StaffOnly`, `OwnerOnly`, `ModOnly`, `RequiredRole`, 
 - **Install:** Yarn (see `package.json`, `.yarnrc.yml`).
 - **Compile:** `yarn build` — SWC `src` → `dist` per `.swcrc`.
 - **Lint / format:** `yarn lint` / `yarn lint:fix` (ESLint flat config in `eslint.config.js`); `yarn format` / `yarn format:check` (Prettier).
-- **Docker:** `docker compose up --build` is the documented way to run Postgres + Redis + bot (`docker-compose.yml`, `Dockerfile`).
+- **Docker:** Compose files pull `ghcr.io/oriel-beck/application-bot` from GitHub Container Registry (GitHub Packages). Use `docker compose pull` then `up -d` to run the published image, or `docker compose up --build` to compile from this tree. CI publishes on push to `v4`/`main` and `v*.*.*` tags (`.github/workflows/publish-image.yml`). A `validate` service runs first and fails `up` if `config.json`, required env vars, or question JSON are invalid. `config.json` is bind-mounted at runtime and must not be copied into the image.
 - **Drizzle CLI:** `drizzle-kit` in devDependencies; `drizzle.config.ts` points at `./src/schema.ts`.
 
 ## JSON assets
 
-- `json/base-questions.json` — seed/reference question data used by the questions flow (see question manager/command usage when changing).
+- `json/base-questions.json` — seed/reference question data used by the questions flow (see question manager/command usage when changing). Required at startup; host `./json` shadows the image copy.
+- `json/rand-questions.json` — optional runtime/merged random questions (`{ id, question }[]`). Gitignored; validated only when present.
 - `json/international-support.json` — locale strings for the international support forum (`@lib/international-support-register.js`).
 
 ## Conventions for edits (agent checklist)

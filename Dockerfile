@@ -14,12 +14,11 @@ COPY --from=installer /app .
 RUN yarn swc src --config-file .swcrc -d dist
 
 FROM node:22-alpine AS runner
+LABEL org.opencontainers.image.source=https://github.com/oriel-beck/application-bot
+LABEL org.opencontainers.image.description="Discord staff application bot"
 WORKDIR /app
 COPY --from=installer /app .
 COPY --from=builder /app/dist/src src
 COPY json json
-COPY *json ./
 COPY drizzle drizzle
 CMD node src/index.js
-
-

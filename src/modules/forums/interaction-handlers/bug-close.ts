@@ -71,12 +71,7 @@ export class BugReportCloseHandler extends InteractionHandler {
         throw error;
       }
 
-      await applyForumCloseFlow(
-        interaction.channel,
-        'bug_reports',
-        isResolved ? 'resolved' : 'not_a_bug',
-        localeTags
-      );
+      await applyForumCloseFlow(interaction.channel, 'bug_reports', isResolved ? 'resolved' : 'not_a_bug', localeTags);
       return;
     }
 

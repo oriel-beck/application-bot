@@ -13,6 +13,7 @@
     "format:check": "prettier --check .",
     "docker:pull": "docker compose pull",
     "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
     "docker:start": "docker compose up --build",
     "docker:stop": "docker compose stop",
     "docker:down": "docker compose down",

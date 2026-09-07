@@ -53,11 +53,7 @@ export function sameTags(a: string[], b: string[]): boolean {
   return b.every((tag) => set.has(tag));
 }
 
-export function getCloseAction(
-  kind: ForumPostKind,
-  oldTags: string[],
-  newTags: string[]
-): ForumCloseKind | null {
+export function getCloseAction(kind: ForumPostKind, oldTags: string[], newTags: string[]): ForumCloseKind | null {
   const oldSet = new Set(oldTags);
   const newSet = new Set(newTags);
 
@@ -69,9 +65,7 @@ export function getCloseAction(
   }
 
   const resolved =
-    kind === 'support'
-      ? container.config.support_tags.resolved
-      : container.config.international_support_tags.resolved;
+    kind === 'support' ? container.config.support_tags.resolved : container.config.international_support_tags.resolved;
   if (!oldSet.has(resolved) && newSet.has(resolved)) return 'resolved';
   return null;
 }
@@ -83,9 +77,7 @@ export function hasCloseTag(kind: ForumPostKind, tags: string[]): boolean {
     return set.has(resolved) || set.has(not_a_bug);
   }
   const resolved =
-    kind === 'support'
-      ? container.config.support_tags.resolved
-      : container.config.international_support_tags.resolved;
+    kind === 'support' ? container.config.support_tags.resolved : container.config.international_support_tags.resolved;
   return set.has(resolved);
 }
 
@@ -183,13 +175,11 @@ export async function applyForumCloseFlow(
 
   try {
     const guildName = thread.guild?.name ?? 'the server';
-    const { embed: closeEmbed, dmContent, cleanupAi } = buildCloseContent(
-      kind,
-      closeKind,
-      localeTags,
-      guildName,
-      thread.url
-    );
+    const {
+      embed: closeEmbed,
+      dmContent,
+      cleanupAi
+    } = buildCloseContent(kind, closeKind, localeTags, guildName, thread.url);
 
     await thread.send({ embeds: [closeEmbed] });
 

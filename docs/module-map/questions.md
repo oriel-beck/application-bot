@@ -33,4 +33,5 @@
 
 ## Assets
 
-- `json/base-questions.json` — reference/seed data (see `AGENTS.md`).
+- `json/base-questions.json` — required seed questions (non-empty JSON array of strings). Compose bind-mounts host `./json` over the image, so this file must exist on the host. Startup validation fails if it is missing, empty, or not an array of strings.
+- `json/rand-questions.json` — optional (gitignored; manager creates/merges it). If present, must be a JSON array of `{ id, question }` with unique non-empty ids.

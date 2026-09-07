@@ -1,4 +1,7 @@
 # Local / all-in-one stack — Postgres, Redis, Chroma, bot, ingestor.
+#
+# Pulls ghcr.io/oriel-beck/application-bot by default. Override with APPBOT_IMAGE
+# or pass --build to compile from this tree.
 
 name: application-bot
 
@@ -11,7 +14,25 @@ networks:
   appbot: {}
 
 services:
+  validate:
+    image: ${APPBOT_IMAGE:-ghcr.io/oriel-beck/application-bot:latest}
+    build: .
+    env_file:
+      - .env
+    environment:
+      CHROMA_URL: http://chroma:8000
+      REDIS_HOST: redis
+      VALIDATE_POSTGRES: '1'
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./json:/app/json
+    command: ['node', 'src/scripts/validate-config.js']
+    restart: 'no'
+    networks:
+      - appbot
+
   appbot:
+    image: ${APPBOT_IMAGE:-ghcr.io/oriel-beck/application-bot:latest}
     build: .
     restart: unless-stopped
     env_file:
@@ -20,8 +41,11 @@ services:
       CHROMA_URL: http://chroma:8000
       REDIS_HOST: redis
     volumes:
+      - ./config.json:/app/config.json:ro
       - ./json:/app/json
     depends_on:
+      validate:
+        condition: service_completed_successfully
       postgres:
         condition: service_started
       redis:
@@ -40,10 +64,14 @@ services:
       - chroma_data:/chroma/chroma
     environment:
       ANONYMIZED_TELEMETRY: 'false'
+    depends_on:
+      validate:
+        condition: service_completed_successfully
     networks:
       - appbot
 
   ingestor:
+    image: ${APPBOT_IMAGE:-ghcr.io/oriel-beck/application-bot:latest}
     build: .
     command: ['node', 'src/scripts/ingest-wiki.js']
     env_file:
@@ -51,9 +79,13 @@ services:
     environment:
       CHROMA_URL: http://chroma:8000
     volumes:
+      - ./config.json:/app/config.json:ro
       - ./json:/app/json
     depends_on:
-      - chroma
+      validate:
+        condition: service_completed_successfully
+      chroma:
+        condition: service_started
     networks:
       - appbot
     restart: 'no'
@@ -67,6 +99,9 @@ services:
       - .env
     ports:
       - 5432
+    depends_on:
+      validate:
+        condition: service_completed_successfully
     networks:
       - appbot
 
@@ -81,3 +116,6 @@ services:
       - 6379
     environment:
       ALLOW_EMPTY_PASSWORD: 'yes'
+    depends_on:
+      validate:
+        condition: service_completed_successfully

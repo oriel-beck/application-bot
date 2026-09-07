@@ -27,7 +27,9 @@ OPENAI_API_KEY=*****
 CHROMA_URL=http://chroma:8000
 ```
 
-2. Create a config file named `config.json` in the main directory, all values are required.
+2. Create a config file named `config.json` in the main directory. Required IDs must be Discord snowflakes (digits only). Empty strings and placeholders fail startup validation.
+
+Optional channel keys may be omitted: `variable_guides`, `limiter_guides`, `faq`, `bot_commands_1`, `bot_commands_2`. If present, they must also be snowflakes.
 
 ```json
 {
@@ -96,17 +98,52 @@ CHROMA_URL=http://chroma:8000
 }
 ```
 
+3. Keep `json/base-questions.json` on the host (Compose bind-mounts `./json` over the image copy). It must be a non-empty JSON array of question strings. `json/rand-questions.json` is optional (created at runtime); if you add it, it must be an array of `{ "id", "question" }` objects with unique ids.
+
+`docker compose up` runs a **validate** service first. Missing or invalid `config.json`, `.env`, or question JSON aborts the stack.
+
+## Image (GitHub Packages)
+
+The bot image is published to GitHub Container Registry as [`ghcr.io/oriel-beck/application-bot`](https://github.com/oriel-beck/application-bot/pkgs/container/application-bot).
+
+Pushes to `v4` / `main` and version tags (`v1.2.3`) build and push via [`.github/workflows/publish-image.yml`](.github/workflows/publish-image.yml). Tags include `latest`, the branch name, and the git SHA.
+
+After the first publish, open the package on GitHub and set visibility to **Public** if it is still private (linked packages often inherit the repo’s visibility). Public images can be pulled without logging in.
+
+Override the image with `APPBOT_IMAGE` if you fork the repo or pin a digest:
+
+```env
+APPBOT_IMAGE=ghcr.io/oriel-beck/application-bot:sha-abc1234
+```
+
+`config.json` is **not** baked into the image. Create it on the host before `docker compose up` (Compose bind-mounts it). A missing file can make Docker create a directory at that path.
+
 ## Startup
 
 ### Local (includes Postgres + Redis)
 
-`docker compose -f docker-compose.yml up --build`
+Pull the published image and start:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Build from this tree instead of pulling:
+
+```bash
+docker compose up --build
+```
 
 ### VPS / shared infra (uses existing Postgres + Redis)
 
 1. Ensure the shared infra stack is running on the VPS (`postgres` and `redis` reachable on network `infra`).
 2. Start with:
-   `docker compose -f docker-compose.infra.yml up --build`
+
+```bash
+docker compose -f docker-compose.infra.yml pull
+docker compose -f docker-compose.infra.yml up -d
+```
 
 ## Lint and format
 
