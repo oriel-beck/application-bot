@@ -1,13 +1,7 @@
-import { cleanupClosedSupportChannel } from '@lib/bdfd-ai/cleanup-channel.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Subcommand } from '@sapphire/plugin-subcommands';
-import { Colors, EmbedBuilder, MessageFlags, type ThreadChannel } from 'discord.js';
-import { bugReportResolvedDm, bugReportResolvedEmbed } from '../bug-report-util.js';
-import {
-  detectInternationalSupportLanguage,
-  formatInternationalResolvedDm,
-  getInternationalSupportStrings
-} from '../international-support.i18n.js';
+import { MessageFlags, type ThreadChannel } from 'discord.js';
+import { applyForumCloseFlow, getForumPostKind } from '../post-util.js';
 
 @ApplyOptions<Subcommand.Options>({
   name: 'forum',
@@ -57,46 +51,23 @@ export class SlashCommand extends Subcommand {
 
     const channel = interaction.channel;
     const parentId = await resolveForumParentId(channel);
-    const { channels } = this.container.config;
+    const kind = getForumPostKind(parentId);
 
-    let resolvedTag: string;
-    let closeEmbed: EmbedBuilder;
-    let dmContent: (guildName: string) => string;
-    let cleanupAi = false;
-
-    if (parentId === channels.support) {
-      resolvedTag = this.container.config.support_tags.resolved;
-      closeEmbed = new EmbedBuilder()
-        .setTitle('Resolved')
-        .setDescription(
-          'Your post has been resolved, locked, and archived, if there are additional issues please open a new post.'
-        )
-        .setFooter({ text: 'Thank you for using BDFD! ❤️' })
-        .setColor(Colors.Green);
-      dmContent = (guildName) =>
-        `Your post in ${guildName} was resolved, you can return to read your post at any time in ${channel.url}.`;
-      cleanupAi = true;
-    } else if (parentId === channels.international_support) {
-      resolvedTag = this.container.config.international_support_tags.resolved;
-      const strings = getInternationalSupportStrings(detectInternationalSupportLanguage(channel.appliedTags));
-      closeEmbed = new EmbedBuilder()
-        .setTitle(strings.resolvedTitle)
-        .setDescription(strings.resolvedDescription)
-        .setFooter({ text: strings.resolvedFooter })
-        .setColor(Colors.Green);
-      dmContent = (guildName) => formatInternationalResolvedDm(strings.resolvedDm, guildName, channel.url);
-      cleanupAi = true;
-    } else if (parentId === channels.bug_reports) {
-      resolvedTag = this.container.config.bug_report_tags.resolved;
-      closeEmbed = bugReportResolvedEmbed();
-      dmContent = (guildName) => bugReportResolvedDm(guildName, channel.url);
-    } else {
+    if (!kind) {
       return interaction.reply({
         content: 'This command can only be used in support, international support, or bug report posts.',
         flags: MessageFlags.Ephemeral
       });
     }
 
+    const resolvedTag =
+      kind === 'support'
+        ? this.container.config.support_tags.resolved
+        : kind === 'international_support'
+          ? this.container.config.international_support_tags.resolved
+          : this.container.config.bug_report_tags.resolved;
+
+    const localeTags = [...channel.appliedTags];
     const tagged = await channel.setAppliedTags([resolvedTag]).catch(() => null);
     if (!tagged) {
       return interaction.reply({
@@ -105,31 +76,12 @@ export class SlashCommand extends Subcommand {
       });
     }
 
-    const reply = await interaction.reply({
-      content: 'Resolving post...',
+    await applyForumCloseFlow(channel, kind, 'resolved', localeTags);
+
+    return interaction.reply({
+      content: 'Solved post!',
       flags: MessageFlags.Ephemeral
     });
-
-    await channel.send({ embeds: [closeEmbed] });
-
-    const originalMessage = await this.container.redis.get(channel.id);
-    if (originalMessage) {
-      await channel.messages.delete(originalMessage).catch(() => null);
-    }
-
-    const owner = await channel.fetchOwner().catch(() => null);
-
-    await channel.edit({ locked: true, archived: true });
-    await reply.edit({
-      content: 'Solved post!'
-    });
-
-    const guildName = interaction.guild?.name ?? 'the server';
-    owner?.user?.send({ content: dmContent(guildName) }).catch(() => null);
-
-    if (cleanupAi) {
-      await cleanupClosedSupportChannel(channel.id, { deleteTranscript: true });
-    }
   }
 
   public registerApplicationCommands(registry: Subcommand.Registry) {

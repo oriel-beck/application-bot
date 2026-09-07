@@ -2,6 +2,24 @@ import { container } from '@sapphire/framework';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder } from 'discord.js';
 import { ForumCustomIDs } from '@lib/constants/custom-ids.js';
 
+export function isSupportForum(parentChannelId: string | undefined): boolean {
+  return parentChannelId === container.config.channels.support;
+}
+
+export function supportResolvedEmbed() {
+  return new EmbedBuilder()
+    .setTitle('Resolved')
+    .setDescription(
+      'Your post has been resolved, locked, and archived, if there are additional issues please open a new post.'
+    )
+    .setFooter({ text: 'Thank you for using BDFD! ❤️' })
+    .setColor(Colors.Green);
+}
+
+export function supportResolvedDm(guildName: string, url: string) {
+  return `Your post in ${guildName} was resolved, you can return to read your post at any time in ${url}.`;
+}
+
 export function generatePostHelpEmbed(appliedTags: string[]) {
   const mainTags = [
     container.config.support_tags.code_error,

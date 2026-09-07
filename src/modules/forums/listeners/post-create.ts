@@ -1,9 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Events, Listener } from '@sapphire/framework';
 import type { ActionRowBuilder, AnyThreadChannel, ButtonBuilder, EmbedBuilder } from 'discord.js';
-import { generateBugReportHelpEmbed } from '../bug-report-util.js';
-import { generateInternationalPostHelpEmbed } from '../international-util.js';
-import { generatePostHelpEmbed } from '../util.js';
+import { generateHelpPayload, getForumPostKind, storeForumHelpMessageId, storeForumTags } from '../post-util.js';
 
 @ApplyOptions<Listener.Options>({
   event: Events.ThreadCreate,
@@ -13,23 +11,12 @@ export class PostCreateListener extends Listener<typeof Events.ThreadCreate> {
   async run(thread: AnyThreadChannel, newlyCreated: boolean) {
     if (!newlyCreated) return;
 
-    if (thread.parent?.id === this.container.config.channels.support) {
-      const { row, embed } = generatePostHelpEmbed(thread.appliedTags);
-      // If the author sends an attachment the bot cannot reply until it is fully sent but still gets the event, so retry in 5 seconds (5 attempts)
-      await retryMessage(thread, embed, row);
-      return;
-    }
+    const kind = getForumPostKind(thread.parent?.id ?? thread.parentId);
+    if (!kind) return;
 
-    if (thread.parent?.id === this.container.config.channels.international_support) {
-      const { row, embed } = generateInternationalPostHelpEmbed(thread.appliedTags);
-      await retryMessage(thread, embed, row);
-      return;
-    }
-
-    if (thread.parent?.id === this.container.config.channels.bug_reports) {
-      const { row, embed } = generateBugReportHelpEmbed(thread.appliedTags);
-      await retryMessage(thread, embed, row);
-    }
+    const { row, embed } = generateHelpPayload(kind, thread.appliedTags);
+    await storeForumTags(thread.id, thread.appliedTags ?? []);
+    await retryMessage(thread, embed, row);
   }
 }
 
@@ -41,6 +28,10 @@ async function retryMessage(channel: AnyThreadChannel, embed: EmbedBuilder, row:
       .send({
         embeds: [embed],
         components: [row]
+      })
+      .then(async (message) => {
+        await storeForumHelpMessageId(channel.id, message.id);
+        return message;
       })
       .catch(() => {
         if (attempts === 5) return;

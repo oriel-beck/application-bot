@@ -1,15 +1,10 @@
 import { hasRole } from '@lib/precondition-util.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from '@sapphire/framework';
-import { ButtonInteraction, DiscordAPIError, PermissionFlagsBits, MessageFlags, type EmbedBuilder } from 'discord.js';
+import { ButtonInteraction, DiscordAPIError, PermissionFlagsBits, MessageFlags } from 'discord.js';
 import { ForumCustomIDs } from '@lib/constants/custom-ids.js';
-import {
-  bugReportNotABugDm,
-  bugReportNotABugEmbed,
-  bugReportResolvedDm,
-  bugReportResolvedEmbed,
-  isBugReportsForum
-} from '../bug-report-util.js';
+import { isBugReportsForum } from '../bug-report-util.js';
+import { applyForumCloseFlow } from '../post-util.js';
 
 const PREFIX = `${ForumCustomIDs.bugClose}:`;
 
@@ -61,6 +56,8 @@ export class BugReportCloseHandler extends InteractionHandler {
 
       await interaction.deferUpdate();
 
+      const localeTags = [...interaction.channel.appliedTags];
+
       try {
         await interaction.channel.setAppliedTags([tag]);
       } catch (error) {
@@ -74,34 +71,12 @@ export class BugReportCloseHandler extends InteractionHandler {
         throw error;
       }
 
-      await interaction.message.edit({ components: [] }).catch(() => null);
-
-      const closeEmbed: EmbedBuilder = isResolved ? bugReportResolvedEmbed() : bugReportNotABugEmbed();
-      await interaction.channel.send({ embeds: [closeEmbed] });
-
-      const owner = await interaction.channel.fetchOwner().catch(() => null);
-
-      try {
-        await interaction.channel.edit({ locked: true, archived: true });
-      } catch (error) {
-        if (error instanceof DiscordAPIError && (error.code === 50001 || error.code === 50013)) {
-          await interaction
-            .followUp({
-              content: 'The post was closed, but I could not lock/archive it due to missing access.',
-              flags: MessageFlags.Ephemeral
-            })
-            .catch(() => null);
-        } else {
-          throw error;
-        }
-      }
-
-      const guildName = interaction.guild?.name ?? 'the server';
-      const dmContent = isResolved
-        ? bugReportResolvedDm(guildName, interaction.channel.url)
-        : bugReportNotABugDm(guildName, interaction.channel.url);
-
-      owner?.user?.send({ content: dmContent }).catch(() => null);
+      await applyForumCloseFlow(
+        interaction.channel,
+        'bug_reports',
+        isResolved ? 'resolved' : 'not_a_bug',
+        localeTags
+      );
       return;
     }
 

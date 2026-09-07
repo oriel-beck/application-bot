@@ -1,7 +1,19 @@
 import { container } from '@sapphire/framework';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder } from 'discord.js';
 import { ForumCustomIDs } from '@lib/constants/custom-ids.js';
-import { detectInternationalSupportLanguage, getInternationalSupportStrings } from './international-support.i18n.js';
+import {
+  detectInternationalSupportLanguage,
+  getInternationalSupportStrings,
+  type InternationalSupportStrings
+} from './international-support.i18n.js';
+
+export function internationalResolvedEmbed(strings: InternationalSupportStrings) {
+  return new EmbedBuilder()
+    .setTitle(strings.resolvedTitle)
+    .setDescription(strings.resolvedDescription)
+    .setFooter({ text: strings.resolvedFooter })
+    .setColor(Colors.Green);
+}
 
 export function generateInternationalPostHelpEmbed(appliedTags: string[]) {
   const locale = detectInternationalSupportLanguage(appliedTags);

@@ -2,7 +2,6 @@ import { hasRole } from '@lib/precondition-util.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from '@sapphire/framework';
 import { ButtonInteraction, MessageFlags } from 'discord.js';
-import { generatePostHelpEmbed } from '../util.js';
 import { ForumCustomIDs } from '@lib/constants/custom-ids.js';
 
 const PREFIX = `${ForumCustomIDs.toggleTag}:`;
@@ -24,7 +23,7 @@ export class ToggleTagHandler extends InteractionHandler {
         });
 
       const tag = interaction.customId.slice(PREFIX.length);
-      let appliedTags = interaction.channel.appliedTags;
+      const appliedTags = [...interaction.channel.appliedTags];
 
       if (appliedTags.length === 1 && appliedTags[0] === tag)
         return interaction.reply({
@@ -32,19 +31,11 @@ export class ToggleTagHandler extends InteractionHandler {
           flags: MessageFlags.Ephemeral
         });
 
-      if (appliedTags.includes(tag)) {
-        appliedTags = appliedTags.filter((t) => t !== tag);
-        await interaction.channel.setAppliedTags(appliedTags);
-      } else {
-        appliedTags.push(tag);
-        await interaction.channel.setAppliedTags(appliedTags);
-      }
+      await interaction.deferUpdate();
 
-      const { row, embed } = generatePostHelpEmbed(appliedTags);
-      return await interaction.update({
-        embeds: [embed],
-        components: [row]
-      });
+      const nextTags = appliedTags.includes(tag) ? appliedTags.filter((t) => t !== tag) : [...appliedTags, tag];
+      await interaction.channel.setAppliedTags(nextTags);
+      return;
     } else {
       return interaction.reply({
         content: 'This cannot be used outside of a forum post.',

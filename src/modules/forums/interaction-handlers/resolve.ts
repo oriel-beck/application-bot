@@ -1,22 +1,14 @@
 import { hasRole } from '@lib/precondition-util.js';
 import { ApplyOptions } from '@sapphire/decorators';
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from '@sapphire/framework';
-import {
-  ButtonInteraction,
-  Colors,
-  DiscordAPIError,
-  EmbedBuilder,
-  PermissionFlagsBits,
-  MessageFlags
-} from 'discord.js';
-import { cleanupClosedSupportChannel } from '@lib/bdfd-ai/cleanup-channel.js';
+import { ButtonInteraction, DiscordAPIError, PermissionFlagsBits, MessageFlags } from 'discord.js';
 import { ForumCustomIDs } from '@lib/constants/custom-ids.js';
 import {
   detectInternationalSupportLanguage,
-  formatInternationalResolvedDm,
   getInternationalSupportStrings,
   isInternationalSupportForum
 } from '../international-support.i18n.js';
+import { applyForumCloseFlow } from '../post-util.js';
 
 const PREFIX = `${ForumCustomIDs.supportResolve}:`;
 
@@ -66,6 +58,8 @@ export class ResolveSupportPostHandler extends InteractionHandler {
 
       await interaction.deferUpdate();
 
+      const localeTags = [...interaction.channel.appliedTags];
+
       try {
         await interaction.channel.setAppliedTags([expectedResolved]);
       } catch (error) {
@@ -80,58 +74,12 @@ export class ResolveSupportPostHandler extends InteractionHandler {
         throw error;
       }
 
-      await interaction.message.edit({ components: [] }).catch(() => null);
-
-      if (isInternational && strings) {
-        await interaction.channel.send({
-          embeds: [
-            new EmbedBuilder()
-              .setTitle(strings.resolvedTitle)
-              .setDescription(strings.resolvedDescription)
-              .setFooter({ text: strings.resolvedFooter })
-              .setColor(Colors.Green)
-          ]
-        });
-      } else {
-        await interaction.channel.send({
-          embeds: [
-            new EmbedBuilder()
-              .setTitle('Resolved')
-              .setDescription(
-                'Your post has been resolved, locked, and archived, if there are additional issues please open a new post.'
-              )
-              .setFooter({ text: 'Thank you for using BDFD! ❤️' })
-              .setColor(Colors.Green)
-          ]
-        });
-      }
-
-      const owner = await interaction.channel.fetchOwner().catch(() => null);
-
-      try {
-        await interaction.channel.edit({ locked: true, archived: true });
-      } catch (error) {
-        if (error instanceof DiscordAPIError && (error.code === 50001 || error.code === 50013)) {
-          await interaction
-            .followUp({
-              content: 'The post was marked as resolved, but I could not lock/archive it due to missing access.',
-              flags: MessageFlags.Ephemeral
-            })
-            .catch(() => null);
-        } else {
-          throw error;
-        }
-      }
-
-      const guildName = interaction.guild?.name ?? 'the server';
-      const dmContent =
-        isInternational && strings
-          ? formatInternationalResolvedDm(strings.resolvedDm, guildName, interaction.channel.url)
-          : `Your post in ${guildName} was resolved, you can return to read your post at any time in ${interaction.channel.url}.`;
-
-      owner?.user?.send({ content: dmContent }).catch(() => null);
-
-      await cleanupClosedSupportChannel(interaction.channel.id, { deleteTranscript: true });
+      await applyForumCloseFlow(
+        interaction.channel,
+        isInternational ? 'international_support' : 'support',
+        'resolved',
+        localeTags
+      );
       return;
     }
 

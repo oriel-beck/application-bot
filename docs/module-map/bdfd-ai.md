@@ -17,7 +17,7 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 
 **Auto-cleanup** (`cleanup-channel.ts`): AI conversation + Redis usage/intro keys are cleared when:
 
-- a support/intl post is resolved (Resolve button or `/forum solve`) — also deletes transcript rows
+- a support/intl post is resolved (Resolve button, `/forum solve`, or the resolved tag applied in Discord) — also deletes transcript rows
 - a support/intl thread is archived, locked, or deleted — also deletes transcript rows
 - a ticket channel is deleted (`transcripts` `channelDelete` — transcript rows only if the closing DM was sent)
 - a channel has had **no AI activity** for 7 days (`listeners/ready-sweep.ts` daily, or owner `/ai-sweep`) — **AI only; transcripts are kept**
