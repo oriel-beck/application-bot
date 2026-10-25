@@ -7,13 +7,13 @@ RAG-powered AI assistant for support forum threads, international support thread
 ## Trigger
 
 1. **`/ai`** — slash command with a `message` option; restricted to configured bot command channels (`channels.bot_commands_1` / `channels.bot_commands_2`) for regular users. In support/intl forum posts and ticket channels, only the post/ticket author may use it (staff + support-in-training bypass both restrictions). Uses `ignoreAiEnabled` + `skipChannelTracking`: no `ai_enabled` gate, **no** per-channel usage limit, **no** conversation memory (each invoke is standalone).
-2. **Reply to a bot message** — support/intl threads and tickets only; requires `ai_enabled` (`listeners/message-create.ts`). Counts toward channel limit and persists turns.
+2. **Mention the bot, or reply to a bot message** — support/intl threads and tickets only; requires `ai_enabled` (`listeners/message-create.ts`). Counts toward channel limit and persists turns. Discord only includes that text without the Message Content intent when the bot is mentioned, or when the user replies to a normal bot message with ping left on (not a reply to a slash-command response). If the text is missing, the bot tells the author to mention it, reply with ping on, or use `/ai`.
 
 Both paths share `processAiRequest` in `src/lib/bdfd-ai/process-request.ts`.
 
 ## Conversation memory
 
-Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alternating **user** / **assistant** rows per channel. Each new question loads prior turns (up to 20) so follow-ups stay in context. Owner `/ai-limit` action **Clear AI conversation** or `/ai-conversations` **Delete** wipes a channel’s history. **`/ai` does not read or write this table.**
+Mention and reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alternating **user** / **assistant** rows per channel. Each new question loads prior turns (up to 20) so follow-ups stay in context. Owner `/ai-limit` action **Clear AI conversation** or `/ai-conversations` **Delete** wipes a channel’s history. **`/ai` does not read or write this table.**
 
 **Auto-cleanup** (`cleanup-channel.ts`): AI conversation + Redis usage/intro keys are cleared when:
 
@@ -32,7 +32,7 @@ Reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alt
 | `commands/ai-sweep.ts`                | Owner `/ai-sweep` — clear AI state for channels inactive 7+ days (transcripts kept)              |
 | `commands/ai-conversations.ts`        | Owner `/ai-conversations` — Components V2 browser (each row: usage/limit + Reset usage / Delete) |
 | `interaction-handlers/list/*.ts`      | List pagination + reset/delete (`ai:list:*`)                                                     |
-| `listeners/message-create.ts`         | Reply-to-bot flow                                                                                |
+| `listeners/message-create.ts`         | Mention or reply-to-bot flow                                                                     |
 | `listeners/ticket-intro.ts`           | One-time ticket intro (only when AI enabled)                                                     |
 | `listeners/thread-update.ts`          | Cleanup when support/intl thread is archived or locked                                           |
 | `listeners/thread-delete.ts`          | Cleanup when support/intl thread is deleted                                                      |
@@ -57,7 +57,7 @@ List UI utils: `src/lib/command-utils/bdfd-ai/list/ai-conversation-list.utils.ts
 | `bdfd-basics.ts`             | Always-on BDFD primer (callbacks = trigger only, not reply code)                                                                                                                         |
 | `bdfd-api.ts`                | Public API `function_list` / `callback_list` → Chroma chunks + index registration                                                                                                        |
 | `discord-ingest.ts`          | Optional Discord channel history ingest (guides/FAQ channels)                                                                                                                            |
-| `channel-utils.ts`           | Channel kind + author resolution                                                                                                                                                         |
+| `channel-utils.ts`           | Channel kind + author resolution. Ticket author falls back to a user mention on the opener when that embed text is hidden.                                                               |
 | `cleanup-channel.ts`         | `cleanupClosedSupportChannel` + inactive sweep                                                                                                                                           |
 
 ## Settings
@@ -70,7 +70,7 @@ List UI utils: `src/lib/command-utils/bdfd-ai/list/ai-conversation-list.utils.ts
 - Before chunking, `wiki-markdown.ts` strips `discord yaml` preview fences.
 - Ingest skips **`src/javascript/`** (deprecated BDJS) via `wiki-ingest.ts`; each run **recreates** the Chroma collection so old BDJS chunks are removed.
 - Ingest also pulls **[BDFD public API](https://wiki.botdesignerdiscord.com/resources/api.html)** `function_list` and `callback_list` (`bdfd-api.ts`) — one Chroma chunk per function/callback (`kind` metadata); merges names into `bdscript-functions.json` with `kind: function | callback`. Callback chunks state they belong in the **command trigger** field, not reply code. **Re-run ingest** after changing API chunk format so Chroma picks up the stronger callback wording.
-- Optional Discord ingest source (`discord-ingest.ts`): set `BDFD_INGEST_CHANNEL_IDS` (comma-separated channel IDs) and token via `BDFD_INGEST_BOT_TOKEN` (falls back to `BOT_TOKEN`) to index message history from guide/FAQ channels.
+- Optional Discord ingest source (`discord-ingest.ts`): set `BDFD_INGEST_CHANNEL_IDS` (comma-separated channel IDs) and token via `BDFD_INGEST_BOT_TOKEN` (falls back to `BOT_TOKEN`) to index message history from guide/FAQ channels. The bot does **not** use the Message Content intent, so Discord returns those channel histories without text, embeds, or attachments. Ingest logs a warning and skips the channel. Messages the bot itself sent can still be indexed.
 - If `BDFD_INGEST_CHANNEL_IDS` is not set, ingest auto-falls back to `config.json` channel keys from `BDFD_INGEST_CHANNEL_KEYS` (default: `tips,variable_guides,limiter_guides,faq`) and uses `config.guild` as guild fallback for jump-link URLs.
 - Optional: `BDFD_INGEST_GUILD_ID` (overrides `config.guild`), `BDFD_INGEST_MAX_MESSAGES_PER_CHANNEL` (default `500`).
 - Env: `OPENAI_API_KEY`, `CHROMA_URL` (+ optional Discord ingest env above). **Re-run ingest** after ingest/rule changes.

@@ -21,7 +21,8 @@ export const blacklistTable = pgTable('blacklist', {
 export const settingsTable = pgTable('settings', {
   guild: bigint('guild', { mode: 'bigint' }).primaryKey(),
   enabled: boolean('enabled'),
-  aiEnabled: boolean('ai_enabled').notNull().default(false)
+  aiEnabled: boolean('ai_enabled').notNull().default(false),
+  transcriptsEnabled: boolean('transcripts_enabled').notNull().default(true)
 });
 
 export const aiTurnRoleEnum = pgEnum('ai_turn_role', ['user', 'assistant']);

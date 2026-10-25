@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Effective date:** August 11, 2026  
-**Last updated:** August 11, 2026  
+**Last updated:** October 25, 2026  
 **Application:** Application Bot (private Discord bot for the Bot Designer for Discord community)  
 **Operator:** Oriel Beck ([GitHub](https://github.com/oriel-beck/application-bot))  
 **Contact:** Discord user ID `311808747141857292`, or contact BDFD server staff who can reach the bot operator
@@ -36,12 +36,13 @@ We process data that Discord makes available to the Bot when you use it, and dat
 
 ### 2.3 Ticket transcripts
 
-In configured **ticket** channels, the Bot may store:
+In configured **ticket** channels, while an owner has ticket transcripts enabled (`/transcript-toggle`, on by default), the Bot may store:
 
-- Message content (text)
+- Message text when Discord includes it without the Message Content intent: messages the Bot sends, messages that mention the Bot, and replies to the Bot
+- A placeholder instead of text for other messages
 - Message ID, author user ID, channel ID, and timestamps
 
-This is used so staff/owners can review or export ticket history.
+This is used so staff/owners can review or export ticket history. The Bot cannot read the text of ordinary user or staff messages in the ticket.
 
 ### 2.4 Reports, blacklist, and moderation helpers
 
@@ -52,15 +53,16 @@ This is used so staff/owners can review or export ticket history.
 
 When AI features are enabled by an owner:
 
-- Natural-language questions you send via `/ai` or by **replying to the Bot** in supported support threads/tickets
-- Temporary conversation turns (user and assistant messages) for reply-to-bot context in a channel
+- Natural-language questions you send via `/ai`, by **mentioning the Bot**, or by **replying to the Bot** (with ping on, and not as a reply to a slash-command response) in supported support threads/tickets
+- Temporary conversation turns (user and assistant messages) for mention and reply context in a channel
 - Usage / rate-limit counters and related Redis keys
 
 AI conversation history for a channel may be cleared when the ticket/thread is closed or cleaned up, when an owner deletes it, or after a period of inactivity (currently designed around 7 days of no AI activity for the AI state sweep). **Ticket transcripts are retained separately** under staff transcript controls.
 
 ### 2.6 Utility / guide content
 
-- Message content from configured staff tip or guide channels may be read or indexed so commands like tips lookup work, and (if configured) so documentation/guide text can be ingested for AI retrieval
+- Tip text is stored when a staff member uses the **Index tip** context menu on a tip message. The Bot does not bulk-read the tips channel
+- Optional Discord guide/FAQ channel ingest does not receive message text without the Message Content intent, so those channels are skipped when their messages come back empty
 
 ### 2.7 Share-your-bot channel helpers
 
@@ -113,7 +115,9 @@ Their processing is governed by their own terms and privacy policies in addition
 
 ## 6. Message Content and privileged data
 
-The Bot requests Discord **Message Content Intent** only as needed for features such as ticket transcripts, tip indexing, and AI reply-to-bot questions. It does **not** use Presence Intent. It does not require Server Members Intent for normal operation (individual member lookups may be performed on demand when deciding applications).
+The Bot does **not** request Discord’s **Message Content** privileged intent. It does **not** use Presence Intent. It does not require Server Members Intent for normal operation (individual member lookups may be performed on demand when deciding applications).
+
+Message text is available only in the cases Discord still allows without that intent (messages the Bot sends, direct messages to the Bot, messages that mention the Bot, and replies to the Bot’s own messages when ping is left on), and when you use a command or context menu on a specific message (which includes that message’s content).
 
 We do not perform server-wide logging of all guild messages. Message content storage is limited to the feature scopes described above.
 
@@ -138,7 +142,7 @@ Exact retention may change as features are maintained; staff tools and operator 
 You can reduce collection by:
 
 - Not opening or using ticket channels (avoids transcript logging of your ticket messages)
-- Not using `/ai` and not replying to the Bot for AI help when AI is enabled
+- Not using `/ai` and not mentioning or replying to the Bot for AI help when AI is enabled
 - Not submitting a staff application or report
 
 To request access, correction, or deletion of data the Bot stores about you (for example application answers or transcript text), contact the operator via Discord (`311808747141857292`) or BDFD staff who can escalate to the operator. We may need to verify you control the Discord account in question. Some records may be retained where required for moderation, security, dispute resolution, or legal obligations.

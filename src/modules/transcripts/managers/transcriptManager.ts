@@ -1,6 +1,16 @@
 import { BaseManager } from '@lib/managers/base.manager.js';
+import { container } from '@sapphire/framework';
 import { and, count, eq, lt, max, sql } from 'drizzle-orm';
 import { messagesTable, transcriptTable } from '../../../schema.js';
+
+/** Stored when Discord omits message text (no Message Content intent). */
+export const UNAVAILABLE_TRANSCRIPT_TEXT = '(content unavailable)';
+
+/** Text Discord actually delivered. Null when the message-content exception does not apply. */
+export function deliveredMessageText(content: string | null | undefined): string | null {
+  if (!content?.trim()) return null;
+  return content;
+}
 
 export interface TranscriptChannelSummary {
   channelId: string;
@@ -28,6 +38,12 @@ interface TranscriptCreatePayload {
 export default class TranscriptManager extends BaseManager {
   constructor() {
     super('transcripts');
+  }
+
+  /** Guild setting. Missing row or column is treated as on, which matches previous behavior. */
+  public async recordingEnabled() {
+    const rows = await container.settings.get(container.config.guild).catch(() => null);
+    return rows?.at(0)?.transcriptsEnabled ?? true;
   }
 
   public async create(payload: TranscriptCreatePayload) {

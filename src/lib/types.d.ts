@@ -19,6 +19,7 @@ export interface Setting {
   guild: types.Long;
   enabled: boolean;
   aiEnabled: boolean;
+  transcriptsEnabled: boolean;
 }
 
 export interface Question {

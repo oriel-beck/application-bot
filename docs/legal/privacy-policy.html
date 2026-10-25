@@ -21,7 +21,7 @@
       </nav>
       <div class="meta">
         <div><strong>Effective date:</strong> August 11, 2026</div>
-        <div><strong>Last updated:</strong> August 11, 2026</div>
+        <div><strong>Last updated:</strong> October 25, 2026</div>
         <div>
           <strong>Application:</strong> Application Bot (private Discord bot for the Bot Designer for Discord community)
         </div>
@@ -76,12 +76,22 @@
       </ul>
 
       <h3>2.3 Ticket transcripts</h3>
-      <p>In configured <strong>ticket</strong> channels, the Bot may store:</p>
+      <p>
+        In configured <strong>ticket</strong> channels, while an owner has ticket transcripts enabled
+        (<code>/transcript-toggle</code>, on by default), the Bot may store:
+      </p>
       <ul>
-        <li>Message content (text)</li>
+        <li>
+          Message text when Discord includes it without the Message Content intent: messages the Bot sends, messages
+          that mention the Bot, and replies to the Bot
+        </li>
+        <li>A placeholder instead of text for other messages</li>
         <li>Message ID, author user ID, channel ID, and timestamps</li>
       </ul>
-      <p>This is used so staff/owners can review or export ticket history.</p>
+      <p>
+        This is used so staff/owners can review or export ticket history. The Bot cannot read the text of ordinary user
+        or staff messages in the ticket.
+      </p>
 
       <h3>2.4 Reports, blacklist, and moderation helpers</h3>
       <ul>
@@ -93,10 +103,11 @@
       <p>When AI features are enabled by an owner:</p>
       <ul>
         <li>
-          Natural-language questions you send via <code>/ai</code> or by <strong>replying to the Bot</strong> in
+          Natural-language questions you send via <code>/ai</code>, by <strong>mentioning the Bot</strong>, or by
+          <strong>replying to the Bot</strong> (with ping on, and not as a reply to a slash-command response) in
           supported support threads/tickets
         </li>
-        <li>Temporary conversation turns (user and assistant messages) for reply-to-bot context in a channel</li>
+        <li>Temporary conversation turns (user and assistant messages) for mention and reply context in a channel</li>
         <li>Usage / rate-limit counters and related Redis keys</li>
       </ul>
       <p>
@@ -107,8 +118,9 @@
 
       <h3>2.6 Utility / guide content</h3>
       <p>
-        Message content from configured staff tip or guide channels may be read or indexed so commands like tips lookup
-        work, and (if configured) so documentation/guide text can be ingested for AI retrieval.
+        Tip text is stored when a staff member uses the <strong>Index tip</strong> context menu on a tip message. The Bot
+        does not bulk-read the tips channel. Optional Discord guide/FAQ channel ingest does not receive message text
+        without the Message Content intent, so those channels are skipped when their messages come back empty.
       </p>
 
       <h3>2.7 Share-your-bot channel helpers</h3>
@@ -189,10 +201,15 @@
 
       <h2>6. Message Content and privileged data</h2>
       <p>
-        The Bot requests Discord <strong>Message Content Intent</strong> only as needed for features such as ticket
-        transcripts, tip indexing, and AI reply-to-bot questions. It does <strong>not</strong> use Presence Intent. It
-        does not require Server Members Intent for normal operation (individual member lookups may be performed on
-        demand when deciding applications).
+        The Bot does <strong>not</strong> request Discord’s <strong>Message Content</strong> privileged intent. It does
+        <strong>not</strong> use Presence Intent. It does not require Server Members Intent for normal operation
+        (individual member lookups may be performed on demand when deciding applications).
+      </p>
+      <p>
+        Message text is available only in the cases Discord still allows without that intent (messages the Bot sends,
+        direct messages to the Bot, messages that mention the Bot, and replies to the Bot’s own messages when ping is
+        left on), and when you use a command or context menu on a specific message (which includes that message’s
+        content).
       </p>
       <p>
         We do not perform server-wide logging of all guild messages. Message content storage is limited to the feature
@@ -240,7 +257,7 @@
       <p>You can reduce collection by:</p>
       <ul>
         <li>Not opening or using ticket channels (avoids transcript logging of your ticket messages)</li>
-        <li>Not using <code>/ai</code> and not replying to the Bot for AI help when AI is enabled</li>
+        <li>Not using <code>/ai</code> and not mentioning or replying to the Bot for AI help when AI is enabled</li>
         <li>Not submitting a staff application or report</li>
       </ul>
       <p>

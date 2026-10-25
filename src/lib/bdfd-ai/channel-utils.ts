@@ -39,11 +39,20 @@ export async function resolveChannelAuthorId(
   const first = top?.first();
   if (!first?.author.bot) return null;
 
-  const description = first.embeds.at(0)?.description;
-  if (!description) return null;
+  return authorIdFromBotOpener(first);
+}
 
-  const match = description.match(/<@!?(\d{17,20})>/);
-  return match?.[1] ?? null;
+/**
+ * Ticket openers are another bot's message. Without the Message Content intent, that
+ * message's embed text is empty, but user mentions on it are still present.
+ */
+function authorIdFromBotOpener(message: Message): string | null {
+  const description = message.embeds.at(0)?.description;
+  const fromEmbed = description?.match(/<@!?(\d{17,20})>/)?.[1];
+  if (fromEmbed) return fromEmbed;
+
+  const mentioned = message.mentions.users.find((user) => !user.bot);
+  return mentioned?.id ?? null;
 }
 
 export function resolveChannelFromInteraction(

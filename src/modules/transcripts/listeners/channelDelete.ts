@@ -11,7 +11,8 @@ export class ChannelDeleteListener extends Listener<typeof Events.ChannelDelete>
   async run(channel: DMChannel | NonThreadGuildBasedChannel) {
     if (channel.type !== ChannelType.GuildText || channel.parentId != this.container.config.categories.tickets) return;
 
-    const transcript = await this.container.transcripts.get(channel.id, true);
+    const recording = await this.container.transcripts.recordingEnabled();
+    const transcript = recording ? await this.container.transcripts.get(channel.id, true) : null;
     let sent = false;
 
     if (transcript) {

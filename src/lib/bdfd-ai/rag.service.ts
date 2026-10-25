@@ -45,7 +45,7 @@ If a function is not found, do not use it. If docs are insufficient after search
 Wiki excerpts use plain triple-backtick fences for real BDScript. "[Discord UI preview omitted" lines are not code.
 
 Be concise and practical. Your reply will be shown in a Discord embed (markdown supported).
-If the user says their code is too large to paste, tell them to send a pastebin raw link or a .txt file URL in a reply to you.`;
+If the user says their code is too large to paste, tell them to send a pastebin raw link or a .txt file URL in a reply to you or a message that mentions you.`;
 
 export class RagService {
   private openai: OpenAI | null = null;

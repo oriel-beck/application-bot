@@ -203,10 +203,12 @@ export async function ingestDiscordChannels(params: {
       maxMessages: maxMessagesPerChannel
     });
 
+    let useful = 0;
     for (const message of messages) {
       if (!isUsefulMessage(message)) continue;
       const doc = formatMessageDoc(channelId, message);
       if (!doc) continue;
+      useful++;
 
       const heading = `#${channelId} message by ${message.author?.username ?? 'unknown-user'}`;
       chunks.push({
@@ -219,6 +221,12 @@ export async function ingestDiscordChannels(params: {
           source: 'discord'
         }
       });
+    }
+
+    if (messages.length > 0 && useful === 0) {
+      console.warn(
+        `[bdfd-ai] Discord ingest skipped #${channelId}: ${messages.length} messages had no text, embeds, or attachments. Channel history ingest needs the Message Content intent.`
+      );
     }
   }
 

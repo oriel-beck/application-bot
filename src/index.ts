@@ -21,12 +21,7 @@ import '@lib/bdfd-ai/bdfd-ai-register.js';
 
 const client = new ApplicationClient(
   {
-    intents: [
-      GatewayIntentBits.Guilds,
-      GatewayIntentBits.DirectMessages,
-      GatewayIntentBits.MessageContent,
-      GatewayIntentBits.GuildMessages
-    ],
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMessages],
     partials: [Partials.Channel, Partials.Message, Partials.User],
     makeCache: Options.cacheWithLimits({
       MessageManager: 0,

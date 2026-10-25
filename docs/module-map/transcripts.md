@@ -5,9 +5,10 @@
 
 ## Commands
 
-| File                     | Purpose                                                                                                                                                                         |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `commands/transcript.ts` | Subcommands: `delete`, `clear-deleted`, `get` (`.txt` export; loads messages via `get(..., true)`), **`list`** (Components V2 browser). Preconditions: `ModOnly` + `OwnerOnly`. |
+| File                            | Purpose                                                                                                                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `commands/transcript.ts`        | Subcommands: `delete`, `clear-deleted`, `get` (`.txt` export; loads messages via `get(..., true)`), **`list`** (Components V2 browser). Preconditions: `ModOnly` + `OwnerOnly`. |
+| `commands/transcript-toggle.ts` | Owner `/transcript-toggle` — enable or disable recording and the closing DM. Default **on**. Existing rows are kept.                                                            |
 
 ## Interaction handlers
 
@@ -24,15 +25,15 @@ Manager helpers: `getAll()`, **`listWithCounts()`** (channel + author + message 
 
 ## Listeners
 
-| File                         | Purpose                                                                                                                                     |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `listeners/messageCreate.ts` | Record new messages.                                                                                                                        |
-| `listeners/messageUpdate.ts` | Record edits.                                                                                                                               |
-| `listeners/messageDelete.ts` | Handle deletions.                                                                                                                           |
-| `listeners/channelDelete.ts` | DM transcript on ticket delete; always clears AI state via `cleanupClosedSupportChannel`; deletes transcript rows only if the DM succeeded. |
+| File                         | Purpose                                                                                                                                                                                                                                                                                                                                              |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `listeners/messageCreate.ts` | Record new messages when `settings.transcripts_enabled` is on. Text is stored only when Discord includes it (bot messages, mentions of the bot, replies to the bot). Other messages are stored as `(content unavailable)`. Ticket author is taken from the opener embed, then from a user mention on that opener, then from the first human message. |
+| `listeners/messageUpdate.ts` | Record edits when the new text is visible. Empty updates are ignored so a hidden edit does not wipe stored text.                                                                                                                                                                                                                                     |
+| `listeners/messageDelete.ts` | Handle deletions.                                                                                                                                                                                                                                                                                                                                    |
+| `listeners/channelDelete.ts` | DM transcript on ticket delete when recording is on; always clears AI state via `cleanupClosedSupportChannel`; deletes transcript rows only if the DM succeeded.                                                                                                                                                                                     |
 
-Transcripts are **not** removed by the 7-day AI inactive sweep (`sweepInactiveSupportChannels`). They are deleted only via `/transcript` commands, list Delete, ticket channel delete (after successful DM), or support thread resolve/archive/delete.
+Create, edit, and delete listeners do nothing while transcripts are disabled. Transcripts are **not** removed by the 7-day AI inactive sweep (`sweepInactiveSupportChannels`). They are deleted only via `/transcript` commands, list Delete, ticket channel delete (after successful DM), or support thread resolve/archive/delete.
 
 ## Schema
 
-Transcript/message tables in `src/schema.ts` (aligned with manager). `messages` includes `"createdAt"` (migration `0002_aspiring_kabuki.sql`).
+Transcript/message tables in `src/schema.ts` (aligned with manager). `messages` includes `"createdAt"` (migration `0002_aspiring_kabuki.sql`). Recording is `settings.transcripts_enabled` (boolean, default `true`, migration `0004_transcripts_enabled.sql`).

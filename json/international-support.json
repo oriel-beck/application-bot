@@ -2,7 +2,7 @@
   "en": {
     "embedTitle": "BDFD International Support",
     "embedDescription": "` ● ` Please send your code as a code block (\\`\\`\\`), not as a screenshot.\n` ● ` Please describe your issue clearly and include any error messages.\n` ● ` Be patient — support is provided by volunteers.",
-    "aiInvokeHint": "**AI:** Use **`/ai`** or reply to **this message** for wiki-powered help (conversation is saved).",
+    "aiInvokeHint": "**AI:** Use **`/ai`**, mention this bot, or reply to **this message** (leave ping on). Conversation is saved for mentions and replies.",
     "footer": "Do not try to hoist your post in any channel in the server, this is against our rules and you will receive a warning if you do so.",
     "resolveButton": "Resolve",
     "resolvedTitle": "Resolved",
@@ -16,7 +16,7 @@
   "tr": {
     "embedTitle": "BDFD Uluslararası Destek",
     "embedDescription": "` ● ` Lütfen kodunuzu ekran görüntüsü olarak değil, kod bloğu (\\`\\`\\`) olarak gönderin.\n` ● ` Sorununuzu açıkça anlatın ve varsa hata mesajlarını ekleyin.\n` ● ` Sabırlı olun — destek gönüllüler tarafından sağlanır.",
-    "aiInvokeHint": "**YZ:** Otomatik BDFD yardımı (wiki) için **bu mesaja** yanıt verin.",
+    "aiInvokeHint": "**YZ:** **`/ai`** kullanın, bu bottan bahsedin veya **bu mesaja** yanıt verin (ping açık kalsın). Bahsetme ve yanıtlarda konuşma kaydedilir.",
     "footer": "Sunucudaki herhangi bir kanalda gönderinizi yükseltmeye çalışmayın; bu kurallara aykırıdır ve uyarı alırsınız.",
     "resolveButton": "Çözüldü",
     "resolvedTitle": "Çözüldü",
@@ -30,7 +30,7 @@
   "ru": {
     "embedTitle": "BDFD Международная поддержка",
     "embedDescription": "` ● ` Отправляйте код в виде блока кода (\\`\\`\\`), а не скриншота.\n` ● ` Чётко опишите проблему и укажите сообщения об ошибках.\n` ● ` Будьте терпеливы — поддержку оказывают волонтёры.",
-    "aiInvokeHint": "**ИИ:** Ответьте на **это сообщение** для автоматической помощи BDFD (на основе вики).",
+    "aiInvokeHint": "**ИИ:** Используйте **`/ai`**, упомяните этого бота или ответьте на **это сообщение** (оставьте пинг). История сохраняется для упоминаний и ответов.",
     "footer": "Не пытайтесь поднимать свой пост в каналах сервера — это нарушает правила и может привести к предупреждению.",
     "resolveButton": "Решено",
     "resolvedTitle": "Решено",
@@ -44,7 +44,7 @@
   "fr": {
     "embedTitle": "Support international BDFD",
     "embedDescription": "` ● ` Envoyez votre code en bloc de code (\\`\\`\\`), pas en capture d'écran.\n` ● ` Décrivez clairement votre problème et incluez les messages d'erreur.\n` ● ` Soyez patient — le support est assuré par des bénévoles.",
-    "aiInvokeHint": "**IA:** Répondez à **ce message** pour l'aide BDFD automatisée (alimentée par le wiki).",
+    "aiInvokeHint": "**IA :** Utilisez **`/ai`**, mentionnez ce bot ou répondez à **ce message** (laissez le ping). La conversation est enregistrée pour les mentions et les réponses.",
     "footer": "N'essayez pas de remonter votre post dans un canal du serveur ; c'est contre les règles et vous recevrez un avertissement.",
     "resolveButton": "Résolu",
     "resolvedTitle": "Résolu",
@@ -58,7 +58,7 @@
   "es": {
     "embedTitle": "Soporte internacional BDFD",
     "embedDescription": "` ● ` Envía tu código como bloque de código (\\`\\`\\`), no como captura de pantalla.\n` ● ` Describe tu problema con claridad e incluye los mensajes de error.\n` ● ` Ten paciencia — el soporte lo brindan voluntarios.",
-    "aiInvokeHint": "**IA:** Responde a **este mensaje** para obtener ayuda automática de BDFD (basada en la wiki).",
+    "aiInvokeHint": "**IA:** Usa **`/ai`**, menciona a este bot o responde a **este mensaje** (deja el ping). La conversación se guarda en menciones y respuestas.",
     "footer": "No intentes elevar tu publicación en ningún canal del servidor; va contra las reglas y recibirás una advertencia.",
     "resolveButton": "Resuelto",
     "resolvedTitle": "Resuelto",
@@ -72,7 +72,7 @@
   "pt": {
     "embedTitle": "Suporte internacional BDFD",
     "embedDescription": "` ● ` Envie seu código como bloco de código (\\`\\`\\`), não como captura de tela.\n` ● ` Descreva seu problema com clareza e inclua mensagens de erro.\n` ● ` Seja paciente — o suporte é feito por voluntários.",
-    "aiInvokeHint": "**IA:** Responda a **esta mensagem** para ajuda automática do BDFD (com base na wiki).",
+    "aiInvokeHint": "**IA:** Use **`/ai`**, mencione este bot ou responda a **esta mensagem** (deixe o ping). A conversa é salva em menções e respostas.",
     "footer": "Não tente impulsionar sua postagem em nenhum canal do servidor; isso é contra as regras e você receberá um aviso.",
     "resolveButton": "Resolvido",
     "resolvedTitle": "Resolvido",
@@ -86,7 +86,7 @@
   "ar": {
     "embedTitle": "دعم BDFD الدولي",
     "embedDescription": "` ● ` أرسل الكود ككتلة كود (\\`\\`\\`) وليس كصورة.\n` ● ` صِف مشكلتك بوضوح واذكر رسائل الخطأ.\n` ● ` كن صبوراً — الدعم يقدمه متطوعون.",
-    "aiInvokeHint": "**الذكاء الاصطناعي:** رد على **هذه الرسالة** للحصول على مساعدة BDFD آلية (مدعومة بالويكي).",
+    "aiInvokeHint": "**الذكاء الاصطناعي:** استخدم **`/ai`** أو اذكر هذا البوت أو رد على **هذه الرسالة** (اترك التنبيه مفعّلاً). يُحفظ الحوار عند الذكر والرد.",
     "footer": "لا تحاول رفع منشورك في أي قناة بالسيرفر؛ ذلك مخالف للقواعد وسيؤدي إلى تحذير.",
     "resolveButton": "تم الحل",
     "resolvedTitle": "تم الحل",
@@ -100,7 +100,7 @@
   "de": {
     "embedTitle": "BDFD Internationaler Support",
     "embedDescription": "` ● ` Sende deinen Code als Codeblock (\\`\\`\\`), nicht als Screenshot.\n` ● ` Beschreibe dein Problem klar und nenne Fehlermeldungen.\n` ● ` Hab Geduld — Support wird von Freiwilligen geleistet.",
-    "aiInvokeHint": "**KI:** Antworte auf **diese Nachricht** für automatische BDFD-Hilfe (Wiki-basiert).",
+    "aiInvokeHint": "**KI:** Nutze **`/ai`**, erwähne diesen Bot oder antworte auf **diese Nachricht** (Ping anlassen). Der Verlauf wird bei Erwähnungen und Antworten gespeichert.",
     "footer": "Versuche nicht, deinen Beitrag in einem Kanal hochzuziehen; das verstößt gegen die Regeln und führt zu einer Verwarnung.",
     "resolveButton": "Gelöst",
     "resolvedTitle": "Gelöst",
@@ -114,7 +114,7 @@
   "nl": {
     "embedTitle": "BDFD Internationale ondersteuning",
     "embedDescription": "` ● ` Stuur je code als codeblok (\\`\\`\\`), niet als screenshot.\n` ● ` Beschrijf je probleem duidelijk en vermeld foutmeldingen.\n` ● ` Wees geduldig — ondersteuning wordt door vrijwilligers gegeven.",
-    "aiInvokeHint": "**AI:** Reageer op **dit bericht** voor automatische BDFD-hulp (wiki).",
+    "aiInvokeHint": "**AI:** Gebruik **`/ai`**, vermeld deze bot of reageer op **dit bericht** (laat ping aan). Het gesprek wordt bewaard bij vermeldingen en reacties.",
     "footer": "Probeer je bericht niet omhoog te halen in een kanaal; dat is tegen de regels en levert een waarschuwing op.",
     "resolveButton": "Opgelost",
     "resolvedTitle": "Opgelost",
@@ -128,7 +128,7 @@
   "hi": {
     "embedTitle": "BDFD अंतर्राष्ट्रीय सहायता",
     "embedDescription": "` ● ` कोड स्क्रीनशॉट नहीं, कोड ब्लॉक (\\`\\`\\`) में भेजें।\n` ● ` अपनी समस्या स्पष्ट लिखें और त्रुटि संदेश शामिल करें।\n` ● ` धैर्य रखें — सहायता स्वयंसेवकों द्वारा दी जाती है।",
-    "aiInvokeHint": "**AI:** स्वचालित BDFD सहायता (विकी-संचालित) के लिए **इस संदेश** का उत्तर दें।",
+    "aiInvokeHint": "**AI:** **`/ai`** इस्तेमाल करें, इस बॉट को मेंशन करें, या **इस संदेश** का उत्तर दें (पिंग चालू रखें)। मेंशन और उत्तर पर बातचीत सहेजी जाती है।",
     "footer": "सर्वर के किसी भी चैनल में अपनी पोस्ट होइस्ट न करें; यह नियमों के विरुद्ध है और चेतावनी मिल सकती है।",
     "resolveButton": "हल हो गया",
     "resolvedTitle": "हल हो गया",
@@ -142,7 +142,7 @@
   "pl": {
     "embedTitle": "Międzynarodowe wsparcie BDFD",
     "embedDescription": "` ● ` Wyślij kod jako blok kodu (\\`\\`\\`), nie jako zrzut ekranu.\n` ● ` Opisz problem jasno i podaj komunikaty błędów.\n` ● ` Bądź cierpliwy — wsparcie świadczą wolontariusze.",
-    "aiInvokeHint": "**AI:** Odpowiedz na **tę wiadomość**, aby uzyskać automatyczną pomoc BDFD (opartą na wiki).",
+    "aiInvokeHint": "**AI:** Użyj **`/ai`**, wspomniej tego bota lub odpowiedz na **tę wiadomość** (zostaw ping). Historia jest zapisywana przy wzmiankach i odpowiedziach.",
     "footer": "Nie próbuj podbijać posta na kanale serwera — to łamie zasady i grozi ostrzeżeniem.",
     "resolveButton": "Rozwiązane",
     "resolvedTitle": "Rozwiązane",
@@ -156,7 +156,7 @@
   "it": {
     "embedTitle": "Supporto internazionale BDFD",
     "embedDescription": "` ● ` Invia il codice come blocco di codice (\\`\\`\\`), non come screenshot.\n` ● ` Descrivi chiaramente il problema e includi i messaggi di errore.\n` ● ` Sii paziente — il supporto è offerto da volontari.",
-    "aiInvokeHint": "**IA:** Rispondi a **questo messaggio** per l'aiuto BDFD automatico (basato sulla wiki).",
+    "aiInvokeHint": "**IA:** Usa **`/ai`**, menziona questo bot o rispondi a **questo messaggio** (lascia il ping). La conversazione viene salvata per menzioni e risposte.",
     "footer": "Non cercare di far salire il post in nessun canale; è contro le regole e riceverai un avviso.",
     "resolveButton": "Risolto",
     "resolvedTitle": "Risolto",
@@ -170,7 +170,7 @@
   "cs": {
     "embedTitle": "BDFD Mezinárodní podpora",
     "embedDescription": "` ● ` Odešlete kód jako blok kódu (\\`\\`\\`), ne jako screenshot.\n` ● ` Popište problém jasně a uveďte chybové hlášky.\n` ● ` Buďte trpěliví — podporu poskytují dobrovolníci.",
-    "aiInvokeHint": "**AI:** Odpovězte na **tuto zprávu** pro automatickou pomoc BDFD (na wiki).",
+    "aiInvokeHint": "**AI:** Použijte **`/ai`**, označte tohoto bota nebo odpovězte na **tuto zprávu** (nechte ping). Konverzace se ukládá u zmínek a odpovědí.",
     "footer": "Nepokoušejte se zvedat příspěvek v kanálech serveru; je to proti pravidlům a dostanete varování.",
     "resolveButton": "Vyřešeno",
     "resolvedTitle": "Vyřešeno",
@@ -184,7 +184,7 @@
   "el": {
     "embedTitle": "Διεθνής υποστήριξη BDFD",
     "embedDescription": "` ● ` Στείλτε τον κώδικα ως μπλοκ κώδικα (\\`\\`\\`), όχι ως στιγμιότυπο.\n` ● ` Περιγράψτε σαφώς το πρόβλημα και συμπεριλάβετε μηνύματα σφάλματος.\n` ● ` Να είστε υπομονετικοί — η υποστήριξη παρέχεται από εθελοντές.",
-    "aiInvokeHint": "**AI:** Απαντήστε σε **αυτό το μήνυμα** για αυτοματοποιημένη βοήθεια BDFD (βασισμένη στο wiki).",
+    "aiInvokeHint": "**AI:** Χρησιμοποιήστε **`/ai`**, αναφέρετε αυτό το bot ή απαντήστε σε **αυτό το μήνυμα** (αφήστε το ping). Η συνομιλία αποθηκεύεται σε αναφορές και απαντήσεις.",
     "footer": "Μην προσπαθείτε να ανεβάσετε την ανάρτησή σας σε κανάλι — παραβιάζει τους κανόνες και θα λάβετε προειδοποίηση.",
     "resolveButton": "Επιλύθηκε",
     "resolvedTitle": "Επιλύθηκε",
@@ -198,7 +198,7 @@
   "hu": {
     "embedTitle": "BDFD Nemzetközi támogatás",
     "embedDescription": "` ● ` Küldd a kódot kódblokkban (\\`\\`\\`), ne képernyőképként.\n` ● ` Írd le világosan a problémát és a hibaüzeneteket.\n` ● ` Légy türelmes — a támogatást önkéntesek adják.",
-    "aiInvokeHint": "**MI:** Válaszolj **erre az üzenetre** az automatikus BDFD-súgóért (wiki alapú).",
+    "aiInvokeHint": "**MI:** Használd a **`/ai`** parancsot, említsd meg ezt a botot, vagy válaszolj **erre az üzenetre** (hagyd bekapcsolva a pinget). Az említések és válaszok beszélgetése mentésre kerül.",
     "footer": "Ne próbáld feljebb vinni a bejegyzésedet csatornákban; ez szabálysértés és figyelmeztetést kaphatsz.",
     "resolveButton": "Megoldva",
     "resolvedTitle": "Megoldva",
@@ -212,7 +212,7 @@
   "other": {
     "embedTitle": "BDFD International Support",
     "embedDescription": "` ● ` Please send your code as a code block (\\`\\`\\`), not as a screenshot.\n` ● ` Please describe your issue clearly and include any error messages.\n` ● ` Be patient — support is provided by volunteers.",
-    "aiInvokeHint": "**AI:** Use **`/ai`** or reply to **this message** for wiki-powered help (conversation is saved).",
+    "aiInvokeHint": "**AI:** Use **`/ai`**, mention this bot, or reply to **this message** (leave ping on). Conversation is saved for mentions and replies.",
     "footer": "Do not try to hoist your post in any channel in the server, this is against our rules and you will receive a warning if you do so.",
     "resolveButton": "Resolve",
     "resolvedTitle": "Resolved",

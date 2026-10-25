@@ -1,6 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Events, Listener } from '@sapphire/framework';
 import { ChannelType, Message, PartialMessage } from 'discord.js';
+import { deliveredMessageText } from '../managers/transcriptManager.js';
 
 @ApplyOptions<Listener.Options>({
   event: Events.MessageUpdate,
@@ -13,6 +14,9 @@ export class MessageDeleteListener extends Listener<typeof Events.MessageUpdate>
       newMessage.channel.parentId !== this.container.config.categories.tickets
     )
       return;
-    await this.container.transcripts.updateMessage(newMessage.id, newMessage.content || 'EMPTY');
+    if (!(await this.container.transcripts.recordingEnabled())) return;
+    const text = deliveredMessageText(newMessage.content);
+    if (!text) return;
+    await this.container.transcripts.updateMessage(newMessage.id, text);
   }
 }

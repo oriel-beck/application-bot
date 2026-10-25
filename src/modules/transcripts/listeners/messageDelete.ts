@@ -13,6 +13,7 @@ export class MessageDeleteListener extends Listener<typeof Events.MessageDelete>
       message.channel.parentId !== this.container.config.categories.tickets
     )
       return;
+    if (!(await this.container.transcripts.recordingEnabled())) return;
     await this.container.transcripts.deleteMessage(message.channel.id, message.id);
   }
 }
