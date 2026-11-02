@@ -3,7 +3,6 @@ import type { BdscriptFunctionIndex } from './bdscript-function-index.js';
 import { bdscriptFunctionNames, normalizeBdscriptFunctionName } from './bdscript-function-index.js';
 
 const BDSCRIPT_FUNCTION_PATTERN = /\$([A-Za-z][A-Za-z0-9]*)/g;
-const CODE_FENCE_PATTERN = /```([^\n`]*)\n?([\s\S]*?)```/g;
 /** `[word]` / `[@user]` — closing `]` is not escaped. */
 const PLACEHOLDER_BRACKET = /^\[(@?[A-Za-z][A-Za-z0-9]*)\]/;
 const FUNCTION_OPEN = /^\$[A-Za-z][A-Za-z0-9]*\[/;
@@ -50,15 +49,14 @@ export function findInvalidFunctions(text: string, index: BdscriptFunctionIndex)
 }
 
 /**
- * Callbacks mixed into a reply-code fence (same fence also has BDScript functions).
- * Single-callback-only fences are treated as valid trigger examples.
+ * Callbacks mixed into a reply-code snippet (same snippet also has BDScript functions).
+ * A single-callback-only snippet is treated as a valid trigger example.
  */
-export function findCallbacksMisusedInReplyCode(text: string, index: BdscriptFunctionIndex): string[] {
+export function findCallbacksMisusedInSnippets(snippets: string[], index: BdscriptFunctionIndex): string[] {
   const misused = new Set<string>();
 
-  for (const match of text.matchAll(CODE_FENCE_PATTERN)) {
-    const body = match[2] ?? '';
-    const names = extractBdscriptFunctions(body);
+  for (const snippet of snippets) {
+    const names = extractBdscriptFunctions(snippet);
     if (!names.length) continue;
 
     const functions: string[] = [];
@@ -270,14 +268,13 @@ export function findArityIssues(calls: FlatBdscriptCall[], index: BdscriptFuncti
   return issues;
 }
 
-/** Same as findArityIssues, but scoped to code-fence bodies (for checking a model's reply code). */
-export function findArityIssuesInReplyCode(text: string, index: BdscriptFunctionIndex): ArityIssue[] {
+/** Same as findArityIssues, but scoped to a reply's code snippets (for checking a model's reply code). */
+export function findArityIssuesInSnippets(snippets: string[], index: BdscriptFunctionIndex): ArityIssue[] {
   const seen = new Set<string>();
   const issues: ArityIssue[] = [];
 
-  for (const match of text.matchAll(CODE_FENCE_PATTERN)) {
-    const body = match[2] ?? '';
-    const calls = flattenBdscriptCalls(parseBdscript(body));
+  for (const snippet of snippets) {
+    const calls = flattenBdscriptCalls(parseBdscript(snippet));
     for (const issue of findArityIssues(calls, index)) {
       if (seen.has(issue.name)) continue;
       seen.add(issue.name);
@@ -371,21 +368,6 @@ export function repairBdscriptCode(code: string): string {
   }
 
   return out;
-}
-
-/**
- * Deterministically escape placeholder `]` in BDScript within an assistant reply
- * (code fences + lines that start with `$`). No model round-trip.
- */
-export function repairBdscriptEscaping(text: string): string {
-  const withFences = text.replace(CODE_FENCE_PATTERN, (_m, lang: string, body: string) => {
-    return `\`\`\`${lang}\n${repairBdscriptCode(body)}\`\`\``;
-  });
-
-  return withFences
-    .split('\n')
-    .map((line) => (/^\s*\$[A-Za-z]/.test(line) ? repairBdscriptCode(line) : line))
-    .join('\n');
 }
 
 function scoreNameSimilarity(a: string, b: string): number {

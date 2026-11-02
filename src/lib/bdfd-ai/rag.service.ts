@@ -14,12 +14,12 @@ import {
   buildRepairPrompt,
   extractBdscriptFunctions,
   findArityIssues,
-  findArityIssuesInReplyCode,
-  findCallbacksMisusedInReplyCode,
+  findArityIssuesInSnippets,
+  findCallbacksMisusedInSnippets,
   findInvalidFunctions,
   flattenBdscriptCalls,
   parseBdscript,
-  repairBdscriptEscaping
+  repairBdscriptCode
 } from './bdscript-validation.js';
 import { BDFD_BASICS } from './bdfd-basics.js';
 import type { ChatTurn } from './types.js';
@@ -50,10 +50,82 @@ You also have tools:
 **Hard rule:** Inside \`$function[...]\` args, escape literal \`;\` as \`\\;\` and literal \`]\` as \`\\]\`. Usage hints like \`[@user]\` / \`[amount]\` inside \`$argsCheck\` (or any message arg) must be \`[@user\\]\` / \`[amount\\]\`.
 If a function is not found, do not use it. If docs are insufficient after searching, say so and link https://wiki.botdesignerdiscord.com/
 
-Wiki excerpts use plain triple-backtick fences for real BDScript. "[Discord UI preview omitted" lines are not code.
+Context chunks (<wiki_context>, <relevant_functions>, etc.) use plain triple-backtick fences for real BDScript when quoting the wiki. "[Discord UI preview omitted" lines in that context are not code — this is about reading retrieved context, separate from your own output format below.
+
+**Output format:** your final answer (once done calling tools) must be a JSON object: \`{ "response": string, "snippets": string[] }\`.
+- \`response\` is the prose shown to the user. Reference a BDScript code snippet with \`{0}\`, \`{1}\`, etc. — the index into \`snippets\` — never paste raw code or triple-backtick fences directly into \`response\`.
+- \`snippets\` holds raw BDScript only, no markdown fences, no language tags — one entry per \`{n}\` referenced from \`response\`.
+- A pure-prose answer with no code is fine: use an empty \`snippets\` array.
 
 Be concise and practical. Your reply will be shown in a Discord embed (markdown supported).
 If the user says their code is too large to paste, tell them to send a pastebin raw link or a .txt file URL in a reply to you or a message that mentions you.`;
+
+/**
+ * Structured output: the final answer is split into prose (`response`) and raw code
+ * (`snippets`), referenced from `response` via `{n}` placeholders. Replaces scraping
+ * markdown fences out of free-form text — the backend gets exact, unambiguous code strings
+ * to validate/repair, and splices them back in as fences only once they pass.
+ */
+const RESPONSE_FORMAT: OpenAI.Chat.Completions.ChatCompletionCreateParams['response_format'] = {
+  type: 'json_schema',
+  json_schema: {
+    name: 'bdfd_ai_answer',
+    strict: true,
+    schema: {
+      type: 'object',
+      properties: {
+        response: {
+          type: 'string',
+          description:
+            'Prose shown to the user. Reference a snippet by its index into `snippets` using {0}, {1}, etc. Never paste raw code or triple-backtick fences directly here.'
+        },
+        snippets: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'Raw BDScript code only, no markdown fences or language tags — one entry per {n} referenced from `response`.'
+        }
+      },
+      required: ['response', 'snippets'],
+      additionalProperties: false
+    }
+  }
+};
+
+interface StructuredDraft {
+  response: string;
+  snippets: string[];
+}
+
+/** Parse the model's structured JSON answer, falling back to treating raw text as pure prose. */
+function parseStructuredCompletion(content: string | null | undefined): StructuredDraft {
+  const fallback: StructuredDraft = { response: content?.trim() || 'I could not generate a response.', snippets: [] };
+  if (!content) return fallback;
+
+  try {
+    const parsed = JSON.parse(content) as Partial<StructuredDraft>;
+    if (typeof parsed.response !== 'string') return fallback;
+    const snippets = Array.isArray(parsed.snippets)
+      ? parsed.snippets.filter((s): s is string => typeof s === 'string')
+      : [];
+    return { response: parsed.response, snippets };
+  } catch {
+    return fallback;
+  }
+}
+
+const SNIPPET_PLACEHOLDER = /\{(\d+)\}/g;
+
+/** Splice validated snippets back into the prose, as fences, at their `{n}` placeholders. */
+function spliceSnippetsIntoResponse(response: string, snippets: string[]): string {
+  return response.replace(SNIPPET_PLACEHOLDER, (match, indexStr: string) => {
+    const index = Number(indexStr);
+    if (!Number.isInteger(index) || index < 0 || index >= snippets.length) {
+      return match; // not a valid snippet reference — leave the literal text alone
+    }
+    return `\`\`\`\n${snippets[index]}\n\`\`\``;
+  });
+}
 
 export class RagService {
   private openai: OpenAI | null = null;
@@ -147,53 +219,58 @@ export class RagService {
   }
 
   private async repairResponse(
-    draft: string,
+    draft: StructuredDraft,
     messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
     invalidNames: string[],
     misusedCallbacks: string[],
     arityIssues: ArityIssue[]
-  ): Promise<string> {
+  ): Promise<StructuredDraft> {
     if (!this.openai) {
       throw new Error('RAG service not ready');
     }
 
+    const repairPrompt =
+      buildRepairPrompt(invalidNames, this.functionIndex, misusedCallbacks, arityIssues) +
+      '\n\nReturn the corrected answer in the same JSON format: { "response": string, "snippets": string[] }.';
+
     const repair = await this.openai.chat.completions.create({
       model: CHAT_MODEL,
+      response_format: RESPONSE_FORMAT,
       messages: [
         ...messages,
-        { role: 'assistant', content: draft },
-        {
-          role: 'user',
-          content: buildRepairPrompt(invalidNames, this.functionIndex, misusedCallbacks, arityIssues)
-        }
+        { role: 'assistant', content: JSON.stringify(draft) },
+        { role: 'user', content: repairPrompt }
       ],
       max_tokens: 1024,
       temperature: 0
     });
 
-    return repair.choices[0]?.message?.content?.trim() ?? draft;
+    return parseStructuredCompletion(repair.choices[0]?.message?.content);
   }
 
   /** Repair attempts after the initial draft; 3 validation checks total. */
   private static readonly MAX_VALIDATION_RETRIES = 2;
 
   private async validateAndRepair(
-    response: string,
+    response: StructuredDraft,
     messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]
   ): Promise<string> {
     let draft = response;
 
     for (let attempt = 0; attempt <= RagService.MAX_VALIDATION_RETRIES; attempt++) {
-      const invalid = findInvalidFunctions(draft, this.functionIndex);
-      const misusedCallbacks = findCallbacksMisusedInReplyCode(draft, this.functionIndex);
-      const arityIssues = findArityIssuesInReplyCode(draft, this.functionIndex);
+      // Hallucinated names can appear in the prose too (e.g. "you could also try `$fooBar`"),
+      // not just inside a snippet, so check `response` in addition to each snippet.
+      const invalid = [
+        ...new Set([
+          ...findInvalidFunctions(draft.response, this.functionIndex),
+          ...draft.snippets.flatMap((s) => findInvalidFunctions(s, this.functionIndex))
+        ])
+      ];
+      const misusedCallbacks = findCallbacksMisusedInSnippets(draft.snippets, this.functionIndex);
+      const arityIssues = findArityIssuesInSnippets(draft.snippets, this.functionIndex);
 
       if (!invalid.length && !misusedCallbacks.length && !arityIssues.length) {
-        const escaped = repairBdscriptEscaping(draft);
-        if (escaped !== draft) {
-          console.warn('[bdfd-ai] Escaped literal ] inside $function arguments');
-        }
-        return escaped;
+        return spliceSnippetsIntoResponse(draft.response, draft.snippets.map(repairBdscriptCode));
       }
 
       console.warn(
@@ -230,6 +307,7 @@ export class RagService {
         messages,
         tools: WIKI_AGENT_TOOLS,
         tool_choice: 'auto',
+        response_format: RESPONSE_FORMAT,
         max_tokens: 1024,
         temperature: 0
       });
@@ -240,8 +318,7 @@ export class RagService {
       }
 
       if (!choice.tool_calls?.length) {
-        const draft = choice.content?.trim() ?? 'I could not generate a response.';
-        return this.validateAndRepair(draft, messages);
+        return this.validateAndRepair(parseStructuredCompletion(choice.content), messages);
       }
 
       messages.push(choice);
@@ -267,6 +344,7 @@ export class RagService {
 
     const final = await this.openai.chat.completions.create({
       model: CHAT_MODEL,
+      response_format: RESPONSE_FORMAT,
       messages: [
         ...messages,
         {
@@ -279,8 +357,7 @@ export class RagService {
       temperature: 0
     });
 
-    const draft = final.choices[0]?.message?.content?.trim() ?? 'I could not generate a response.';
-    return this.validateAndRepair(draft, messages);
+    return this.validateAndRepair(parseStructuredCompletion(final.choices[0]?.message?.content), messages);
   }
 
   async query(userMessage: string, history: ChatTurn[]): Promise<string> {
