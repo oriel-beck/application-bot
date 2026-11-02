@@ -5,11 +5,13 @@ import {
   type BdscriptFunctionIndex,
   checkBdscriptFunctions,
   ensureFunctionIndex,
+  fetchApiDocsForNames,
   formatFunctionCheckResults
 } from './bdscript-function-index.js';
 import {
   BdscriptValidationError,
   buildRepairPrompt,
+  extractBdscriptFunctions,
   findCallbacksMisusedInReplyCode,
   findInvalidFunctions,
   repairBdscriptEscaping
@@ -279,13 +281,20 @@ export class RagService {
       externalContext = await fetchExternalContent(urls);
     }
 
-    const [wikiResults, apiHits] = await Promise.all([
+    const usedNames = extractBdscriptFunctions(userMessage);
+
+    const [wikiResults, apiHits, namedDocs] = await Promise.all([
       searchWikiDocuments(this.collection, this.openai, userMessage, INITIAL_TOP_K),
-      searchApiFunctionDocs(this.collection, this.openai, userMessage, API_FUNCTION_TOP_K)
+      searchApiFunctionDocs(this.collection, this.openai, userMessage, API_FUNCTION_TOP_K),
+      fetchApiDocsForNames(usedNames, this.functionIndex, this.collection)
     ]);
 
     const wikiChunks = new Set(wikiResults);
     const { functions: apiFunctionChunks, callbacks: apiCallbackChunks } = splitApiDocHits(apiHits);
+    // Deterministic injection: guarantee every $function/callback already in the user's own
+    // message is backed by its real doc, regardless of how it ranks in semantic top-k.
+    for (const doc of namedDocs.functions) apiFunctionChunks.add(doc);
+    for (const doc of namedDocs.callbacks) apiCallbackChunks.add(doc);
 
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
       {

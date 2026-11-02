@@ -21,7 +21,10 @@ export type BdscriptFunctionIndex = Map<string, BdscriptFunctionRecord>;
 const INDEX_FILENAME = 'bdscript-functions.json';
 const BDSCRIPT_FILE_PREFIX = 'src/bdscript/';
 const WIKI_CALLBACK_PREFIX = 'src/callbacks/';
+const API_FUNCTION_FILE_PREFIX = 'api/bdfd/';
 const API_CALLBACK_FILE_PREFIX = 'api/bdfd/callback/';
+/** Cap on how many names from a single user message get a deterministic doc lookup. */
+const MAX_DETERMINISTIC_LOOKUPS = 20;
 
 export function normalizeBdscriptFunctionName(name: string): string {
   return name.trim().replace(/^\$/, '');
@@ -209,6 +212,43 @@ export async function checkBdscriptFunctions(
   }
 
   return results;
+}
+
+/**
+ * Deterministically fetch the official `bdfd-api` doc chunk for each name already present
+ * in the user's own message, keyed by exact file lookup rather than semantic similarity.
+ * Guarantees a function/callback the user literally typed is always backed by its real doc,
+ * even when a long multi-function script would otherwise starve it out of top-k retrieval.
+ */
+export async function fetchApiDocsForNames(
+  names: string[],
+  index: BdscriptFunctionIndex,
+  collection: Collection
+): Promise<{ functions: string[]; callbacks: string[] }> {
+  const functions: string[] = [];
+  const callbacks: string[] = [];
+
+  const lookups = names.slice(0, MAX_DETERMINISTIC_LOOKUPS).map(async (name) => {
+    const rec = index.get(name);
+    if (!rec) return;
+
+    const isCallback = rec.kind === 'callback';
+    const file = isCallback ? `${API_CALLBACK_FILE_PREFIX}${name}.md` : `${API_FUNCTION_FILE_PREFIX}${name}.md`;
+
+    try {
+      const got = await collection.get({ where: { file }, limit: 1 });
+      const doc = got.documents?.[0];
+      if (typeof doc === 'string' && doc.length) {
+        (isCallback ? callbacks : functions).push(doc);
+      }
+    } catch {
+      /* skip on lookup failure — semantic search may still surface it */
+    }
+  });
+
+  await Promise.all(lookups);
+
+  return { functions, callbacks };
 }
 
 function formatKindLabel(kind: BdscriptNameKind | undefined): string {

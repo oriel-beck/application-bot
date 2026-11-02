@@ -1,4 +1,4 @@
-import type { Collection } from 'chromadb';
+import { IncludeEnum, type Collection } from 'chromadb';
 import type OpenAI from 'openai';
 import { type BdscriptNameKind, inferBdscriptKind } from './bdscript-function-index.js';
 import { embedText } from './wiki-search.js';
@@ -32,7 +32,7 @@ export async function searchApiFunctionDocs(
     queryEmbeddings: [embedding],
     nResults,
     where: { source: 'bdfd-api' },
-    include: ['documents', 'metadatas']
+    include: [IncludeEnum.Documents, IncludeEnum.Metadatas]
   });
 
   const documents = result.documents?.[0] ?? [];
