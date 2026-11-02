@@ -32,7 +32,7 @@ export async function searchApiFunctionDocs(
     queryEmbeddings: [embedding],
     nResults,
     where: { source: 'bdfd-api' },
-    include: [IncludeEnum.Documents, IncludeEnum.Metadatas]
+    include: [IncludeEnum.documents, IncludeEnum.metadatas]
   });
 
   const documents = result.documents?.[0] ?? [];

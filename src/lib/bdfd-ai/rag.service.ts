@@ -238,6 +238,10 @@ export class RagService {
       messages.push(choice);
 
       for (const call of choice.tool_calls) {
+        // WIKI_AGENT_TOOLS only declares `type: 'function'` tools, so a 'custom' tool call
+        // should never occur here — narrow for the type, and skip defensively if it ever does.
+        if (call.type !== 'function') continue;
+
         const result = await this.runTool(call.function.name, call.function.arguments, wikiChunks);
         messages.push({
           role: 'tool',
