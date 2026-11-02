@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Collection } from 'chromadb';
 import {
+  type BdfdApiArgument,
   fetchBdfdCallbackList,
   fetchBdfdFunctionList,
   registerBdscriptCallbacksFromApi,
@@ -14,6 +15,12 @@ export interface BdscriptFunctionRecord {
   url: string;
   file: string;
   kind: BdscriptNameKind;
+  /**
+   * Argument schema per syntax overload, from the official BDFD API (`function_list`/
+   * `callback_list`). Undefined when the name was only registered from wiki markdown, which
+   * has no structured argument data — arity validation is skipped for those names.
+   */
+  variants?: (BdfdApiArgument[] | null)[];
 }
 
 export type BdscriptFunctionIndex = Map<string, BdscriptFunctionRecord>;
@@ -98,7 +105,8 @@ export async function loadBdscriptFunctionIndex(cwd = process.cwd()): Promise<Bd
       index.set(name, {
         url: rec.url,
         file: rec.file,
-        kind: rec.kind ?? inferBdscriptKind(rec.file)
+        kind: rec.kind ?? inferBdscriptKind(rec.file),
+        variants: rec.variants
       });
     }
     return index;

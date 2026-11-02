@@ -9,11 +9,16 @@ import {
   formatFunctionCheckResults
 } from './bdscript-function-index.js';
 import {
+  type ArityIssue,
   BdscriptValidationError,
   buildRepairPrompt,
   extractBdscriptFunctions,
+  findArityIssues,
+  findArityIssuesInReplyCode,
   findCallbacksMisusedInReplyCode,
   findInvalidFunctions,
+  flattenBdscriptCalls,
+  parseBdscript,
   repairBdscriptEscaping
 } from './bdscript-validation.js';
 import { BDFD_BASICS } from './bdfd-basics.js';
@@ -34,6 +39,7 @@ You receive:
 - **<relevant_callbacks>** — official BDFD API callbacks when retrieved; these are **command triggers only**, never reply-code functions.
 - **<wiki_context>** — wiki guides and examples.
 - **<bdfd_basics>** — always-applied BDFD rules.
+- **<user_code_analysis>** — when present, an automated argument-count check of $functions already in the user's message. It only checks arg count, not correctness — verify against relevant_functions, don't take it as the final word.
 
 You also have tools:
 - **search_wiki** — fetch more wiki excerpts when context is incomplete.
@@ -144,7 +150,8 @@ export class RagService {
     draft: string,
     messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
     invalidNames: string[],
-    misusedCallbacks: string[]
+    misusedCallbacks: string[],
+    arityIssues: ArityIssue[]
   ): Promise<string> {
     if (!this.openai) {
       throw new Error('RAG service not ready');
@@ -157,7 +164,7 @@ export class RagService {
         { role: 'assistant', content: draft },
         {
           role: 'user',
-          content: buildRepairPrompt(invalidNames, this.functionIndex, misusedCallbacks)
+          content: buildRepairPrompt(invalidNames, this.functionIndex, misusedCallbacks, arityIssues)
         }
       ],
       max_tokens: 1024,
@@ -179,8 +186,9 @@ export class RagService {
     for (let attempt = 0; attempt <= RagService.MAX_VALIDATION_RETRIES; attempt++) {
       const invalid = findInvalidFunctions(draft, this.functionIndex);
       const misusedCallbacks = findCallbacksMisusedInReplyCode(draft, this.functionIndex);
+      const arityIssues = findArityIssuesInReplyCode(draft, this.functionIndex);
 
-      if (!invalid.length && !misusedCallbacks.length) {
+      if (!invalid.length && !misusedCallbacks.length && !arityIssues.length) {
         const escaped = repairBdscriptEscaping(draft);
         if (escaped !== draft) {
           console.warn('[bdfd-ai] Escaped literal ] inside $function arguments');
@@ -191,14 +199,15 @@ export class RagService {
       console.warn(
         `[bdfd-ai] Validation failed (attempt ${attempt + 1}/${RagService.MAX_VALIDATION_RETRIES + 1}): ` +
           `invalid=[${invalid.map((n) => `$${n}`).join(', ')}] ` +
-          `misusedCallbacks=[${misusedCallbacks.map((n) => `$${n}`).join(', ')}]`
+          `misusedCallbacks=[${misusedCallbacks.map((n) => `$${n}`).join(', ')}] ` +
+          `arityIssues=[${arityIssues.map((i) => `$${i.name}(${i.argCount})`).join(', ')}]`
       );
 
       if (attempt === RagService.MAX_VALIDATION_RETRIES) {
-        throw new BdscriptValidationError(invalid, misusedCallbacks);
+        throw new BdscriptValidationError(invalid, misusedCallbacks, arityIssues);
       }
 
-      draft = await this.repairResponse(draft, messages, invalid, misusedCallbacks);
+      draft = await this.repairResponse(draft, messages, invalid, misusedCallbacks, arityIssues);
     }
 
     // Unreachable — loop always returns or throws on its last iteration.
@@ -286,6 +295,8 @@ export class RagService {
     }
 
     const usedNames = extractBdscriptFunctions(userMessage);
+    const userCalls = flattenBdscriptCalls(parseBdscript(userMessage));
+    const userArityIssues = findArityIssues(userCalls, this.functionIndex);
 
     const [wikiResults, apiHits, namedDocs] = await Promise.all([
       searchWikiDocuments(this.collection, this.openai, userMessage, INITIAL_TOP_K),
@@ -311,6 +322,23 @@ export class RagService {
       messages.push({
         role: 'system',
         content: `<user_attached_content>\n${externalContext}\n</user_attached_content>`
+      });
+    }
+
+    if (userArityIssues.length) {
+      messages.push({
+        role: 'system',
+        content:
+          '<user_code_analysis>\n' +
+          "Automated check of the $functions already used in the user's own message below — verify " +
+          'against relevant_functions before relying on this, it only checks argument count:\n' +
+          userArityIssues
+            .map(
+              (issue) =>
+                `- $${issue.name} called with ${issue.argCount} argument(s); expected ${issue.expected.join(' or ')}`
+            )
+            .join('\n') +
+          '\n</user_code_analysis>'
       });
     }
 

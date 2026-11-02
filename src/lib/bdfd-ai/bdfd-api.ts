@@ -308,45 +308,55 @@ export function bdfdApiCallbacksToChunks(callbacks: BdfdApiCallback[]): BdfdApiW
   return chunks;
 }
 
-/** Add API functions to the BDScript name index (wiki entries win for url/file). */
+/**
+ * Add API functions to the BDScript name index (wiki entries win for url/file) and attach the
+ * official argument-schema variants for arity validation — backfilled onto a wiki-sourced entry
+ * too, since wiki markdown has no structured argument data of its own.
+ */
 export function registerBdscriptFunctionsFromApi(functions: BdfdApiFunction[], index: BdscriptFunctionIndex): number {
   let added = 0;
 
-  for (const func of functions) {
-    const name = parseBdscriptTag(func.tag);
-    if (!name) continue;
-
-    if (!index.has(name)) {
-      const file = `${API_FUNCTION_FILE_PREFIX}${name}`;
-      index.set(name, {
-        url: wikiUrlFromPath(`src/bdscript/${name}.md`),
-        file,
-        kind: inferBdscriptKind(file)
-      });
-      added++;
+  for (const [name, variants] of groupFunctionsByName(functions)) {
+    const argVariants = variants.map((v) => v.arguments);
+    const existing = index.get(name);
+    if (existing) {
+      existing.variants ??= argVariants;
+      continue;
     }
+
+    const file = `${API_FUNCTION_FILE_PREFIX}${name}`;
+    index.set(name, {
+      url: wikiUrlFromPath(`src/bdscript/${name}.md`),
+      file,
+      kind: inferBdscriptKind(file),
+      variants: argVariants
+    });
+    added++;
   }
 
   return added;
 }
 
-/** Add API callbacks to the name index (wiki callback pages win). */
+/** Add API callbacks to the name index (wiki callback pages win) and attach argument-schema variants. */
 export function registerBdscriptCallbacksFromApi(callbacks: BdfdApiCallback[], index: BdscriptFunctionIndex): number {
   let added = 0;
 
-  for (const callback of callbacks) {
-    const name = parseBdscriptTag(callback.name);
-    if (!name) continue;
-
-    if (!index.has(name)) {
-      const file = `${API_CALLBACK_FILE_PREFIX}${name}`;
-      index.set(name, {
-        url: wikiUrlFromPath(wikiCallbackPath(name)),
-        file,
-        kind: inferBdscriptKind(file)
-      });
-      added++;
+  for (const [name, variants] of groupCallbacksByName(callbacks)) {
+    const argVariants = variants.map((v) => v.arguments);
+    const existing = index.get(name);
+    if (existing) {
+      existing.variants ??= argVariants;
+      continue;
     }
+
+    const file = `${API_CALLBACK_FILE_PREFIX}${name}`;
+    index.set(name, {
+      url: wikiUrlFromPath(wikiCallbackPath(name)),
+      file,
+      kind: inferBdscriptKind(file),
+      variants: argVariants
+    });
+    added++;
   }
 
   return added;

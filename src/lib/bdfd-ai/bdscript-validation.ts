@@ -1,3 +1,4 @@
+import type { BdfdApiArgument } from './bdfd-api.js';
 import type { BdscriptFunctionIndex } from './bdscript-function-index.js';
 import { bdscriptFunctionNames, normalizeBdscriptFunctionName } from './bdscript-function-index.js';
 
@@ -18,10 +19,11 @@ const HALLUCINATION_ALIASES: Record<string, string> = {
 export class BdscriptValidationError extends Error {
   constructor(
     public readonly invalidNames: string[],
-    public readonly misusedCallbacks: string[]
+    public readonly misusedCallbacks: string[],
+    public readonly arityIssues: ArityIssue[] = []
   ) {
     super(
-      `BDScript validation failed after retries: invalid=[${invalidNames.join(', ')}] misusedCallbacks=[${misusedCallbacks.join(', ')}]`
+      `BDScript validation failed after retries: invalid=[${invalidNames.join(', ')}] misusedCallbacks=[${misusedCallbacks.join(', ')}] arityIssues=[${arityIssues.map((i) => `$${i.name}(${i.argCount})`).join(', ')}]`
     );
     this.name = 'BdscriptValidationError';
   }
@@ -76,6 +78,217 @@ export function findCallbacksMisusedInReplyCode(text: string, index: BdscriptFun
 
   return [...misused];
 }
+
+// --- BDScript AST parser + arity validation -------------------------------------------------
+//
+// Generalizes the bracket/escape-aware walker below (repairFunctionArgs/repairBdscriptCode) into
+// a real parser that splits each call's arguments, instead of just re-emitting escaped text.
+// Used to check argument *count* against the official API's per-name schema — the gap
+// findInvalidFunctions leaves open: a real function name used with the wrong number of
+// arguments passes name-existence validation untouched today.
+
+export type BdscriptNode = { type: 'text'; value: string } | BdscriptCallNode;
+
+export interface BdscriptCallNode {
+  type: 'call';
+  name: string;
+  /** False for a bare call with no brackets at all, e.g. `$message` vs `$message[user]`. */
+  hasBrackets: boolean;
+  /** Each element is one `;`-separated argument, itself a sequence of text/nested-call nodes. */
+  args: BdscriptNode[][];
+}
+
+const CALL_NAME = /^\$([A-Za-z][A-Za-z0-9]*)/;
+const ARG_TERMINATORS: ReadonlySet<string> = new Set([';', ']']);
+const NO_TERMINATORS: ReadonlySet<string> = new Set();
+
+function parseTextRun(
+  code: string,
+  start: number,
+  end: number,
+  terminators: ReadonlySet<string>
+): { nodes: BdscriptNode[]; stop: number } {
+  const nodes: BdscriptNode[] = [];
+  let buf = '';
+  let i = start;
+  // Depth of literal (non-call) `[...]` we're inside, e.g. an unescaped `[@user]` placeholder —
+  // its own `]` must not be mistaken for the enclosing call's terminator.
+  let bareDepth = 0;
+
+  const flush = () => {
+    if (buf) {
+      nodes.push({ type: 'text', value: buf });
+      buf = '';
+    }
+  };
+
+  while (i < end) {
+    const ch = code[i]!;
+
+    if (ch === '\\' && i + 1 < end && (code[i + 1] === ';' || code[i + 1] === ']')) {
+      buf += code[i + 1];
+      i += 2;
+      continue;
+    }
+
+    if (bareDepth === 0 && terminators.has(ch)) {
+      break;
+    }
+
+    if (ch === '$') {
+      const match = CALL_NAME.exec(code.slice(i, end));
+      if (match) {
+        flush();
+        const name = match[1]!;
+        const afterName = i + match[0].length;
+        if (code[afterName] === '[') {
+          const call = parseArgs(code, afterName + 1, end);
+          nodes.push({ type: 'call', name, hasBrackets: true, args: call.args });
+          i = call.end;
+        } else {
+          nodes.push({ type: 'call', name, hasBrackets: false, args: [] });
+          i = afterName;
+        }
+        continue;
+      }
+    }
+
+    if (ch === '[') {
+      bareDepth++;
+      buf += ch;
+      i++;
+      continue;
+    }
+
+    if (ch === ']' && bareDepth > 0) {
+      bareDepth--;
+      buf += ch;
+      i++;
+      continue;
+    }
+
+    buf += ch;
+    i++;
+  }
+
+  flush();
+  return { nodes, stop: i };
+}
+
+function parseArgs(code: string, start: number, end: number): { args: BdscriptNode[][]; end: number } {
+  const args: BdscriptNode[][] = [];
+  let i = start;
+
+  while (true) {
+    const run = parseTextRun(code, i, end, ARG_TERMINATORS);
+    args.push(run.nodes);
+    i = run.stop;
+
+    if (i >= end) return { args, end: i }; // unterminated — missing `]`, stop where we ran out
+    if (code[i] === ';') {
+      i++;
+      continue;
+    }
+    return { args, end: i + 1 }; // code[i] === ']' — consume it
+  }
+}
+
+/** Parse a BDScript snippet into a sequence of text/call nodes; calls carry their own nested args. */
+export function parseBdscript(code: string): BdscriptNode[] {
+  return parseTextRun(code, 0, code.length, NO_TERMINATORS).nodes;
+}
+
+export interface FlatBdscriptCall {
+  name: string;
+  hasBrackets: boolean;
+  argCount: number;
+}
+
+function countArgs(node: BdscriptCallNode): number {
+  if (!node.hasBrackets) return 0;
+  // `$fn[]` — nothing between the brackets is "no arguments", not one empty-string argument.
+  if (node.args.length === 1 && node.args[0]!.length === 0) return 0;
+  return node.args.length;
+}
+
+/** Flatten all calls in a parsed tree, including ones nested inside another call's arguments. */
+export function flattenBdscriptCalls(nodes: BdscriptNode[]): FlatBdscriptCall[] {
+  const calls: FlatBdscriptCall[] = [];
+
+  const visit = (list: BdscriptNode[]) => {
+    for (const node of list) {
+      if (node.type !== 'call') continue;
+      calls.push({ name: node.name, hasBrackets: node.hasBrackets, argCount: countArgs(node) });
+      for (const arg of node.args) visit(arg);
+    }
+  };
+
+  visit(nodes);
+  return calls;
+}
+
+export interface ArityIssue {
+  name: string;
+  argCount: number;
+  /** Human-readable expected-count description, one per syntax overload. */
+  expected: string[];
+}
+
+function describeVariant(variant: BdfdApiArgument[] | null): { min: number; max: number; label: string } {
+  if (!variant?.length) {
+    return { min: 0, max: 0, label: 'no arguments' };
+  }
+
+  const min = variant.filter((arg) => arg.required).length;
+  const max = variant.length;
+  const names = variant.map((arg) => arg.name).join(', ');
+  return {
+    min,
+    max,
+    label: min === max ? `${max} argument(s) (${names})` : `${min}-${max} argument(s) (${names})`
+  };
+}
+
+/**
+ * Flag calls whose argument count doesn't fit any of the name's known syntax overloads.
+ * Skips names with no `variants` schema (wiki-only entries) rather than guessing.
+ */
+export function findArityIssues(calls: FlatBdscriptCall[], index: BdscriptFunctionIndex): ArityIssue[] {
+  const issues: ArityIssue[] = [];
+
+  for (const call of calls) {
+    const variants = index.get(call.name)?.variants;
+    if (!variants?.length) continue;
+
+    const ranges = variants.map(describeVariant);
+    const fits = ranges.some((r) => call.argCount >= r.min && call.argCount <= r.max);
+    if (!fits) {
+      issues.push({ name: call.name, argCount: call.argCount, expected: ranges.map((r) => r.label) });
+    }
+  }
+
+  return issues;
+}
+
+/** Same as findArityIssues, but scoped to code-fence bodies (for checking a model's reply code). */
+export function findArityIssuesInReplyCode(text: string, index: BdscriptFunctionIndex): ArityIssue[] {
+  const seen = new Set<string>();
+  const issues: ArityIssue[] = [];
+
+  for (const match of text.matchAll(CODE_FENCE_PATTERN)) {
+    const body = match[2] ?? '';
+    const calls = flattenBdscriptCalls(parseBdscript(body));
+    for (const issue of findArityIssues(calls, index)) {
+      if (seen.has(issue.name)) continue;
+      seen.add(issue.name);
+      issues.push(issue);
+    }
+  }
+
+  return issues;
+}
+
+// --- Deterministic escaping repair (existing) ------------------------------------------------
 
 /**
  * Escape literal `]` in placeholder-like `[word]` / `[@user]` inside `$function[...]` args.
@@ -224,7 +437,8 @@ export function suggestFunctionAlternatives(
 export function buildRepairPrompt(
   invalidNames: string[],
   index: BdscriptFunctionIndex,
-  misusedCallbacks: string[] = []
+  misusedCallbacks: string[] = [],
+  arityIssues: ArityIssue[] = []
 ): string {
   const parts: string[] = [];
 
@@ -257,6 +471,19 @@ export function buildRepairPrompt(
       'Rewrite the **full** answer with labeled parts:',
       '- **Trigger:** put callbacks here (alone in a fence is fine)',
       '- **Reply code:** BDScript $functions only — no callbacks in the same fence as reply functions'
+    );
+  }
+
+  if (arityIssues.length) {
+    if (parts.length) parts.push('');
+    parts.push(
+      'Your previous answer used BDScript functions with the wrong number of arguments:',
+      ...arityIssues.map(
+        (issue) =>
+          `- \`$${issue.name}\` was called with ${issue.argCount} argument(s); expected ${issue.expected.join(' or ')}`
+      ),
+      '',
+      'Rewrite the **full** answer using the correct argument count for each function, matching relevant_functions.'
     );
   }
 
