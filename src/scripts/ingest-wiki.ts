@@ -59,6 +59,8 @@ function chunkMarkdown(filePath: string, content: string): WikiChunk[] {
   const chunks: WikiChunk[] = [];
   const lines = content.split('\n');
   const pageTitle = /^#\s+(.+)$/m.exec(content)?.[1]?.trim();
+  /** Repeated H2/H3 titles (e.g. CHANGELOG months) share a slug — suffix so Chroma IDs stay unique. */
+  const slugCounts = new Map<string, number>();
 
   let currentH2: string | undefined;
   let currentHeading = 'Introduction';
@@ -74,6 +76,13 @@ function chunkMarkdown(filePath: string, content: string): WikiChunk[] {
     return parts.join(' > ');
   };
 
+  const uniqueChunkId = (headingSlug: string): string => {
+    const base = `${filePath}#${headingSlug}`;
+    const n = slugCounts.get(base) ?? 0;
+    slugCounts.set(base, n + 1);
+    return n === 0 ? base : `${base}-${n}`;
+  };
+
   const flush = () => {
     const text = body.join('\n').trim();
     if (!text && currentHeading === 'Introduction') return;
@@ -81,8 +90,7 @@ function chunkMarkdown(filePath: string, content: string): WikiChunk[] {
     const doc = `## ${breadcrumb}\n\n${text}`.trim();
     if (!doc) return;
 
-    const headingSlug = slugify(currentHeading);
-    const id = `${filePath}#${headingSlug}`;
+    const id = uniqueChunkId(slugify(currentHeading));
     const wikiPath = filePath.replace(/^src\//, '').replace(/\.md$/, '.html');
     chunks.push({
       id,
@@ -248,7 +256,7 @@ async function main() {
     );
 
     await collection.upsert({
-      ids: [...new Set(batch.map((c) => c.id))],
+      ids: batch.map((c) => c.id),
       documents: batch.map((c) => c.document),
       metadatas: batch.map((c) => c.metadata),
       embeddings

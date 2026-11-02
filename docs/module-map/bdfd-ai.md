@@ -68,6 +68,7 @@ List UI utils: `src/lib/command-utils/bdfd-ai/list/ai-conversation-list.utils.ts
 
 - Script: `src/scripts/ingest-wiki.ts` → `node dist/src/scripts/ingest-wiki.js` (also in compose).
 - Before chunking, `wiki-markdown.ts` strips `discord yaml` preview fences.
+- Wiki chunk IDs are `path#heading-slug`; repeated headings in one file (e.g. CHANGELOG months) get `-1`, `-2`, … so Chroma upsert stays unique.
 - Ingest skips **`src/javascript/`** (deprecated BDJS) via `wiki-ingest.ts`; each run **recreates** the Chroma collection so old BDJS chunks are removed.
 - Ingest also pulls **[BDFD public API](https://wiki.botdesignerdiscord.com/resources/api.html)** `function_list` and `callback_list` (`bdfd-api.ts`) — one Chroma chunk per function/callback (`kind` metadata); merges names into `bdscript-functions.json` with `kind: function | callback`. Callback chunks state they belong in the **command trigger** field, not reply code. **Re-run ingest** after changing API chunk format so Chroma picks up the stronger callback wording.
 - Optional Discord ingest source (`discord-ingest.ts`): set `BDFD_INGEST_CHANNEL_IDS` (comma-separated channel IDs) and token via `BDFD_INGEST_BOT_TOKEN` (falls back to `BOT_TOKEN`) to index message history from guide/FAQ channels. The bot does **not** use the Message Content intent, so Discord returns those channel histories without text, embeds, or attachments. Ingest logs a warning and skips the channel. Messages the bot itself sent can still be indexed.
