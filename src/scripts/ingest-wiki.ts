@@ -248,7 +248,7 @@ async function main() {
     );
 
     await collection.upsert({
-      ids: batch.map((c) => c.id),
+      ids: [...new Set(batch.map((c) => c.id))],
       documents: batch.map((c) => c.document),
       metadatas: batch.map((c) => c.metadata),
       embeddings
