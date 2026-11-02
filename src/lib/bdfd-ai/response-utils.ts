@@ -57,7 +57,8 @@ export function buildUnavailableEmbed(): EmbedBuilder {
 export function buildValidationFailedEmbed(): EmbedBuilder {
   return buildAiEmbed(
     "I couldn't put together a verified answer. Please try asking again with more detail " +
-      "(e.g. the exact command or reply code you're working with) — this attempt did not count against your usage limit."
+      "(e.g. the exact command or reply code you're working with) — this attempt did not count against your usage limit. " +
+      'If a previous answer in this conversation looks wrong, ask a staff member to clear it with `/ai-limit`.'
   );
 }
 

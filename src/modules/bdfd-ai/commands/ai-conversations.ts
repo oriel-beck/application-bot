@@ -4,8 +4,8 @@ import { Command } from '@sapphire/framework';
 
 @ApplyOptions<Command.Options>({
   name: 'ai-conversations',
-  description: 'Browse and manage stored AI conversations (owner only).',
-  preconditions: ['OwnerOnly']
+  description: 'Browse and manage stored AI conversations (staff only).',
+  preconditions: ['StaffOnly']
 })
 export class AiConversationsCommand extends Command {
   public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {

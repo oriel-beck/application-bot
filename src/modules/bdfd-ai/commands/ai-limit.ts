@@ -5,8 +5,8 @@ import { DEFAULT_AI_LIMIT } from '../managers/ai-rate.manager.js';
 
 @ApplyOptions<Command.Options>({
   name: 'ai-limit',
-  description: 'Configure per-channel AI response limits (owner only).',
-  preconditions: ['OwnerOnly']
+  description: 'Configure per-channel AI response limits (staff only).',
+  preconditions: ['StaffOnly']
 })
 export class AiLimitCommand extends Command {
   public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
