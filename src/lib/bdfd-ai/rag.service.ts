@@ -29,11 +29,32 @@ import { parseStructuredCompletion, spliceSnippetsIntoResponse, type StructuredD
 import type { ChatTurn } from './types.js';
 import { extractUrls, fetchExternalContent } from './external-content.js';
 import { MAX_TOOL_ROUNDS, TOOL_SEARCH_TOP_K, WIKI_AGENT_TOOLS } from './rag-tools.js';
-import { formatWikiChunks, mergeWikiChunks, searchWikiDocuments } from './wiki-search.js';
+import {
+  formatWikiChunks,
+  loadWikiChunkRecords,
+  mergeWikiChunks,
+  searchWikiChunkRecords,
+  searchWikiDocuments
+} from './wiki-search.js';
+import { WIKI_BASE_URL } from './wiki-ingest.js';
+import { sectionUrl, WikiPageIndex, type WikiPageKind, type WikiSearchHit } from './wiki-page-index.js';
 
 const WIKI_COLLECTION = 'bdfd-wiki';
 const CHAT_MODEL = 'gpt-4o-mini';
 const INITIAL_TOP_K = 6;
+/** Related wiki pages linked under a `/search ai` answer. */
+const MAX_CITED_PAGES = 3;
+/** Don't hammer Chroma when the page index is empty (e.g. ingest hasn't run yet). */
+const WIKI_INDEX_RETRY_MS = 60_000;
+
+const WIKI_QUESTION_PROMPT = `This question comes from the wiki search command: the user is asking about the BDFD wiki.
+Answer from <wiki_context> and <relevant_functions> (use search_wiki if they don't cover it). Explain concepts in plain language and keep code examples short.
+If the wiki doesn't cover the question, say so plainly instead of guessing. Do not add a sources list — links to the wiki pages you were given are appended automatically.`;
+
+export interface RagQueryOptions {
+  /** `/search ai`: wiki-focused prompt, and links to the retrieved wiki pages are appended. */
+  wikiQuestion?: boolean;
+}
 
 const SYSTEM_PROMPT = `You are an expert assistant for BDFD (Bot Designer for Discord), **BDScript only**.
 You help users debug BDScript. You do not support BDFD JavaScript (BDJS) — never suggest \`ban()\`, \`setResponse()\`, or other non-$ JavaScript-mode APIs.
@@ -52,7 +73,7 @@ You also have tools:
 **Hard rule:** Only mention BDScript $functions that appear in relevant_functions, wiki_context, or bdfd_basics, or that check_bdscript_functions confirms exist as **functions**.
 **Hard rule:** Callbacks from relevant_callbacks / check results are **triggers only**. When showing a callback command, label **Trigger** (callback) and **Reply code** (BDScript functions only). Never put callbacks inside reply-code fences.
 **Hard rule:** Inside \`$function[...]\` args, escape literal \`;\` as \`\\;\` and literal \`]\` as \`\\]\`. Usage hints like \`[@user]\` / \`[amount]\` inside \`$argsCheck\` (or any message arg) must be \`[@user\\]\` / \`[amount\\]\`.
-If a function is not found, do not use it. If docs are insufficient after searching, say so and link https://wiki.botdesignerdiscord.com/
+If a function is not found, do not use it. If docs are insufficient after searching, say so and link ${WIKI_BASE_URL}
 
 Context chunks (<wiki_context>, <relevant_functions>, etc.) use plain triple-backtick fences for real BDScript when quoting the wiki. "[Discord UI preview omitted" lines in that context are not code — this is about reading retrieved context, separate from your own output format below.
 
@@ -102,22 +123,17 @@ export class RagService {
   private chroma: ChromaClient | null = null;
   private collection: Collection | null = null;
   private functionIndex: BdscriptFunctionIndex = new Map();
+  private wikiIndex = new WikiPageIndex([]);
+  private wikiIndexLoadedAt = 0;
   private ready = false;
 
   async init(): Promise<void> {
     // Loaded before the OpenAI/Chroma checks: `/check-code` only needs the index, not the AI.
     this.functionIndex = await ensureFunctionIndex();
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      console.warn('[bdfd-ai] OPENAI_API_KEY is not set; AI support is disabled.');
-      return;
-    }
-
-    this.openai = new OpenAI({ apiKey });
+    // Chroma is connected even without OpenAI: `/search wiki` title search only needs the chunks.
     const chromaUrl = process.env.CHROMA_URL ?? 'http://localhost:8000';
     this.chroma = createChromaClient(chromaUrl);
-
     try {
       this.collection = await this.chroma.getOrCreateCollection({
         name: WIKI_COLLECTION,
@@ -126,16 +142,85 @@ export class RagService {
         // function from the optional @chroma-core/default-embed package, which isn't installed.
         embeddingFunction: null
       });
-      if (this.functionIndex.size === 0) {
-        console.error('[bdfd-ai] No BDScript functions indexed; AI support disabled.');
-        return;
-      }
-
-      this.ready = true;
-      console.log(`[bdfd-ai] RAG service ready (${this.functionIndex.size} BDScript functions indexed)`);
     } catch (err) {
       console.error('[bdfd-ai] Failed to connect to Chroma:', err);
+      return;
     }
+
+    await this.loadWikiIndex();
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      console.warn('[bdfd-ai] OPENAI_API_KEY is not set; AI support is disabled.');
+      return;
+    }
+    this.openai = new OpenAI({ apiKey });
+
+    if (this.functionIndex.size === 0) {
+      console.error('[bdfd-ai] No BDScript functions indexed; AI support disabled.');
+      return;
+    }
+
+    this.ready = true;
+    console.log(`[bdfd-ai] RAG service ready (${this.functionIndex.size} BDScript functions indexed)`);
+  }
+
+  private async loadWikiIndex(): Promise<void> {
+    if (!this.collection) return;
+    this.wikiIndexLoadedAt = Date.now();
+    try {
+      this.wikiIndex = new WikiPageIndex(await loadWikiChunkRecords(this.collection));
+      console.log(`[bdfd-ai] Wiki search index ready (${this.wikiIndex.size} pages)`);
+    } catch (err) {
+      console.error('[bdfd-ai] Failed to load wiki pages for search:', err);
+    }
+  }
+
+  /** Current wiki page index without reloading — for autocomplete, which must answer within 3s. */
+  get wikiPageIndex(): WikiPageIndex {
+    return this.wikiIndex;
+  }
+
+  /** Wiki page index for `/search wiki`; retried (throttled) while empty, e.g. before the first ingest. */
+  async getWikiIndex(): Promise<WikiPageIndex> {
+    if (this.wikiIndex.size === 0 && Date.now() - this.wikiIndexLoadedAt > WIKI_INDEX_RETRY_MS) {
+      await this.loadWikiIndex();
+    }
+    return this.wikiIndex;
+  }
+
+  /** Embedding search for queries the title search can't match (e.g. "how do I make a leaderboard"). */
+  async semanticWikiSearch(query: string, limit: number, kind?: WikiPageKind): Promise<WikiSearchHit[]> {
+    if (!this.openai || !this.collection) return [];
+
+    const records = await searchWikiChunkRecords(this.collection, this.openai, query, limit * 2);
+    const hits: WikiSearchHit[] = [];
+    const seen = new Set<string>();
+    for (const record of records) {
+      const located = this.wikiIndex.locate(record.document);
+      if (!located || seen.has(located.page.file) || (kind && located.page.kind !== kind)) continue;
+      seen.add(located.page.file);
+      hits.push({ page: located.page, sectionIndex: located.sectionIndex, score: 0 });
+    }
+    return hits.slice(0, limit);
+  }
+
+  /** Markdown list of the wiki pages behind the retrieved chunks, in retrieval order. */
+  private formatWikiSources(wikiChunks: Set<string>): string {
+    const lines: string[] = [];
+    const seen = new Set<string>();
+    for (const chunk of wikiChunks) {
+      const located = this.wikiIndex.locate(chunk);
+      const url = located && sectionUrl(located.page, located.sectionIndex);
+      if (!located || !url || seen.has(located.page.file)) continue;
+      seen.add(located.page.file);
+      const { page, sectionIndex } = located;
+      const section = page.sections[sectionIndex];
+      const label = section && section.heading !== 'Introduction' ? `${page.title} › ${section.heading}` : page.title;
+      lines.push(`- [${label}](${url})`);
+      if (lines.length === MAX_CITED_PAGES) break;
+    }
+    return lines.length ? `\n\n**Related wiki pages**\n${lines.join('\n')}` : '';
   }
 
   get isReady(): boolean {
@@ -357,7 +442,7 @@ export class RagService {
     return this.validateAndRepair(parseStructuredCompletion(final.choices[0]?.message?.content), messages);
   }
 
-  async query(userMessage: string, history: ChatTurn[]): Promise<string> {
+  async query(userMessage: string, history: ChatTurn[], options: RagQueryOptions = {}): Promise<string> {
     if (!this.ready || !this.openai || !this.collection) {
       throw new Error('RAG service not ready');
     }
@@ -392,6 +477,10 @@ export class RagService {
         content: this.buildSystemContent(wikiChunks, apiFunctionChunks, apiCallbackChunks)
       }
     ];
+
+    if (options.wikiQuestion) {
+      messages.push({ role: 'system', content: WIKI_QUESTION_PROMPT });
+    }
 
     if (externalContext) {
       messages.push({
@@ -429,6 +518,7 @@ export class RagService {
 
     messages.push({ role: 'user', content: userMessage });
 
-    return this.completeWithTools(messages, wikiChunks, apiFunctionChunks, apiCallbackChunks);
+    const answer = await this.completeWithTools(messages, wikiChunks, apiFunctionChunks, apiCallbackChunks);
+    return options.wikiQuestion ? answer + this.formatWikiSources(wikiChunks) : answer;
   }
 }

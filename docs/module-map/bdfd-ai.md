@@ -11,6 +11,16 @@ RAG-powered AI assistant for support forum threads, international support thread
 
 Both paths share `processAiRequest` in `src/lib/bdfd-ai/process-request.ts`.
 
+## Wiki search
+
+**`/search wiki query: [type:]`** — finds a wiki **guide** or **function** reference by title or section heading; `type` (Guides / Functions) narrows it, unset searches both. Fuzzy: partial names (`textspl`), typos (`textSplti`, `varaibles`), `$` optional, camelCase typed as words (`text split`). The option autocompletes (top 25, labelled Guide/Function; picking one encodes `page:<file>[#<section index>]` as the value). The reply is public: the best match's section text, an **On this page** list of section links, and **Other results**. Functions the official API lists but the wiki has no page for (e.g. `$addActionRow`) are searchable too: they show their API definition, marked "no wiki page yet", **with no link**. A URL is never guessed from a function name.
+
+All links go to the **nightly** wiki (`WIKI_BASE_URL` in `wiki-ingest.ts`, `https://wiki.botdesignerdiscord.com/nightly/`). Ingest reads the repo's `dev` branch, which deploys there; the production root is built from `prod` and lags behind. Page URLs are rebuilt from the source path at runtime (`wikiPageUrl`), so they're correct even for chunks ingested with an older base. Links inside excerpts are kept only when they point at an indexed page; typo'd links in the wiki source are shown as plain text.
+
+The page index (`WikiPageIndex`, `wiki-page-index.ts`) is built in memory at startup from every `source: wiki` and `source: bdfd-api` Chroma chunk (`loadWikiChunkRecords`). It needs Chroma, but **not** `OPENAI_API_KEY`. If the index is empty (no ingest yet), it retries at most once a minute. When the title search finds nothing, or a 3+ word query only matched weakly (a question, not a page name), an embedding search over wiki and API chunks (`RagService.semanticWikiSearch`, needs OpenAI) fills in.
+
+**`/search ai question:`** — the same RAG pipeline as `/ai` (same channel/role gating via `ai-command-access.ts`, ignores `ai_enabled`, no channel limit or memory), plus a wiki-focused system prompt. Up to 3 **Related wiki pages** (the pages behind the retrieved wiki chunks) are appended to the answer as links.
+
 ## Code checker (no AI)
 
 **`/check-code`** (optional single-line `code` option, otherwise a multi-line modal) and the **Check BDScript** message context menu run the BDScript parser over the user's code and list unknown functions (with suggestions), wrong argument counts, calls closed early by an unescaped `]` (e.g. `[@user]` inside `$argsCheck`), and unclosed calls — each with line/column. Ephemeral reply; no OpenAI call, so it ignores `ai_enabled` and works without `OPENAI_API_KEY` (only the function index is needed).
@@ -36,6 +46,7 @@ Mention and reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_
 | `commands/ai-sweep.ts`                     | Owner `/ai-sweep` — clear AI state for channels inactive 7+ days (transcripts kept)              |
 | `commands/ai-conversations.ts`             | Staff `/ai-conversations` — Components V2 browser (each row: usage/limit + Reset usage / Delete) |
 | `commands/check-code.ts`                   | `/check-code` + **Check BDScript** context menu — parser-only lint of user code                  |
+| `commands/search.ts`                       | `/search wiki` (fuzzy page search + autocomplete) and `/search ai` (AI answer about the wiki)    |
 | `interaction-handlers/check-code-modal.ts` | `/check-code` modal submit (`chk:mdl:code`)                                                      |
 | `interaction-handlers/list/*.ts`           | List pagination + reset/delete (`ai:list:*`)                                                     |
 | `listeners/message-create.ts`              | Mention or reply-to-bot flow                                                                     |
@@ -49,23 +60,26 @@ Mention and reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_
 
 Custom IDs: `AiConversationCustomIDs`, `CheckCodeCustomIDs` in `src/lib/constants/custom-ids.ts`.  
 Check-code utils: `src/lib/command-utils/bdfd-ai/check-code.utils.ts` (modal, code-fence extraction, result embed).
+Search utils: `src/lib/command-utils/bdfd-ai/search.utils.ts` (autocomplete choices/pick round-trip, result embed).
 List UI utils: `src/lib/command-utils/bdfd-ai/list/ai-conversation-list.utils.ts` (`PAGE_SIZE = 8`, First/Prev/page/Next/Last; per-row Reset usage / Delete).
 
 ## Shared lib (`src/lib/bdfd-ai/`)
 
-| File                         | Role                                                                                                                                                                                                                              |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `process-request.ts`         | Gates, thinking UI, RAG call, save turns                                                                                                                                                                                          |
-| `response-utils.ts`          | Embeds (footer disclaimer on successful replies); over 4096 chars attach `bdfd-ai-response.txt`                                                                                                                                   |
-| `rag.service.ts`             | Chroma + OpenAI (`container.rag`); parallel wiki + API retrieval (functions vs callbacks split), post-validation, auto-repair                                                                                                     |
-| `api-function-search.ts`     | Chroma query filtered to `source: bdfd-api`; returns hits with `kind` (`function` / `callback`)                                                                                                                                   |
-| `bdscript-validation.ts`     | BDScript parser (`parseBdscript`: unescaped `]` closes the innermost call, `\;` / `\]` are literal); name, arity and early-`]` checks; `lintBdscript` for `/check-code`; placeholder `]` escaping; edit-distance name suggestions |
-| `bdscript-function-index.ts` | Name index with `kind: function \| callback`; `ensureFunctionIndex()` API fallback when JSON is empty or has no `variants` (cached back to the JSON)                                                                              |
-| `bdfd-basics.ts`             | Always-on BDFD primer (callbacks = trigger only, not reply code)                                                                                                                                                                  |
-| `bdfd-api.ts`                | Public API `function_list` / `callback_list` → Chroma chunks + index registration                                                                                                                                                 |
-| `discord-ingest.ts`          | Optional Discord channel history ingest (guides/FAQ channels)                                                                                                                                                                     |
-| `channel-utils.ts`           | Channel kind + author resolution. Ticket author falls back to a user mention on the opener when that embed text is hidden.                                                                                                        |
-| `cleanup-channel.ts`         | `cleanupClosedSupportChannel` + inactive sweep                                                                                                                                                                                    |
+| File                         | Role                                                                                                                                                                                                                                |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ai-command-access.ts`       | Shared channel/role gate for `/ai` and `/search ai`                                                                                                                                                                                 |
+| `wiki-page-index.ts`         | `/search wiki` fuzzy title/heading index over wiki chunks (exact > prefix > substring > typo, camelCase-aware); `locate(document)` maps a RAG chunk back to its page; display helpers (link resolution, mdBook anchors, truncation) |
+| `process-request.ts`         | Gates, thinking UI, RAG call, save turns                                                                                                                                                                                            |
+| `response-utils.ts`          | Embeds (footer disclaimer on successful replies); over 4096 chars attach `bdfd-ai-response.txt`                                                                                                                                     |
+| `rag.service.ts`             | Chroma + OpenAI (`container.rag`); parallel wiki + API retrieval (functions vs callbacks split), post-validation, auto-repair                                                                                                       |
+| `api-function-search.ts`     | Chroma query filtered to `source: bdfd-api`; returns hits with `kind` (`function` / `callback`)                                                                                                                                     |
+| `bdscript-validation.ts`     | BDScript parser (`parseBdscript`: unescaped `]` closes the innermost call, `\;` / `\]` are literal); name, arity and early-`]` checks; `lintBdscript` for `/check-code`; placeholder `]` escaping; edit-distance name suggestions   |
+| `bdscript-function-index.ts` | Name index with `kind: function \| callback`; `ensureFunctionIndex()` API fallback when JSON is empty or has no `variants` (cached back to the JSON)                                                                                |
+| `bdfd-basics.ts`             | Always-on BDFD primer (callbacks = trigger only, not reply code)                                                                                                                                                                    |
+| `bdfd-api.ts`                | Public API `function_list` / `callback_list` → Chroma chunks + index registration                                                                                                                                                   |
+| `discord-ingest.ts`          | Optional Discord channel history ingest (guides/FAQ channels)                                                                                                                                                                       |
+| `channel-utils.ts`           | Channel kind + author resolution. Ticket author falls back to a user mention on the opener when that embed text is hidden.                                                                                                          |
+| `cleanup-channel.ts`         | `cleanupClosedSupportChannel` + inactive sweep                                                                                                                                                                                      |
 
 ## Settings
 
@@ -76,7 +90,9 @@ List UI utils: `src/lib/command-utils/bdfd-ai/list/ai-conversation-list.utils.ts
 - Script: `src/scripts/ingest-wiki.ts` → `node dist/src/scripts/ingest-wiki.js` (also in compose).
 - Before chunking, `wiki-markdown.ts` strips `discord yaml` preview fences.
 - Wiki chunk IDs are `path#heading-slug`; repeated headings in one file (e.g. CHANGELOG months) get `-1`, `-2`, … so Chroma upsert stays unique.
+- Ingest reads the wiki repo's **`dev`** branch (deployed to the nightly wiki, see `WIKI_BASE_URL`) and only the pages linked from its `src/SUMMARY.md` (`parseSummaryPaths`): mdBook builds nothing else, so unlisted files would link to a 404.
 - Ingest skips **`src/javascript/`** (deprecated BDJS) via `wiki-ingest.ts`; each run **recreates** the Chroma collection so old BDJS chunks are removed.
+- API chunks carry a `**Wiki:**` line (and `url` metadata) only when a published wiki page exists for that name — wherever it lives (`bdscript/`, `premium/`, `callbacks/`). API-only names get `url: ''` in chunks and in `bdscript-functions.json` rather than a guessed URL.
 - Ingest also pulls **[BDFD public API](https://wiki.botdesignerdiscord.com/resources/api.html)** `function_list` and `callback_list` (`bdfd-api.ts`) — one Chroma chunk per function/callback (`kind` metadata); merges names into `bdscript-functions.json` with `kind: function | callback`. Callback chunks state they belong in the **command trigger** field, not reply code. **Re-run ingest** after changing API chunk format so Chroma picks up the stronger callback wording.
 - Optional Discord ingest source (`discord-ingest.ts`): set `BDFD_INGEST_CHANNEL_IDS` (comma-separated channel IDs) and token via `BDFD_INGEST_BOT_TOKEN` (falls back to `BOT_TOKEN`) to index message history from guide/FAQ channels. The bot does **not** use the Message Content intent, so Discord returns those channel histories without text, embeds, or attachments. Ingest logs a warning and skips the channel. Messages the bot itself sent can still be indexed.
 - If `BDFD_INGEST_CHANNEL_IDS` is not set, ingest auto-falls back to `config.json` channel keys from `BDFD_INGEST_CHANNEL_KEYS` (default: `tips,variable_guides,limiter_guides,faq`) and uses `config.guild` as guild fallback for jump-link URLs.

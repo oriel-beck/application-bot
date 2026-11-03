@@ -28,6 +28,8 @@ export interface ProcessAiRequestOptions {
   ignoreAiEnabled?: boolean;
   /** When true, skips channel usage limits, thinking lock, and conversation persistence (`/ai`). */
   skipChannelTracking?: boolean;
+  /** `/search ai`: wiki-focused answer with related wiki page links. */
+  wikiQuestion?: boolean;
 }
 
 type EditableMessage = {
@@ -71,7 +73,7 @@ async function createThinkingSurface(source: AiRequestSource): Promise<EditableM
 }
 
 export async function processAiRequest(options: ProcessAiRequestOptions): Promise<void> {
-  const { container, channelId, userText, source, ignoreAiEnabled, skipChannelTracking } = options;
+  const { container, channelId, userText, source, ignoreAiEnabled, skipChannelTracking, wikiQuestion } = options;
 
   const settings = await container.settings.get(container.config.guild).catch(() => null);
   if (!ignoreAiEnabled && !settings?.at(0)?.aiEnabled) {
@@ -133,7 +135,7 @@ export async function processAiRequest(options: ProcessAiRequestOptions): Promis
 
   try {
     const history = skipChannelTracking ? [] : await container.aiConversation.getHistory(channelId);
-    const response = await container.rag.query(userText, history);
+    const response = await container.rag.query(userText, history, { wikiQuestion });
 
     animation.stop();
 

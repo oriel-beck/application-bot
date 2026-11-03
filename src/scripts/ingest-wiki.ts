@@ -14,18 +14,20 @@ import {
   fetchBdfdCallbackList,
   fetchBdfdFunctionList,
   registerBdscriptCallbacksFromApi,
-  registerBdscriptFunctionsFromApi
+  registerBdscriptFunctionsFromApi,
+  type WikiPageResolver
 } from '../lib/bdfd-ai/bdfd-api.js';
 import {
   bdscriptFunctionIndexToJson,
   registerBdscriptFunctionsFromMarkdown,
   type BdscriptFunctionIndex
 } from '../lib/bdfd-ai/bdscript-function-index.js';
-import { isWikiPathIncluded } from '../lib/bdfd-ai/wiki-ingest.js';
+import { isWikiPathIncluded, parseSummaryPaths } from '../lib/bdfd-ai/wiki-ingest.js';
 import { normalizeWikiMarkdownForRag } from '../lib/bdfd-ai/wiki-markdown.js';
 import { chunkMarkdown, type WikiChunk } from '../lib/bdfd-ai/wiki-chunking.js';
 
 const WIKI_REPO = 'NilPointer-Software/bdfd-wiki';
+/** Deploys to the nightly wiki — see `WIKI_BASE_URL`. */
 const WIKI_BRANCH = 'dev';
 const COLLECTION_NAME = 'bdfd-wiki';
 const EMBEDDING_MODEL = 'text-embedding-3-small';
@@ -42,10 +44,11 @@ async function listMarkdownPaths(): Promise<string[]> {
   if (!res.ok) throw new Error(`GitHub tree fetch failed: ${res.status}`);
 
   const data = (await res.json()) as { tree: { path: string; type: string }[] };
+  // Only pages linked from SUMMARY.md are built into the live wiki — anything else would be
+  // linked to a URL that 404s.
+  const published = new Set(parseSummaryPaths(await fetchMarkdown('src/SUMMARY.md')));
   return data.tree
-    .filter(
-      (t) => t.type === 'blob' && t.path.endsWith('.md') && t.path.startsWith('src/') && isWikiPathIncluded(t.path)
-    )
+    .filter((t) => t.type === 'blob' && published.has(t.path) && isWikiPathIncluded(t.path))
     .map((t) => t.path);
 }
 
@@ -93,7 +96,7 @@ async function main() {
   // we always supply our own precomputed embeddings on upsert, so it's never needed.
   const collection = await chroma.createCollection({ name: COLLECTION_NAME, embeddingFunction: null });
 
-  console.log('Listing wiki markdown files (BDScript/docs only; src/javascript/ excluded)...');
+  console.log(`Listing published wiki pages on ${WIKI_BRANCH} (BDScript/docs only; src/javascript/ excluded)...`);
   const paths = await listMarkdownPaths();
   console.log(`Found ${paths.length} markdown files`);
 
@@ -109,17 +112,23 @@ async function main() {
   }
   console.log(`Prepared ${allChunks.length} wiki chunks`);
 
+  // Names registered from a published wiki page carry its `src/` path; API-only names have none.
+  const wikiPageFor: WikiPageResolver = (name) => {
+    const file = functionIndex.get(name)?.file;
+    return file?.startsWith('src/') ? file : undefined;
+  };
+
   console.log('Fetching BDFD public API function_list...');
   const apiFunctions = await fetchBdfdFunctionList();
   const apiAdded = registerBdscriptFunctionsFromApi(apiFunctions, functionIndex);
-  const apiChunks = bdfdApiFunctionsToChunks(apiFunctions);
+  const apiChunks = bdfdApiFunctionsToChunks(apiFunctions, wikiPageFor);
   allChunks.push(...apiChunks);
   console.log(`Added ${apiChunks.length} function API chunks (${apiAdded} new names in function index)`);
 
   console.log('Fetching BDFD public API callback_list...');
   const apiCallbacks = await fetchBdfdCallbackList();
   const callbackAdded = registerBdscriptCallbacksFromApi(apiCallbacks, functionIndex);
-  const callbackChunks = bdfdApiCallbacksToChunks(apiCallbacks);
+  const callbackChunks = bdfdApiCallbacksToChunks(apiCallbacks, wikiPageFor);
   allChunks.push(...callbackChunks);
   console.log(`Added ${callbackChunks.length} callback API chunks (${callbackAdded} new names in function index)`);
 

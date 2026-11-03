@@ -1,3 +1,5 @@
+import { WIKI_BASE_URL } from './wiki-ingest.js';
+
 export const MAX_CHUNK_CHARS = 3200;
 
 export interface WikiChunk {
@@ -63,7 +65,7 @@ export function chunkMarkdown(filePath: string, content: string): WikiChunk[] {
       metadata: {
         file: filePath,
         heading: breadcrumb,
-        url: `https://wiki.botdesignerdiscord.com/${wikiPath}`,
+        url: `${WIKI_BASE_URL}${wikiPath}`,
         source: 'wiki'
       }
     });

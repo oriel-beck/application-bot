@@ -8,6 +8,7 @@ import {
   registerBdscriptCallbacksFromApi,
   registerBdscriptFunctionsFromApi
 } from './bdfd-api.js';
+import { WIKI_BASE_URL } from './wiki-ingest.js';
 
 export type BdscriptNameKind = 'function' | 'callback';
 
@@ -39,7 +40,7 @@ export function normalizeBdscriptFunctionName(name: string): string {
 
 export function wikiUrlFromPath(filePath: string): string {
   const wikiPath = filePath.replace(/^src\//, '').replace(/\.md$/, '.html');
-  return `https://wiki.botdesignerdiscord.com/${wikiPath}`;
+  return `${WIKI_BASE_URL}${wikiPath}`;
 }
 
 /** Infer function vs callback from wiki/API file path (callback paths checked first). */
@@ -103,7 +104,8 @@ export async function loadBdscriptFunctionIndex(cwd = process.cwd()): Promise<Bd
     const index: BdscriptFunctionIndex = new Map();
     for (const [name, rec] of Object.entries(data)) {
       index.set(name, {
-        url: rec.url,
+        // Rebuilt from `file` so a JSON written with an older base URL still links correctly.
+        url: rec.file.startsWith('src/') ? wikiUrlFromPath(rec.file) : rec.url,
         file: rec.file,
         kind: rec.kind ?? inferBdscriptKind(rec.file),
         variants: rec.variants
@@ -225,10 +227,11 @@ export async function checkBdscriptFunctions(
             exists = true;
             file = candidate;
             kind = inferBdscriptKind(candidate);
+            // API-only names have no wiki page to link.
             url =
               candidate.startsWith(BDSCRIPT_FILE_PREFIX) || candidate.startsWith(WIKI_CALLBACK_PREFIX)
                 ? wikiUrlFromPath(candidate)
-                : 'https://wiki.botdesignerdiscord.com/resources/api.html';
+                : undefined;
             break;
           }
         } catch {

@@ -27,7 +27,9 @@ describe('normalizeBdscriptFunctionName', () => {
 
 describe('wikiUrlFromPath', () => {
   it('maps a src/*.md path to the published wiki URL', () => {
-    expect(wikiUrlFromPath('src/bdscript/var.md')).toBe('https://wiki.botdesignerdiscord.com/bdscript/var.html');
+    expect(wikiUrlFromPath('src/bdscript/var.md')).toBe(
+      'https://wiki.botdesignerdiscord.com/nightly/bdscript/var.html'
+    );
   });
 });
 
@@ -49,7 +51,7 @@ describe('wiki-then-API registration ordering', () => {
     // Ingest order: wiki markdown is registered first (it has a `# $var` heading).
     registerBdscriptFunctionsFromMarkdown('src/bdscript/var.md', '# $var\nCreates a temporary variable.\n', index);
     expect(index.get('var')).toEqual({
-      url: 'https://wiki.botdesignerdiscord.com/bdscript/var.html',
+      url: 'https://wiki.botdesignerdiscord.com/nightly/bdscript/var.html',
       file: 'src/bdscript/var.md',
       kind: 'function'
     });
@@ -74,7 +76,7 @@ describe('wiki-then-API registration ordering', () => {
     );
 
     const rec = index.get('var');
-    expect(rec?.url).toBe('https://wiki.botdesignerdiscord.com/bdscript/var.html');
+    expect(rec?.url).toBe('https://wiki.botdesignerdiscord.com/nightly/bdscript/var.html');
     expect(rec?.file).toBe('src/bdscript/var.md');
     expect(rec?.variants).toEqual([
       [
@@ -201,7 +203,7 @@ describe('ensureFunctionIndex', () => {
   });
 
   it('backfills `variants` into a stale (pre-arity) index, keeping its wiki url, and caches it', async () => {
-    const wikiUrl = 'https://wiki.botdesignerdiscord.com/bdscript/var.html';
+    const wikiUrl = 'https://wiki.botdesignerdiscord.com/nightly/bdscript/var.html';
     await writeIndexJson({ var: { url: wikiUrl, file: 'src/bdscript/var.md', kind: 'function' } });
 
     const index = await ensureFunctionIndex(cwd);

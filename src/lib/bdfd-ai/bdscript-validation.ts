@@ -486,7 +486,7 @@ export function repairBdscriptCode(code: string): string {
  * Optimal-string-alignment edit distance (Levenshtein + adjacent transpositions), so the
  * common `$lenght` / `$mesage` typos are one edit away from the real name.
  */
-function editDistance(a: string, b: string): number {
+export function editDistance(a: string, b: string): number {
   const rows = Array.from({ length: a.length + 1 }, (_, i) => [i, ...new Array<number>(b.length).fill(0)]);
   for (let j = 1; j <= b.length; j++) rows[0]![j] = j;
 
