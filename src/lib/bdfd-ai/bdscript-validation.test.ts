@@ -307,7 +307,8 @@ describe('suggestFunctionAlternatives', () => {
   it('uses the hallucination alias table, and suggests nothing for unrelated names', () => {
     const suggestions = suggestFunctionAlternatives(['lenght', 'length', 'zzzzzz'], index);
     expect(suggestions.get('length')).toEqual(['charCount']);
-    expect(suggestions.get('lenght')).toEqual(['charCount']); // a typo of an alias still resolves
+    // Aliases are exact-match only: they redirect known AI hallucinations, they aren't real names to fuzzy-match.
+    expect(suggestions.has('lenght')).toBe(false);
     expect(suggestions.has('zzzzzz')).toBe(false);
   });
 

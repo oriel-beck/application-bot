@@ -531,8 +531,7 @@ export function suggestFunctionAlternatives(
 
   for (const invalid of invalidNames) {
     const normalized = normalizeBdscriptFunctionName(invalid);
-    const aliasKey = Object.keys(HALLUCINATION_ALIASES).find((key) => nameDistance(normalized, key) !== null);
-    const alias = aliasKey && HALLUCINATION_ALIASES[aliasKey];
+    const alias = HALLUCINATION_ALIASES[normalized];
     if (alias && index.get(alias)?.kind === 'function') {
       suggestions.set(invalid, [alias]);
       continue;
