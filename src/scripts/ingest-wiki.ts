@@ -5,8 +5,8 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import OpenAI from 'openai';
-import { ChromaClient } from 'chromadb';
 import { createHash } from 'crypto';
+import { createChromaClient } from '../lib/bdfd-ai/chroma-client.js';
 import { ingestDiscordChannels } from '../lib/bdfd-ai/discord-ingest.js';
 import {
   bdfdApiCallbacksToChunks,
@@ -167,7 +167,7 @@ async function main() {
 
   const chromaUrl = process.env.CHROMA_URL ?? 'http://localhost:8000';
   const openai = new OpenAI({ apiKey });
-  const chroma = new ChromaClient({ path: chromaUrl });
+  const chroma = createChromaClient(chromaUrl);
 
   try {
     await chroma.deleteCollection({ name: COLLECTION_NAME });
@@ -175,7 +175,10 @@ async function main() {
   } catch {
     /* collection may not exist on first run */
   }
-  const collection = await chroma.createCollection({ name: COLLECTION_NAME });
+  // Explicit `null` (not `undefined`) skips chromadb's attempt to lazily resolve a default
+  // embedding function from the optional @chroma-core/default-embed package (not installed) —
+  // we always supply our own precomputed embeddings on upsert, so it's never needed.
+  const collection = await chroma.createCollection({ name: COLLECTION_NAME, embeddingFunction: null });
 
   console.log('Listing wiki markdown files (BDScript/docs only; src/javascript/ excluded)...');
   const paths = await listMarkdownPaths();

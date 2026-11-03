@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
-import { ChromaClient, type Collection } from 'chromadb';
+import { type ChromaClient, type Collection } from 'chromadb';
 import { API_FUNCTION_TOP_K, searchApiFunctionDocs, splitApiDocHits } from './api-function-search.js';
+import { createChromaClient } from './chroma-client.js';
 import {
   type BdscriptFunctionIndex,
   checkBdscriptFunctions,
@@ -143,11 +144,15 @@ export class RagService {
 
     this.openai = new OpenAI({ apiKey });
     const chromaUrl = process.env.CHROMA_URL ?? 'http://localhost:8000';
-    this.chroma = new ChromaClient({ path: chromaUrl });
+    this.chroma = createChromaClient(chromaUrl);
 
     try {
       this.collection = await this.chroma.getOrCreateCollection({
-        name: WIKI_COLLECTION
+        name: WIKI_COLLECTION,
+        // We always supply precomputed embeddings ourselves (search/upsert); explicit `null`
+        // (not `undefined`) skips chromadb's attempt to lazily resolve a default embedding
+        // function from the optional @chroma-core/default-embed package, which isn't installed.
+        embeddingFunction: null
       });
       this.functionIndex = await ensureFunctionIndex();
       if (this.functionIndex.size === 0) {
