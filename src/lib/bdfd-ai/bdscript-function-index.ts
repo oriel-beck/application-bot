@@ -120,7 +120,6 @@ export function bdscriptFunctionNames(index: BdscriptFunctionIndex): Set<string>
   return new Set(index.keys());
 }
 
-/** Load index from disk; if empty, populate from BDFD public API lists. */
 /** Write the index to `json/` (same file the wiki ingest writes) so later startups skip the API. */
 export async function saveBdscriptFunctionIndex(index: BdscriptFunctionIndex, cwd = process.cwd()): Promise<void> {
   const path = join(cwd, 'json', INDEX_FILENAME);
@@ -132,13 +131,23 @@ export async function saveBdscriptFunctionIndex(index: BdscriptFunctionIndex, cw
   }
 }
 
+/**
+ * Load index from disk, then fill it from the BDFD public API lists when it's empty — or stale:
+ * a JSON written before argument schemas were tracked has names but no `variants`, which would
+ * silently turn off every arity check. The API data merges into what's on disk (wiki-sourced
+ * `url`/`file` are kept, `variants` backfilled, missing names added) and is cached back.
+ */
 export async function ensureFunctionIndex(cwd = process.cwd()): Promise<BdscriptFunctionIndex> {
   const index = await loadBdscriptFunctionIndex(cwd);
-  if (index.size > 0) {
+  if (index.size > 0 && [...index.values()].some((rec) => rec.variants)) {
     return index;
   }
 
-  console.warn('[bdfd-ai] Function index empty — fetching BDFD public API function_list and callback_list');
+  console.warn(
+    index.size === 0
+      ? '[bdfd-ai] Function index empty — fetching BDFD public API function_list and callback_list'
+      : '[bdfd-ai] Function index has no argument schemas (pre-arity JSON) — backfilling from BDFD public API'
+  );
 
   try {
     const [functions, callbacks] = await Promise.all([fetchBdfdFunctionList(), fetchBdfdCallbackList()]);

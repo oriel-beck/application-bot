@@ -1,9 +1,17 @@
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { Collection } from 'chromadb';
-import { describe, expect, it } from 'vitest';
-import { registerBdscriptCallbacksFromApi, registerBdscriptFunctionsFromApi } from './bdfd-api.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  type BdfdApiFunction,
+  registerBdscriptCallbacksFromApi,
+  registerBdscriptFunctionsFromApi
+} from './bdfd-api.js';
 import {
   type BdscriptFunctionIndex,
   bdscriptFunctionNames,
+  ensureFunctionIndex,
   fetchApiDocsForNames,
   inferBdscriptKind,
   normalizeBdscriptFunctionName,
@@ -142,5 +150,73 @@ describe('fetchApiDocsForNames', () => {
 
     const result = await fetchApiDocsForNames(['totallyMadeUp'], index, collection);
     expect(result).toEqual({ functions: [], callbacks: [] });
+  });
+});
+
+describe('ensureFunctionIndex', () => {
+  const varFromApi: BdfdApiFunction = {
+    tag: '$var[Name;(Value)]',
+    shortDescription: 'Temp variable',
+    longDescription: '',
+    arguments: [
+      { name: 'Name', type: 'String', required: true },
+      { name: 'Value', type: 'String', required: false }
+    ],
+    intents: 0,
+    premium: false
+  };
+
+  let cwd: string;
+  let fetchMock: ReturnType<typeof vi.fn>;
+
+  async function writeIndexJson(data: unknown) {
+    await writeFile(join(cwd, 'json', 'bdscript-functions.json'), JSON.stringify(data));
+  }
+
+  async function readIndexJson() {
+    return JSON.parse(await readFile(join(cwd, 'json', 'bdscript-functions.json'), 'utf-8')) as Record<
+      string,
+      { url: string; variants?: unknown }
+    >;
+  }
+
+  beforeEach(async () => {
+    cwd = await mkdtemp(join(tmpdir(), 'bdscript-index-'));
+    await mkdir(join(cwd, 'json'));
+    // Fake the BDFD API at the network edge: function_list → [$var], callback_list → [].
+    fetchMock = vi.fn(async (url: string) => Response.json(url.includes('function_list') ? [varFromApi] : []));
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(async () => {
+    vi.unstubAllGlobals();
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it('builds an empty index from the API and caches it to json/', async () => {
+    await writeIndexJson({});
+    const index = await ensureFunctionIndex(cwd);
+    expect(index.get('var')?.variants).toHaveLength(1);
+    expect((await readIndexJson()).var?.variants).toBeDefined();
+  });
+
+  it('backfills `variants` into a stale (pre-arity) index, keeping its wiki url, and caches it', async () => {
+    const wikiUrl = 'https://wiki.botdesignerdiscord.com/bdscript/var.html';
+    await writeIndexJson({ var: { url: wikiUrl, file: 'src/bdscript/var.md', kind: 'function' } });
+
+    const index = await ensureFunctionIndex(cwd);
+    expect(fetchMock).toHaveBeenCalledTimes(2); // function_list + callback_list
+    expect(index.get('var')).toMatchObject({ url: wikiUrl, file: 'src/bdscript/var.md' });
+    expect(index.get('var')?.variants).toHaveLength(1);
+    expect((await readIndexJson()).var).toMatchObject({ url: wikiUrl, variants: expect.any(Array) });
+  });
+
+  it('uses an up-to-date index as-is without calling the API', async () => {
+    await writeIndexJson({
+      var: { url: '', file: 'api/bdfd/var', kind: 'function', variants: [varFromApi.arguments] }
+    });
+    const index = await ensureFunctionIndex(cwd);
+    expect(index.size).toBe(1);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
