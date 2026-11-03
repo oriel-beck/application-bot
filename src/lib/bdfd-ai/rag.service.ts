@@ -25,6 +25,7 @@ import {
   repairBdscriptCode
 } from './bdscript-validation.js';
 import { BDFD_BASICS } from './bdfd-basics.js';
+import { parseStructuredCompletion, spliceSnippetsIntoResponse, type StructuredDraft } from './structured-answer.js';
 import type { ChatTurn } from './types.js';
 import { extractUrls, fetchExternalContent } from './external-content.js';
 import { MAX_TOOL_ROUNDS, TOOL_SEARCH_TOP_K, WIKI_AGENT_TOOLS } from './rag-tools.js';
@@ -58,6 +59,7 @@ Context chunks (<wiki_context>, <relevant_functions>, etc.) use plain triple-bac
 **Output format:** your final answer (once done calling tools) must be a JSON object: \`{ "response": string, "snippets": string[] }\`.
 - \`response\` is the prose shown to the user. Reference a BDScript code snippet with \`{0}\`, \`{1}\`, etc. — the index into \`snippets\` — never paste raw code or triple-backtick fences directly into \`response\`.
 - \`snippets\` holds raw BDScript only, no markdown fences, no language tags — one entry per \`{n}\` referenced from \`response\`.
+- **Every** snippet must be referenced by its \`{n}\` in \`response\`, placed where the code should appear. If \`response\` introduces code ("Here's the corrected code:"), the matching \`{n}\` must follow it, and the code must actually be in \`snippets\`.
 - A pure-prose answer with no code is fine: use an empty \`snippets\` array.
 
 Be concise and practical. Your reply will be shown in a Discord embed (markdown supported).
@@ -80,7 +82,7 @@ const RESPONSE_FORMAT: OpenAI.Chat.Completions.ChatCompletionCreateParams['respo
         response: {
           type: 'string',
           description:
-            'Prose shown to the user. Reference a snippet by its index into `snippets` using {0}, {1}, etc. Never paste raw code or triple-backtick fences directly here.'
+            'Prose shown to the user. Reference every snippet by its index into `snippets` using {0}, {1}, etc., placed where the code should appear. Never paste raw code or triple-backtick fences directly here.'
         },
         snippets: {
           type: 'array',
@@ -94,41 +96,6 @@ const RESPONSE_FORMAT: OpenAI.Chat.Completions.ChatCompletionCreateParams['respo
     }
   }
 };
-
-interface StructuredDraft {
-  response: string;
-  snippets: string[];
-}
-
-/** Parse the model's structured JSON answer, falling back to treating raw text as pure prose. */
-function parseStructuredCompletion(content: string | null | undefined): StructuredDraft {
-  const fallback: StructuredDraft = { response: content?.trim() || 'I could not generate a response.', snippets: [] };
-  if (!content) return fallback;
-
-  try {
-    const parsed = JSON.parse(content) as Partial<StructuredDraft>;
-    if (typeof parsed.response !== 'string') return fallback;
-    const snippets = Array.isArray(parsed.snippets)
-      ? parsed.snippets.filter((s): s is string => typeof s === 'string')
-      : [];
-    return { response: parsed.response, snippets };
-  } catch {
-    return fallback;
-  }
-}
-
-const SNIPPET_PLACEHOLDER = /\{(\d+)\}/g;
-
-/** Splice validated snippets back into the prose, as fences, at their `{n}` placeholders. */
-function spliceSnippetsIntoResponse(response: string, snippets: string[]): string {
-  return response.replace(SNIPPET_PLACEHOLDER, (match, indexStr: string) => {
-    const index = Number(indexStr);
-    if (!Number.isInteger(index) || index < 0 || index >= snippets.length) {
-      return match; // not a valid snippet reference — leave the literal text alone
-    }
-    return `\`\`\`\n${snippets[index]}\n\`\`\``;
-  });
-}
 
 export class RagService {
   private openai: OpenAI | null = null;
@@ -290,7 +257,16 @@ export class RagService {
       const earlyClosed = findEarlyClosedCallsInSnippets(draft.snippets);
 
       if (!invalid.length && !misusedCallbacks.length && !arityIssues.length && !earlyClosed.length) {
-        return spliceSnippetsIntoResponse(draft.response, draft.snippets);
+        const answer = spliceSnippetsIntoResponse(draft.response, draft.snippets);
+        if (!draft.snippets.length && /:\s*$/.test(draft.response)) {
+          console.warn('[bdfd-ai] Response ends with ":" but has no snippets — model likely omitted the code');
+        }
+        if (answer.unreferenced.length) {
+          console.warn(
+            `[bdfd-ai] Model left snippet(s) [${answer.unreferenced.join(', ')}] unreferenced in response — appended at the end`
+          );
+        }
+        return answer.text;
       }
 
       console.warn(
