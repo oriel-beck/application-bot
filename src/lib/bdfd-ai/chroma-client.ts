@@ -1,14 +1,22 @@
 import { ChromaClient } from 'chromadb';
 
-/**
- * Build a ChromaClient from a `CHROMA_URL` like `http://chroma:8000`.
- * `path` is deprecated in favor of `host`/`port`/`ssl` — parse the URL into those instead.
- */
-export function createChromaClient(url: string): ChromaClient {
+export interface ChromaConnectionArgs {
+  host: string;
+  port: number;
+  ssl: boolean;
+}
+
+/** `path` is deprecated in favor of `host`/`port`/`ssl` — parse a `CHROMA_URL` into those. */
+export function parseChromaUrl(url: string): ChromaConnectionArgs {
   const parsed = new URL(url);
-  return new ChromaClient({
+  return {
     host: parsed.hostname,
     port: parsed.port ? Number(parsed.port) : 8000,
     ssl: parsed.protocol === 'https:'
-  });
+  };
+}
+
+/** Build a ChromaClient from a `CHROMA_URL` like `http://chroma:8000`. */
+export function createChromaClient(url: string): ChromaClient {
+  return new ChromaClient(parseChromaUrl(url));
 }

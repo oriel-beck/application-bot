@@ -94,6 +94,7 @@ Global preconditions (e.g. `StaffOnly`, `OwnerOnly`, `ModOnly`, `RequiredRole`, 
 - **Install:** Yarn (see `package.json`, `.yarnrc.yml`).
 - **Compile:** `yarn build` — SWC `src` → `dist` per `.swcrc`.
 - **Lint / format:** `yarn lint` / `yarn lint:fix` (ESLint flat config in `eslint.config.js`); `yarn format` / `yarn format:check` (Prettier).
+- **Test:** `yarn test` (Vitest, one-shot) / `yarn test:watch`. Test files are colocated as `<module>.test.ts` next to the module they cover (e.g. `bdscript-validation.test.ts`) and excluded from the SWC build output (`.swcrc` `exclude`) so they never ship in the production image. **Rule: new non-trivial pure logic (parsers, validators, formatters — anything with real edge cases) gets unit tests in the same change that introduces it.** CI (`.github/workflows/test.yml`) runs typecheck, lint, format-check, tests, and build on every push/PR to `main`/`v4`.
 - **Docker:** Compose files pull `ghcr.io/oriel-beck/application-bot` from GitHub Container Registry (GitHub Packages). Use `docker compose pull` then `up -d` to run the published image, or `docker compose up --build` to compile from this tree. CI publishes on push to `v4`/`main` and `v*.*.*` tags (`.github/workflows/publish-image.yml`). A `validate` service runs first and fails `up` if `config.json`, required env vars, or question JSON are invalid. `config.json` is bind-mounted at runtime and must not be copied into the image.
 - **Drizzle CLI:** `drizzle-kit` in devDependencies; `drizzle.config.ts` points at `./src/schema.ts`.
 

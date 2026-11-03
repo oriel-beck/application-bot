@@ -1,4 +1,5 @@
 {
+  "exclude": ["\\.test\\.ts$"],
   "module": {
     "type": "es6"
   },

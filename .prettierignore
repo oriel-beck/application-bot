@@ -4,3 +4,4 @@ node_modules
 drizzle
 yarn.lock
 *.gz
+docs/legal
