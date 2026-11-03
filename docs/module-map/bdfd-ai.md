@@ -11,6 +11,10 @@ RAG-powered AI assistant for support forum threads, international support thread
 
 Both paths share `processAiRequest` in `src/lib/bdfd-ai/process-request.ts`.
 
+## Code checker (no AI)
+
+**`/check-code`** (optional single-line `code` option, otherwise a multi-line modal) and the **Check BDScript** message context menu run the BDScript parser over the user's code and list unknown functions (with suggestions), wrong argument counts, calls closed early by an unescaped `]` (e.g. `[@user]` inside `$argsCheck`), and unclosed calls — each with line/column. Ephemeral reply; no OpenAI call, so it ignores `ai_enabled` and works without `OPENAI_API_KEY` (only the function index is needed).
+
 ## Conversation memory
 
 Mention and reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_turns`): alternating **user** / **assistant** rows per channel. Each new question loads prior turns (up to 20) so follow-ups stay in context. Staff `/ai-limit` action **Clear AI conversation** or `/ai-conversations` **Delete** wipes a channel's history — the escape hatch for a wrong-but-validation-passing answer that already got saved and is anchoring later turns. **`/ai` does not read or write this table.**
@@ -24,41 +28,44 @@ Mention and reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_
 
 ## Pieces
 
-| Path                                  | Role                                                                                             |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `commands/ai.ts`                      | User-facing `/ai` command (channel/author/role gated, public reply, ignores toggle)              |
-| `commands/ai-toggle.ts`               | Owner `/ai-toggle` — enable/disable guild AI                                                     |
-| `commands/ai-limit.ts`                | Staff `/ai-limit` — limits, usage, clear conversation                                            |
-| `commands/ai-sweep.ts`                | Owner `/ai-sweep` — clear AI state for channels inactive 7+ days (transcripts kept)              |
-| `commands/ai-conversations.ts`        | Staff `/ai-conversations` — Components V2 browser (each row: usage/limit + Reset usage / Delete) |
-| `interaction-handlers/list/*.ts`      | List pagination + reset/delete (`ai:list:*`)                                                     |
-| `listeners/message-create.ts`         | Mention or reply-to-bot flow                                                                     |
-| `listeners/ticket-intro.ts`           | One-time ticket intro (only when AI enabled)                                                     |
-| `listeners/thread-update.ts`          | Cleanup when support/intl thread is archived or locked                                           |
-| `listeners/thread-delete.ts`          | Cleanup when support/intl thread is deleted                                                      |
-| `listeners/ready-sweep.ts`            | Daily sweep of channels inactive for 7 days                                                      |
-| `managers/ai-rate.manager.ts`         | Per-channel usage limit, thinking lock                                                           |
-| `managers/ai-conversation.manager.ts` | Persisted turn history (`container.aiConversation`); **`listChannels()`** for the browser        |
-| `preconditions/BdfdAiEnabled.ts`      | Unused by `/ai`; reserved for future gated commands                                              |
+| Path                                       | Role                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `commands/ai.ts`                           | User-facing `/ai` command (channel/author/role gated, public reply, ignores toggle)              |
+| `commands/ai-toggle.ts`                    | Owner `/ai-toggle` — enable/disable guild AI                                                     |
+| `commands/ai-limit.ts`                     | Staff `/ai-limit` — limits, usage, clear conversation                                            |
+| `commands/ai-sweep.ts`                     | Owner `/ai-sweep` — clear AI state for channels inactive 7+ days (transcripts kept)              |
+| `commands/ai-conversations.ts`             | Staff `/ai-conversations` — Components V2 browser (each row: usage/limit + Reset usage / Delete) |
+| `commands/check-code.ts`                   | `/check-code` + **Check BDScript** context menu — parser-only lint of user code                  |
+| `interaction-handlers/check-code-modal.ts` | `/check-code` modal submit (`chk:mdl:code`)                                                      |
+| `interaction-handlers/list/*.ts`           | List pagination + reset/delete (`ai:list:*`)                                                     |
+| `listeners/message-create.ts`              | Mention or reply-to-bot flow                                                                     |
+| `listeners/ticket-intro.ts`                | One-time ticket intro (only when AI enabled)                                                     |
+| `listeners/thread-update.ts`               | Cleanup when support/intl thread is archived or locked                                           |
+| `listeners/thread-delete.ts`               | Cleanup when support/intl thread is deleted                                                      |
+| `listeners/ready-sweep.ts`                 | Daily sweep of channels inactive for 7 days                                                      |
+| `managers/ai-rate.manager.ts`              | Per-channel usage limit, thinking lock                                                           |
+| `managers/ai-conversation.manager.ts`      | Persisted turn history (`container.aiConversation`); **`listChannels()`** for the browser        |
+| `preconditions/BdfdAiEnabled.ts`           | Unused by `/ai`; reserved for future gated commands                                              |
 
-Custom IDs: `AiConversationCustomIDs` in `src/lib/constants/custom-ids.ts`.  
+Custom IDs: `AiConversationCustomIDs`, `CheckCodeCustomIDs` in `src/lib/constants/custom-ids.ts`.  
+Check-code utils: `src/lib/command-utils/bdfd-ai/check-code.utils.ts` (modal, code-fence extraction, result embed).
 List UI utils: `src/lib/command-utils/bdfd-ai/list/ai-conversation-list.utils.ts` (`PAGE_SIZE = 8`, First/Prev/page/Next/Last; per-row Reset usage / Delete).
 
 ## Shared lib (`src/lib/bdfd-ai/`)
 
-| File                         | Role                                                                                                                                                                                     |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `process-request.ts`         | Gates, thinking UI, RAG call, save turns                                                                                                                                                 |
-| `response-utils.ts`          | Embeds (footer disclaimer on successful replies); over 4096 chars attach `bdfd-ai-response.txt`                                                                                          |
-| `rag.service.ts`             | Chroma + OpenAI (`container.rag`); parallel wiki + API retrieval (functions vs callbacks split), post-validation, auto-repair                                                            |
-| `api-function-search.ts`     | Chroma query filtered to `source: bdfd-api`; returns hits with `kind` (`function` / `callback`)                                                                                          |
-| `bdscript-validation.ts`     | Extract/validate `$function` names; flag callbacks mixed into reply-code fences; deterministically escape placeholder `]` in `$function` args; alias hints for name/callback repair pass |
-| `bdscript-function-index.ts` | Name index with `kind: function \| callback`; `ensureFunctionIndex()` API fallback when JSON empty                                                                                       |
-| `bdfd-basics.ts`             | Always-on BDFD primer (callbacks = trigger only, not reply code)                                                                                                                         |
-| `bdfd-api.ts`                | Public API `function_list` / `callback_list` → Chroma chunks + index registration                                                                                                        |
-| `discord-ingest.ts`          | Optional Discord channel history ingest (guides/FAQ channels)                                                                                                                            |
-| `channel-utils.ts`           | Channel kind + author resolution. Ticket author falls back to a user mention on the opener when that embed text is hidden.                                                               |
-| `cleanup-channel.ts`         | `cleanupClosedSupportChannel` + inactive sweep                                                                                                                                           |
+| File                         | Role                                                                                                                                                                                                                              |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `process-request.ts`         | Gates, thinking UI, RAG call, save turns                                                                                                                                                                                          |
+| `response-utils.ts`          | Embeds (footer disclaimer on successful replies); over 4096 chars attach `bdfd-ai-response.txt`                                                                                                                                   |
+| `rag.service.ts`             | Chroma + OpenAI (`container.rag`); parallel wiki + API retrieval (functions vs callbacks split), post-validation, auto-repair                                                                                                     |
+| `api-function-search.ts`     | Chroma query filtered to `source: bdfd-api`; returns hits with `kind` (`function` / `callback`)                                                                                                                                   |
+| `bdscript-validation.ts`     | BDScript parser (`parseBdscript`: unescaped `]` closes the innermost call, `\;` / `\]` are literal); name, arity and early-`]` checks; `lintBdscript` for `/check-code`; placeholder `]` escaping; edit-distance name suggestions |
+| `bdscript-function-index.ts` | Name index with `kind: function \| callback`; `ensureFunctionIndex()` API fallback when JSON empty (result is cached back to the JSON)                                                                                            |
+| `bdfd-basics.ts`             | Always-on BDFD primer (callbacks = trigger only, not reply code)                                                                                                                                                                  |
+| `bdfd-api.ts`                | Public API `function_list` / `callback_list` → Chroma chunks + index registration                                                                                                                                                 |
+| `discord-ingest.ts`          | Optional Discord channel history ingest (guides/FAQ channels)                                                                                                                                                                     |
+| `channel-utils.ts`           | Channel kind + author resolution. Ticket author falls back to a user mention on the opener when that embed text is hidden.                                                                                                        |
+| `cleanup-channel.ts`         | `cleanupClosedSupportChannel` + inactive sweep                                                                                                                                                                                    |
 
 ## Settings
 
@@ -75,4 +82,4 @@ List UI utils: `src/lib/command-utils/bdfd-ai/list/ai-conversation-list.utils.ts
 - If `BDFD_INGEST_CHANNEL_IDS` is not set, ingest auto-falls back to `config.json` channel keys from `BDFD_INGEST_CHANNEL_KEYS` (default: `tips,variable_guides,limiter_guides,faq`) and uses `config.guild` as guild fallback for jump-link URLs.
 - Optional: `BDFD_INGEST_GUILD_ID` (overrides `config.guild`), `BDFD_INGEST_MAX_MESSAGES_PER_CHANNEL` (default `500`).
 - Env: `OPENAI_API_KEY`, `CHROMA_URL` (+ optional Discord ingest env above). **Re-run ingest** after ingest/rule changes.
-- RAG (`rag.service.ts`): parallel **wiki search** (top 6) + **API search** (top 8, `source: bdfd-api`, split into `<relevant_functions>` / `<relevant_callbacks>`) before generation; **tool loop** (`search_wiki`, `check_bdscript_functions` reports function vs callback, max 4 rounds); **server-side validation** of `$function` names and callbacks misused inside reply-code fences, with up to **2 silent auto-repair** model passes (3 validation checks total). If the draft still fails validation on the 3rd check, `validateAndRepair` throws `BdscriptValidationError` (`bdscript-validation.ts`) instead of returning the flawed draft — `process-request.ts` catches it and shows a distinct "try asking again with more detail" embed (`buildValidationFailedEmbed`, `response-utils.ts`); usage count and conversation history are **not** updated for that turn (they're only written after a successful response). Once validation passes, **deterministic** escaping of placeholder `]` inside `$function` args (e.g. `[@user]` → `[@user\]` in `$argsCheck` messages) runs with no extra model call. `json/bdscript-functions.json` is built at ingest; if empty at startup, `ensureFunctionIndex()` fetches BDFD public API lists.
+- RAG (`rag.service.ts`): parallel **wiki search** (top 6) + **API search** (top 8, `source: bdfd-api`, split into `<relevant_functions>` / `<relevant_callbacks>`) before generation; **tool loop** (`search_wiki`, `check_bdscript_functions` reports function vs callback, max 4 rounds); **server-side validation** of `$function` names and callbacks misused inside reply-code fences, with up to **2 silent auto-repair** model passes (3 validation checks total). If the draft still fails validation on the 3rd check, `validateAndRepair` throws `BdscriptValidationError` (`bdscript-validation.ts`) instead of returning the flawed draft — `process-request.ts` catches it and shows a distinct "try asking again with more detail" embed (`buildValidationFailedEmbed`, `response-utils.ts`); usage count and conversation history are **not** updated for that turn (they're only written after a successful response). Before each validation check, **deterministic** escaping of placeholder `]` inside `$function` args (e.g. `[@user]` → `[@user\]` in `$argsCheck` messages) runs with no extra model call; anything still closed early by an unescaped `]` goes to the repair pass. `json/bdscript-functions.json` is built at ingest; if empty at startup, `ensureFunctionIndex()` fetches BDFD public API lists and writes them back to that file.
