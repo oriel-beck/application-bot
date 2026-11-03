@@ -81,3 +81,13 @@ export const AiConversationCustomIDs = Object.freeze({
     delete: 'ai:list:del'
   }
 });
+
+/** `/check-code` BDScript checker. */
+export const CheckCodeCustomIDs = Object.freeze({
+  modals: {
+    code: 'chk:mdl:code'
+  },
+  inputs: {
+    code: 'code'
+  }
+});

@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Collection } from 'chromadb';
 import {
@@ -121,6 +121,17 @@ export function bdscriptFunctionNames(index: BdscriptFunctionIndex): Set<string>
 }
 
 /** Load index from disk; if empty, populate from BDFD public API lists. */
+/** Write the index to `json/` (same file the wiki ingest writes) so later startups skip the API. */
+export async function saveBdscriptFunctionIndex(index: BdscriptFunctionIndex, cwd = process.cwd()): Promise<void> {
+  const path = join(cwd, 'json', INDEX_FILENAME);
+  try {
+    await writeFile(path, `${JSON.stringify(bdscriptFunctionIndexToJson(index), null, 2)}\n`);
+    console.log(`[bdfd-ai] Cached function index to ${path}`);
+  } catch (err) {
+    console.warn(`[bdfd-ai] Could not cache function index to ${path}:`, err);
+  }
+}
+
 export async function ensureFunctionIndex(cwd = process.cwd()): Promise<BdscriptFunctionIndex> {
   const index = await loadBdscriptFunctionIndex(cwd);
   if (index.size > 0) {
@@ -138,6 +149,7 @@ export async function ensureFunctionIndex(cwd = process.cwd()): Promise<Bdscript
       console.error('[bdfd-ai] Function index still empty after API fetch');
     } else {
       console.log(`[bdfd-ai] Built function index from API (${index.size} names)`);
+      await saveBdscriptFunctionIndex(index, cwd);
     }
   } catch (err) {
     console.error('[bdfd-ai] Failed to fetch BDFD API for function index:', err);

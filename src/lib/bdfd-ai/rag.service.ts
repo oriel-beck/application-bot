@@ -17,6 +17,8 @@ import {
   findArityIssues,
   findArityIssuesInSnippets,
   findCallbacksMisusedInSnippets,
+  findEarlyClosedCalls,
+  findEarlyClosedCallsInSnippets,
   findInvalidFunctions,
   flattenBdscriptCalls,
   parseBdscript,
@@ -136,6 +138,9 @@ export class RagService {
   private ready = false;
 
   async init(): Promise<void> {
+    // Loaded before the OpenAI/Chroma checks: `/check-code` only needs the index, not the AI.
+    this.functionIndex = await ensureFunctionIndex();
+
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       console.warn('[bdfd-ai] OPENAI_API_KEY is not set; AI support is disabled.');
@@ -154,7 +159,6 @@ export class RagService {
         // function from the optional @chroma-core/default-embed package, which isn't installed.
         embeddingFunction: null
       });
-      this.functionIndex = await ensureFunctionIndex();
       if (this.functionIndex.size === 0) {
         console.error('[bdfd-ai] No BDScript functions indexed; AI support disabled.');
         return;
@@ -169,6 +173,11 @@ export class RagService {
 
   get isReady(): boolean {
     return this.ready;
+  }
+
+  /** Known BDScript functions/callbacks; may be empty if neither the cache nor the BDFD API was reachable. */
+  get bdscriptFunctionIndex(): BdscriptFunctionIndex {
+    return this.functionIndex;
   }
 
   private buildSystemContent(
@@ -228,14 +237,15 @@ export class RagService {
     messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
     invalidNames: string[],
     misusedCallbacks: string[],
-    arityIssues: ArityIssue[]
+    arityIssues: ArityIssue[],
+    earlyClosed: string[]
   ): Promise<StructuredDraft> {
     if (!this.openai) {
       throw new Error('RAG service not ready');
     }
 
     const repairPrompt =
-      buildRepairPrompt(invalidNames, this.functionIndex, misusedCallbacks, arityIssues) +
+      buildRepairPrompt(invalidNames, this.functionIndex, misusedCallbacks, arityIssues, earlyClosed) +
       '\n\nReturn the corrected answer in the same JSON format: { "response": string, "snippets": string[] }.';
 
     const repair = await this.openai.chat.completions.create({
@@ -263,6 +273,10 @@ export class RagService {
     let draft = response;
 
     for (let attempt = 0; attempt <= RagService.MAX_VALIDATION_RETRIES; attempt++) {
+      // Deterministically escape placeholder brackets (`[@user]` → `[@user\]`) *before* validating,
+      // so the common early-`]` mistake is fixed here instead of costing a repair round trip.
+      draft = { ...draft, snippets: draft.snippets.map(repairBdscriptCode) };
+
       // Hallucinated names can appear in the prose too (e.g. "you could also try `$fooBar`"),
       // not just inside a snippet, so check `response` in addition to each snippet.
       const invalid = [
@@ -273,23 +287,25 @@ export class RagService {
       ];
       const misusedCallbacks = findCallbacksMisusedInSnippets(draft.snippets, this.functionIndex);
       const arityIssues = findArityIssuesInSnippets(draft.snippets, this.functionIndex);
+      const earlyClosed = findEarlyClosedCallsInSnippets(draft.snippets);
 
-      if (!invalid.length && !misusedCallbacks.length && !arityIssues.length) {
-        return spliceSnippetsIntoResponse(draft.response, draft.snippets.map(repairBdscriptCode));
+      if (!invalid.length && !misusedCallbacks.length && !arityIssues.length && !earlyClosed.length) {
+        return spliceSnippetsIntoResponse(draft.response, draft.snippets);
       }
 
       console.warn(
         `[bdfd-ai] Validation failed (attempt ${attempt + 1}/${RagService.MAX_VALIDATION_RETRIES + 1}): ` +
           `invalid=[${invalid.map((n) => `$${n}`).join(', ')}] ` +
           `misusedCallbacks=[${misusedCallbacks.map((n) => `$${n}`).join(', ')}] ` +
-          `arityIssues=[${arityIssues.map((i) => `$${i.name}(${i.argCount})`).join(', ')}]`
+          `arityIssues=[${arityIssues.map((i) => `$${i.name}(${i.argCount})`).join(', ')}] ` +
+          `earlyClosed=[${earlyClosed.map((n) => `$${n}`).join(', ')}]`
       );
 
       if (attempt === RagService.MAX_VALIDATION_RETRIES) {
-        throw new BdscriptValidationError(invalid, misusedCallbacks, arityIssues);
+        throw new BdscriptValidationError(invalid, misusedCallbacks, arityIssues, earlyClosed);
       }
 
-      draft = await this.repairResponse(draft, messages, invalid, misusedCallbacks, arityIssues);
+      draft = await this.repairResponse(draft, messages, invalid, misusedCallbacks, arityIssues, earlyClosed);
     }
 
     // Unreachable — loop always returns or throws on its last iteration.
@@ -379,6 +395,7 @@ export class RagService {
     const usedNames = extractBdscriptFunctions(userMessage);
     const userCalls = flattenBdscriptCalls(parseBdscript(userMessage));
     const userArityIssues = findArityIssues(userCalls, this.functionIndex);
+    const userEarlyClosed = findEarlyClosedCalls(userCalls);
 
     const [wikiResults, apiHits, namedDocs] = await Promise.all([
       searchWikiDocuments(this.collection, this.openai, userMessage, INITIAL_TOP_K),
@@ -407,19 +424,25 @@ export class RagService {
       });
     }
 
-    if (userArityIssues.length) {
+    if (userArityIssues.length || userEarlyClosed.length) {
       messages.push({
         role: 'system',
         content:
           '<user_code_analysis>\n' +
           "Automated check of the $functions already used in the user's own message below — verify " +
-          'against relevant_functions before relying on this, it only checks argument count:\n' +
-          userArityIssues
-            .map(
+          'against relevant_functions before relying on this, it only checks argument count and bracket escaping:\n' +
+          [
+            ...userArityIssues.map(
               (issue) =>
-                `- $${issue.name} called with ${issue.argCount} argument(s); expected ${issue.expected.join(' or ')}`
+                `- $${issue.name} called with ${issue.argCount} argument(s); expected ${issue.expected.join(' or ')} ` +
+                '(a literal `;` in an argument must be escaped as `\\;`)'
+            ),
+            ...userEarlyClosed.map(
+              (name) =>
+                `- $${name}[...] is closed early by an unescaped \`]\` in literal text like \`[@user]\` — ` +
+                'every literal `]` inside an argument must be escaped as `\\]`'
             )
-            .join('\n') +
+          ].join('\n') +
           '\n</user_code_analysis>'
       });
     }
