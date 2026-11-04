@@ -10,22 +10,22 @@ import {
   formatFunctionCheckResults
 } from './bdscript-function-index.js';
 import {
-  type ArityIssue,
   BdscriptValidationError,
   buildRepairPrompt,
   extractBdscriptFunctions,
   findArityIssues,
-  findArityIssuesInSnippets,
-  findCallbacksMisusedInSnippets,
   findEarlyClosedCalls,
-  findEarlyClosedCallsInSnippets,
-  findInvalidFunctions,
   flattenBdscriptCalls,
-  parseBdscript,
-  repairBdscriptCode
+  parseBdscript
 } from './bdscript-validation.js';
+import {
+  escapeCodeBlocks,
+  extractCodeBlocks,
+  findAnswerProblems,
+  formatCodeCheckResults,
+  hasAnswerProblems
+} from './code-check.js';
 import { BDFD_BASICS } from './bdfd-basics.js';
-import { parseStructuredCompletion, spliceSnippetsIntoResponse, type StructuredDraft } from './structured-answer.js';
 import type { ChatTurn } from './types.js';
 import { extractUrls, fetchExternalContent } from './external-content.js';
 import { MAX_TOOL_ROUNDS, TOOL_SEARCH_TOP_K, WIKI_AGENT_TOOLS } from './rag-tools.js';
@@ -69,6 +69,7 @@ You receive:
 You also have tools:
 - **search_wiki** — fetch more wiki excerpts when context is incomplete.
 - **check_bdscript_functions** — verify $function / callback names exist and whether each is a function or callback.
+- **check_bdscript_code** — check whole code blocks: unknown functions, argument counts, unescaped \`]\`, unclosed brackets, callbacks in reply code.
 
 **Hard rule:** Only mention BDScript $functions that appear in relevant_functions, wiki_context, or bdfd_basics, or that check_bdscript_functions confirms exist as **functions**.
 **Hard rule:** Callbacks from relevant_callbacks / check results are **triggers only**. When showing a callback command, label **Trigger** (callback) and **Reply code** (BDScript functions only). Never put callbacks inside reply-code fences.
@@ -77,46 +78,11 @@ If a function is not found, do not use it. If docs are insufficient after search
 
 Context chunks (<wiki_context>, <relevant_functions>, etc.) use plain triple-backtick fences for real BDScript when quoting the wiki. "[Discord UI preview omitted" lines in that context are not code — this is about reading retrieved context, separate from your own output format below.
 
-**Output format:** your final answer (once done calling tools) must be a JSON object: \`{ "response": string, "snippets": string[] }\`.
-- \`response\` is the prose shown to the user. Reference a BDScript code snippet with \`{0}\`, \`{1}\`, etc. — the index into \`snippets\` — never paste raw code or triple-backtick fences directly into \`response\`.
-- \`snippets\` holds raw BDScript only, no markdown fences, no language tags — one entry per \`{n}\` referenced from \`response\`.
-- **Every** snippet must be referenced by its \`{n}\` in \`response\`, placed where the code should appear. If \`response\` introduces code ("Here's the corrected code:"), the matching \`{n}\` must follow it, and the code must actually be in \`snippets\`.
-- A pure-prose answer with no code is fine: use an empty \`snippets\` array.
+**Output format:** answer in Discord markdown. Put every piece of BDScript in its own triple-backtick code block.
+**Hard rule:** before your final answer, call **check_bdscript_code** with every code block you will include (several at once is fine). If it reports problems, fix the code and check again — only reply once it finds none. Show the code exactly as you checked it. Answers whose code fails these checks are rejected.
 
 Be concise and practical. Your reply will be shown in a Discord embed (markdown supported).
 If the user says their code is too large to paste, tell them to send a pastebin raw link or a .txt file URL in a reply to you or a message that mentions you.`;
-
-/**
- * Structured output: the final answer is split into prose (`response`) and raw code
- * (`snippets`), referenced from `response` via `{n}` placeholders. Replaces scraping
- * markdown fences out of free-form text — the backend gets exact, unambiguous code strings
- * to validate/repair, and splices them back in as fences only once they pass.
- */
-const RESPONSE_FORMAT: OpenAI.Chat.Completions.ChatCompletionCreateParams['response_format'] = {
-  type: 'json_schema',
-  json_schema: {
-    name: 'bdfd_ai_answer',
-    strict: true,
-    schema: {
-      type: 'object',
-      properties: {
-        response: {
-          type: 'string',
-          description:
-            'Prose shown to the user. Reference every snippet by its index into `snippets` using {0}, {1}, etc., placed where the code should appear. Never paste raw code or triple-backtick fences directly here.'
-        },
-        snippets: {
-          type: 'array',
-          items: { type: 'string' },
-          description:
-            'Raw BDScript code only, no markdown fences or language tags — one entry per {n} referenced from `response`.'
-        }
-      },
-      required: ['response', 'snippets'],
-      additionalProperties: false
-    }
-  }
-};
 
 export class RagService {
   private openai: OpenAI | null = null;
@@ -281,115 +247,96 @@ export class RagService {
       return formatFunctionCheckResults(results);
     }
 
+    if (name === 'check_bdscript_code') {
+      const rawCodes = args.codes;
+      if (!Array.isArray(rawCodes) || rawCodes.length === 0) {
+        return 'Error: codes array is required';
+      }
+
+      const codes = rawCodes.filter((c): c is string => typeof c === 'string');
+      return formatCodeCheckResults(codes, this.functionIndex);
+    }
+
     return `Error: unknown tool ${name}`;
   }
 
-  private async repairResponse(
-    draft: StructuredDraft,
-    messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-    invalidNames: string[],
-    misusedCallbacks: string[],
-    arityIssues: ArityIssue[],
-    earlyClosed: string[]
-  ): Promise<StructuredDraft> {
-    if (!this.openai) {
-      throw new Error('RAG service not ready');
-    }
-
-    const repairPrompt =
-      buildRepairPrompt(invalidNames, this.functionIndex, misusedCallbacks, arityIssues, earlyClosed) +
-      '\n\nReturn the corrected answer in the same JSON format: { "response": string, "snippets": string[] }.';
-
-    const repair = await this.openai.chat.completions.create({
-      model: CHAT_MODEL,
-      response_format: RESPONSE_FORMAT,
-      messages: [
-        ...messages,
-        { role: 'assistant', content: JSON.stringify(draft) },
-        { role: 'user', content: repairPrompt }
-      ],
-      max_tokens: 1024,
-      temperature: 0
-    });
-
-    return parseStructuredCompletion(repair.choices[0]?.message?.content);
-  }
-
-  /** Repair attempts after the initial draft; 3 validation checks total. */
+  /** Repair rounds after the first answer; 3 checks total. */
   private static readonly MAX_VALIDATION_RETRIES = 2;
+  /** Tool rounds a repair gets (enough to re-check the fixed code and answer). */
+  private static readonly REPAIR_TOOL_ROUNDS = 3;
 
-  private async validateAndRepair(
-    response: StructuredDraft,
-    messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]
-  ): Promise<string> {
-    let draft = response;
-
-    for (let attempt = 0; attempt <= RagService.MAX_VALIDATION_RETRIES; attempt++) {
-      // Deterministically escape placeholder brackets (`[@user]` → `[@user\]`) *before* validating,
-      // so the common early-`]` mistake is fixed here instead of costing a repair round trip.
-      draft = { ...draft, snippets: draft.snippets.map(repairBdscriptCode) };
-
-      // Hallucinated names can appear in the prose too (e.g. "you could also try `$fooBar`"),
-      // not just inside a snippet, so check `response` in addition to each snippet.
-      const invalid = [
-        ...new Set([
-          ...findInvalidFunctions(draft.response, this.functionIndex),
-          ...draft.snippets.flatMap((s) => findInvalidFunctions(s, this.functionIndex))
-        ])
-      ];
-      const misusedCallbacks = findCallbacksMisusedInSnippets(draft.snippets, this.functionIndex);
-      const arityIssues = findArityIssuesInSnippets(draft.snippets, this.functionIndex);
-      const earlyClosed = findEarlyClosedCallsInSnippets(draft.snippets);
-
-      if (!invalid.length && !misusedCallbacks.length && !arityIssues.length && !earlyClosed.length) {
-        const answer = spliceSnippetsIntoResponse(draft.response, draft.snippets);
-        if (!draft.snippets.length && /:\s*$/.test(draft.response)) {
-          console.warn('[bdfd-ai] Response ends with ":" but has no snippets — model likely omitted the code');
-        }
-        if (answer.unreferenced.length) {
-          console.warn(
-            `[bdfd-ai] Model left snippet(s) [${answer.unreferenced.join(', ')}] unreferenced in response — appended at the end`
-          );
-        }
-        return answer.text;
-      }
-
-      console.warn(
-        `[bdfd-ai] Validation failed (attempt ${attempt + 1}/${RagService.MAX_VALIDATION_RETRIES + 1}): ` +
-          `invalid=[${invalid.map((n) => `$${n}`).join(', ')}] ` +
-          `misusedCallbacks=[${misusedCallbacks.map((n) => `$${n}`).join(', ')}] ` +
-          `arityIssues=[${arityIssues.map((i) => `$${i.name}(${i.argCount})`).join(', ')}] ` +
-          `earlyClosed=[${earlyClosed.map((n) => `$${n}`).join(', ')}]`
-      );
-
-      if (attempt === RagService.MAX_VALIDATION_RETRIES) {
-        throw new BdscriptValidationError(invalid, misusedCallbacks, arityIssues, earlyClosed);
-      }
-
-      draft = await this.repairResponse(draft, messages, invalid, misusedCallbacks, arityIssues, earlyClosed);
-    }
-
-    // Unreachable — loop always returns or throws on its last iteration.
-    throw new BdscriptValidationError([], []);
-  }
-
+  /**
+   * The model checks its own code with `check_bdscript_code` before answering; this backstop runs
+   * the same checks on the code blocks of the final answer and sends anything it still finds back
+   * for a fix. After the last retry it throws `BdscriptValidationError` instead of sending broken code.
+   */
   private async completeWithTools(
     messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
     wikiChunks: Set<string>,
     apiFunctionChunks: Set<string>,
     apiCallbackChunks: Set<string>
   ): Promise<string> {
+    const context = { wikiChunks, apiFunctionChunks, apiCallbackChunks };
+    let answer = await this.runToolLoop(messages, context, MAX_TOOL_ROUNDS);
+
+    for (let attempt = 0; attempt <= RagService.MAX_VALIDATION_RETRIES; attempt++) {
+      // Deterministically escape placeholder brackets (`[@user]` → `[@user\]`) *before* validating,
+      // so the common early-`]` mistake is fixed here instead of costing a repair round trip.
+      answer = escapeCodeBlocks(answer);
+      const problems = findAnswerProblems(answer, this.functionIndex);
+
+      if (!hasAnswerProblems(problems)) {
+        if (!extractCodeBlocks(answer).length && /:\s*$/.test(answer)) {
+          console.warn('[bdfd-ai] Response ends with ":" but has no code block — model likely omitted the code');
+        }
+        return answer;
+      }
+
+      const { invalidNames, misusedCallbacks, arityIssues, earlyClosed } = problems;
+      console.warn(
+        `[bdfd-ai] Validation failed (attempt ${attempt + 1}/${RagService.MAX_VALIDATION_RETRIES + 1}): ` +
+          `invalid=[${invalidNames.map((n) => `$${n}`).join(', ')}] ` +
+          `misusedCallbacks=[${misusedCallbacks.map((n) => `$${n}`).join(', ')}] ` +
+          `arityIssues=[${arityIssues.map((i) => `$${i.name}(${i.argCount})`).join(', ')}] ` +
+          `earlyClosed=[${earlyClosed.map((n) => `$${n}`).join(', ')}]`
+      );
+
+      if (attempt === RagService.MAX_VALIDATION_RETRIES) {
+        throw new BdscriptValidationError(invalidNames, misusedCallbacks, arityIssues, earlyClosed);
+      }
+
+      messages.push(
+        { role: 'assistant', content: answer },
+        {
+          role: 'user',
+          content:
+            buildRepairPrompt(invalidNames, this.functionIndex, misusedCallbacks, arityIssues, earlyClosed) +
+            '\n\nCheck the corrected code with check_bdscript_code before replying.'
+        }
+      );
+      answer = await this.runToolLoop(messages, context, RagService.REPAIR_TOOL_ROUNDS);
+    }
+
+    // Unreachable — the loop always returns or throws on its last iteration.
+    throw new BdscriptValidationError([], []);
+  }
+
+  /** Let the model call tools for up to `maxRounds`, then return its markdown answer. */
+  private async runToolLoop(
+    messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+    context: { wikiChunks: Set<string>; apiFunctionChunks: Set<string>; apiCallbackChunks: Set<string> },
+    maxRounds: number
+  ): Promise<string> {
     if (!this.openai) {
       throw new Error('RAG service not ready');
     }
 
-    for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+    for (let round = 0; round < maxRounds; round++) {
       const completion = await this.openai.chat.completions.create({
         model: CHAT_MODEL,
         messages,
         tools: WIKI_AGENT_TOOLS,
         tool_choice: 'auto',
-        response_format: RESPONSE_FORMAT,
         max_tokens: 1024,
         temperature: 0
       });
@@ -400,7 +347,7 @@ export class RagService {
       }
 
       if (!choice.tool_calls?.length) {
-        return this.validateAndRepair(parseStructuredCompletion(choice.content), messages);
+        return choice.content?.trim() || 'I could not generate a response.';
       }
 
       messages.push(choice);
@@ -410,7 +357,7 @@ export class RagService {
         // should never occur here — narrow for the type, and skip defensively if it ever does.
         if (call.type !== 'function') continue;
 
-        const result = await this.runTool(call.function.name, call.function.arguments, wikiChunks);
+        const result = await this.runTool(call.function.name, call.function.arguments, context.wikiChunks);
         messages.push({
           role: 'tool',
           tool_call_id: call.id,
@@ -420,26 +367,25 @@ export class RagService {
 
       messages[0] = {
         role: 'system',
-        content: this.buildSystemContent(wikiChunks, apiFunctionChunks, apiCallbackChunks)
+        content: this.buildSystemContent(context.wikiChunks, context.apiFunctionChunks, context.apiCallbackChunks)
       };
     }
 
     const final = await this.openai.chat.completions.create({
       model: CHAT_MODEL,
-      response_format: RESPONSE_FORMAT,
       messages: [
         ...messages,
         {
           role: 'user',
           content:
-            'Provide your final answer now. Use only $functions from relevant_functions or wiki_context for reply code. Callbacks from relevant_callbacks are triggers only — never put them in reply-code fences. Invalid names will be rejected.'
+            'Provide your final answer now. Use only $functions from relevant_functions or wiki_context for reply code, and only code you have checked. Callbacks from relevant_callbacks are triggers only — never put them in reply-code blocks. Invalid code will be rejected.'
         }
       ],
       max_tokens: 1024,
       temperature: 0
     });
 
-    return this.validateAndRepair(parseStructuredCompletion(final.choices[0]?.message?.content), messages);
+    return final.choices[0]?.message?.content?.trim() || 'I could not generate a response.';
   }
 
   async query(userMessage: string, history: ChatTurn[], options: RagQueryOptions = {}): Promise<string> {
