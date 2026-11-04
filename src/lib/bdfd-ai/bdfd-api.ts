@@ -28,6 +28,8 @@ export interface BdfdApiArgument {
   vacantable?: boolean;
   optional?: boolean;
   enumData?: string[];
+  /** The argument can repeat any number of times (`$sum[number;...]`). */
+  repeatable?: boolean;
 }
 
 export interface BdfdApiFunction {

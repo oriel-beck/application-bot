@@ -105,6 +105,8 @@ export interface BdscriptCallNode {
   unclosed: boolean;
   /** Offset of the call's `$` in the parsed code, for line/column diagnostics. */
   start: number;
+  /** Offset just past the call (after its closing `]`, or its name when bare). */
+  end: number;
 }
 
 const CALL_NAME = /^\$([A-Za-z][A-Za-z0-9]*)/;
@@ -161,7 +163,8 @@ function parseTextRun(
             args: call.args,
             closedEarly: call.closedEarly,
             unclosed: call.unclosed,
-            start: i
+            start: i,
+            end: call.end
           });
           i = call.end;
         } else {
@@ -172,7 +175,8 @@ function parseTextRun(
             args: [],
             closedEarly: false,
             unclosed: false,
-            start: i
+            start: i,
+            end: afterName
           });
           i = afterName;
         }
@@ -267,12 +271,18 @@ function describeVariant(variant: BdfdApiArgument[] | null): { min: number; max:
   }
 
   const min = variant.filter((arg) => arg.required).length;
-  const max = variant.length;
-  const names = variant.map((arg) => arg.name).join(', ');
+  // A repeatable argument (`$sum[number;...]`) lifts the upper bound entirely.
+  const max = variant.some((arg) => arg.repeatable) ? Infinity : variant.length;
+  const names = variant.map((arg) => (arg.repeatable ? `${arg.name}...` : arg.name)).join(', ');
   return {
     min,
     max,
-    label: min === max ? `${max} argument(s) (${names})` : `${min}-${max} argument(s) (${names})`
+    label:
+      max === Infinity
+        ? `at least ${min} argument(s) (${names})`
+        : min === max
+          ? `${max} argument(s) (${names})`
+          : `${min}-${max} argument(s) (${names})`
   };
 }
 
@@ -335,7 +345,7 @@ export interface BdscriptDiagnostic {
   message: string;
 }
 
-function lineColumnAt(code: string, offset: number): { line: number; column: number } {
+export function lineColumnAt(code: string, offset: number): { line: number; column: number } {
   const before = code.slice(0, offset);
   const lastNewline = before.lastIndexOf('\n');
   return { line: before.split('\n').length, column: offset - lastNewline };

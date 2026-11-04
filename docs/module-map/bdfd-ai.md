@@ -21,6 +21,17 @@ The page index (`WikiPageIndex`, `wiki-page-index.ts`) is built in memory at sta
 
 **`/search ai question:`** — the same RAG pipeline as `/ai` (same channel/role gating via `ai-command-access.ts`, ignores `ai_enabled`, no channel limit or memory), plus a wiki-focused system prompt. Up to 3 **Related wiki pages** (the pages behind the retrieved wiki chunks) are appended to the answer as links.
 
+## BDScript simulator (no AI)
+
+**`/simulate`** (optional single-line `code` and `message` options, otherwise a modal with code + "message after the trigger") and the **Simulate BDScript** message context menu (opens the modal pre-filled) run the code through a real interpreter (`src/lib/bdscript-sim/`) and reply ephemerally with what the command would send: the text, real embeds, and disabled buttons/select menus, followed by a report embed. No OpenAI call, so it ignores `ai_enabled` and works without `OPENAI_API_KEY` (only the function index is needed). Mentions never ping (`allowedMentions: { parse: [] }`).
+
+- **Context:** the invoking user is the author, in the current channel/server. Users mentioned in the message, or whose IDs appear in the code, are fetched (up to 10) so `$username[ID]` & co. resolve.
+- **Semantics from the wiki:** `$if/$elseif/$else/$endif`, `$try/$catch/$endtry` + `$error[]`, `$stop`, `$onlyIf`, `$argsCheck` (`>3` = 3 or more), `$suppressErrors`, `$c`, text/split/math functions (decimals off unless `$enableDecimals[yes]`; `$random[min;max]` excludes max), temp and persistent variables, embeds by index, buttons/menus. Blank lines are dropped from the response, as BDFD does (so lines holding only `$var[...]`, `$if[...]` etc. leave no gap). BDFD escapes (`\;`, `\]`, `%{-SEMICOL-}%`, `%{DOL}%`, `%ESCAPED%`) are resolved.
+- **Errors look like BDFD's:** ``❌ Function `$sum` at `2:9` returned an error: expected integer in position 2, got 'a'`` — located at the call's closing `]`. Argument count/empty/type checks are driven by the API schema (`arguments.ts`), including mid-list repeatable arguments (`$onlyForIDs[ID;...;Error]`). Bare calls aren't arity-checked (the API omits some bare forms).
+- **Report:** side effects that weren't performed (moderation, reactions, variable writes, `$sendMessage`, `$useChannel`, …), calls not simulated, and notes (random values picked, the author mention BDFD adds without `$nomention`).
+- **Never guesses:** a function with no handler, or one it can't resolve (another user, a persistent variable this run didn't set — its value lives in the bot), is _unknown_. Anything computed from an unknown value is unknown too and is left as written — or outputs nothing if it's an assignment/side effect (`STATEMENT_FUNCTIONS`); variables and `$textSplit` assigned from one stay unknown. If `$if`/`$elseif`/`$onlyIf` depends on an unknown value, the run stops with `stoppedBy: 'unsupported'` and shows the output up to there.
+- Verified against every example on the wiki's function pages (276): none error falsely, and fully-simulated ones match the documented output.
+
 ## Code checker (no AI)
 
 **`/check-code`** (optional single-line `code` option, otherwise a multi-line modal) and the **Check BDScript** message context menu run the BDScript parser over the user's code and list unknown functions (with suggestions), wrong argument counts, calls closed early by an unescaped `]` (e.g. `[@user]` inside `$argsCheck`), and unclosed calls — each with line/column. Ephemeral reply; no OpenAI call, so it ignores `ai_enabled` and works without `OPENAI_API_KEY` (only the function index is needed).
@@ -46,6 +57,8 @@ Mention and reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_
 | `commands/ai-sweep.ts`                     | Owner `/ai-sweep` — clear AI state for channels inactive 7+ days (transcripts kept)              |
 | `commands/ai-conversations.ts`             | Staff `/ai-conversations` — Components V2 browser (each row: usage/limit + Reset usage / Delete) |
 | `commands/check-code.ts`                   | `/check-code` + **Check BDScript** context menu — parser-only lint of user code                  |
+| `commands/simulate.ts`                     | `/simulate` + **Simulate BDScript** context menu — run BDScript and show its output              |
+| `interaction-handlers/simulate-modal.ts`   | `/simulate` modal submit (`sim:mdl:code`)                                                        |
 | `commands/search.ts`                       | `/search wiki` (fuzzy page search + autocomplete) and `/search ai` (AI answer about the wiki)    |
 | `interaction-handlers/check-code-modal.ts` | `/check-code` modal submit (`chk:mdl:code`)                                                      |
 | `interaction-handlers/list/*.ts`           | List pagination + reset/delete (`ai:list:*`)                                                     |
@@ -58,7 +71,8 @@ Mention and reply-to-bot only. Turns are stored in PostgreSQL (`ai_conversation_
 | `managers/ai-conversation.manager.ts`      | Persisted turn history (`container.aiConversation`); **`listChannels()`** for the browser        |
 | `preconditions/BdfdAiEnabled.ts`           | Unused by `/ai`; reserved for future gated commands                                              |
 
-Custom IDs: `AiConversationCustomIDs`, `CheckCodeCustomIDs` in `src/lib/constants/custom-ids.ts`.  
+Custom IDs: `AiConversationCustomIDs`, `CheckCodeCustomIDs`, `SimulateCustomIDs` (rendered simulated components use `sim:out:*`, always disabled) in `src/lib/constants/custom-ids.ts`.
+Simulate utils: `src/lib/command-utils/bdfd-ai/simulate.utils.ts` (modal, context building, `SimResult` → embeds/components within Discord limits, fallback if Discord rejects the payload). Interpreter: `src/lib/bdscript-sim/` (`interpreter.ts` blocks/evaluation, `functions.ts` handler table, `arguments.ts` schema checks, `conditions.ts`, `calculate.ts` — a parser, never `eval`).  
 Check-code utils: `src/lib/command-utils/bdfd-ai/check-code.utils.ts` (modal, code-fence extraction, result embed).
 Search utils: `src/lib/command-utils/bdfd-ai/search.utils.ts` (autocomplete choices/pick round-trip, result embed).
 List UI utils: `src/lib/command-utils/bdfd-ai/list/ai-conversation-list.utils.ts` (`PAGE_SIZE = 8`, First/Prev/page/Next/Last; per-row Reset usage / Delete).

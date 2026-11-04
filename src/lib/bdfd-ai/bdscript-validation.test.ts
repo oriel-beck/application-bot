@@ -77,7 +77,8 @@ describe('parseBdscript / flattenBdscriptCalls', () => {
         args: [[{ type: 'text', value: '2' }], [{ type: 'text', value: 'Use [@user' }]],
         closedEarly: true,
         unclosed: false,
-        start: 0
+        start: 0,
+        end: 24
       },
       { type: 'text', value: ' [amount]]' }
     ]);
@@ -94,7 +95,8 @@ describe('parseBdscript / flattenBdscriptCalls', () => {
         args: [[{ type: 'text', value: '2' }], [{ type: 'text', value: 'Use [@user] [amount]' }]],
         closedEarly: false,
         unclosed: false,
-        start: 0
+        start: 0,
+        end: 36
       }
     ]);
     expect(findEarlyClosedCalls(flattenBdscriptCalls(nodes))).toEqual([]);
@@ -161,6 +163,14 @@ describe('findArityIssues', () => {
   it('flags a call with too many arguments for every known overload', () => {
     const issues = findArityIssues(flattenBdscriptCalls(parseBdscript('$var[a;b;c]')), index);
     expect(issues).toEqual([{ name: 'var', argCount: 3, expected: ['1-2 argument(s) (Name, Value)'] }]);
+  });
+
+  it('accepts any number of a repeatable argument, but still needs the required ones', () => {
+    const sumIndex = indexFrom({ sum: rec({ variants: [[{ ...arg('number', true), repeatable: true }]] }) });
+    expect(findArityIssues(flattenBdscriptCalls(parseBdscript('$sum[1;2;3;4]')), sumIndex)).toEqual([]);
+    expect(findArityIssues(flattenBdscriptCalls(parseBdscript('$sum[]')), sumIndex)).toEqual([
+      { name: 'sum', argCount: 0, expected: ['at least 1 argument(s) (number...)'] }
+    ]);
   });
 
   it('accepts a call that fits one of several overloads (bare or bracketed $message)', () => {
