@@ -14,6 +14,7 @@ import {
   THINKING_STATUSES
 } from './response-utils.js';
 import { BdscriptValidationError } from './bdscript-validation.js';
+import type { RagMode } from './rag.service.js';
 
 export type AiRequestSource =
   | { type: 'message'; message: Message<true> }
@@ -28,8 +29,8 @@ export interface ProcessAiRequestOptions {
   ignoreAiEnabled?: boolean;
   /** When true, skips channel usage limits, thinking lock, and conversation persistence (`/ai`). */
   skipChannelTracking?: boolean;
-  /** `/search ai`: wiki-focused answer with related wiki page links. */
-  wikiQuestion?: boolean;
+  /** Mode prompt on top of the base prompt (default `assistant`; `/search ai` uses `wiki`). */
+  mode?: RagMode;
 }
 
 type EditableMessage = {
@@ -73,7 +74,7 @@ async function createThinkingSurface(source: AiRequestSource): Promise<EditableM
 }
 
 export async function processAiRequest(options: ProcessAiRequestOptions): Promise<void> {
-  const { container, channelId, userText, source, ignoreAiEnabled, skipChannelTracking, wikiQuestion } = options;
+  const { container, channelId, userText, source, ignoreAiEnabled, skipChannelTracking, mode } = options;
 
   const settings = await container.settings.get(container.config.guild).catch(() => null);
   if (!ignoreAiEnabled && !settings?.at(0)?.aiEnabled) {
@@ -135,14 +136,15 @@ export async function processAiRequest(options: ProcessAiRequestOptions): Promis
 
   try {
     const history = skipChannelTracking ? [] : await container.aiConversation.getHistory(channelId);
-    const response = await container.rag.query(userText, history, { wikiQuestion });
+    const { answer, sources } = await container.rag.query(userText, history, { mode });
 
     animation.stop();
 
-    await thinkingSurface.edit(formatAiPayload(response));
+    // Sources are shown but kept out of conversation history.
+    await thinkingSurface.edit(formatAiPayload(answer + sources));
 
     if (!skipChannelTracking) {
-      await container.aiConversation.addExchange(channelId, userText, response);
+      await container.aiConversation.addExchange(channelId, userText, answer);
       await container.aiConversation.trimChannel(channelId);
       await container.aiRate.incrementUsage(channelId);
     }

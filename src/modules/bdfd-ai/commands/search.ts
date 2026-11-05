@@ -75,7 +75,7 @@ export class SearchCommand extends Subcommand {
       source: { type: 'interaction', interaction },
       ignoreAiEnabled: true,
       skipChannelTracking: true,
-      wikiQuestion: true
+      mode: 'wiki'
     });
   }
 

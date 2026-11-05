@@ -57,9 +57,7 @@ function serviceWith(replies: Reply[]) {
         { role: 'system', content: 'sys' },
         { role: 'user', content: 'q' }
       ],
-      new Set(),
-      new Set(),
-      new Set()
+      { systemPrompt: 'sys', wikiChunks: new Set(), apiFunctionChunks: new Set(), apiCallbackChunks: new Set() }
     );
   return { run, requests };
 }

@@ -42,22 +42,14 @@ import { sectionUrl, WikiPageIndex, type WikiPageKind, type WikiSearchHit } from
 const WIKI_COLLECTION = 'bdfd-wiki';
 const CHAT_MODEL = 'gpt-4o-mini';
 const INITIAL_TOP_K = 6;
-/** Related wiki pages linked under a `/search ai` answer. */
-const MAX_CITED_PAGES = 3;
+/** Related wiki pages linked under every answer. */
+const MAX_CITED_PAGES = 8;
 /** Don't hammer Chroma when the page index is empty (e.g. ingest hasn't run yet). */
 const WIKI_INDEX_RETRY_MS = 60_000;
 
-const WIKI_QUESTION_PROMPT = `This question comes from the wiki search command: the user is asking about the BDFD wiki.
-Answer from <wiki_context> and <relevant_functions> (use search_wiki if they don't cover it). Explain concepts in plain language and keep code examples short.
-If the wiki doesn't cover the question, say so plainly instead of guessing. Do not add a sources list — links to the wiki pages you were given are appended automatically.`;
-
-export interface RagQueryOptions {
-  /** `/search ai`: wiki-focused prompt, and links to the retrieved wiki pages are appended. */
-  wikiQuestion?: boolean;
-}
-
-const SYSTEM_PROMPT = `You are an expert assistant for BDFD (Bot Designer for Discord), **BDScript only**.
-You help users debug BDScript. You do not support BDFD JavaScript (BDJS) — never suggest \`ban()\`, \`setResponse()\`, or other non-$ JavaScript-mode APIs.
+/** Shared by every mode: what the model receives, its tools, and the rules every answer must follow. */
+const BASE_PROMPT = `You are an expert on BDFD (Bot Designer for Discord), **BDScript only**.
+You do not support BDFD JavaScript (BDJS) — never suggest \`ban()\`, \`setResponse()\`, or other non-$ JavaScript-mode APIs.
 
 You receive:
 - **<relevant_functions>** — official BDFD API function definitions (prefer these for reply-code syntax).
@@ -81,8 +73,61 @@ Context chunks (<wiki_context>, <relevant_functions>, etc.) use plain triple-bac
 **Output format:** answer in Discord markdown. Put every piece of BDScript in its own triple-backtick code block.
 **Hard rule:** before your final answer, call **check_bdscript_code** with every code block you will include (several at once is fine). If it reports problems, fix the code and check again — only reply once it finds none. Show the code exactly as you checked it. Answers whose code fails these checks are rejected.
 
-Be concise and practical. Your reply will be shown in a Discord embed (markdown supported).
-If the user says their code is too large to paste, tell them to send a pastebin raw link or a .txt file URL in a reply to you or a message that mentions you.`;
+Your reply will be shown in a Discord embed (markdown supported).
+Do not add a sources list — links to the wiki pages you were given are appended automatically.`;
+
+/**
+ * `assistant`: `/ai`, mentions and replies in AI channels — writing and debugging the user's commands.
+ * `wiki`: `/search ai` — explaining what the wiki documents.
+ */
+export type RagMode = 'assistant' | 'wiki';
+
+const MODE_PROMPTS: Record<RagMode, string> = {
+  assistant: `**Mode: assistant (/ai, mentions and replies).** Help the user write and debug BDScript commands.
+- When the user shares code, find the actual problem, explain it in a sentence or two, and show the corrected code.
+- When they ask how to build something, give code they can paste, with a short note on how it works.
+- Be concise and practical.
+- If the user says their code is too large to paste, tell them to send a pastebin raw link or a .txt file URL in a reply to you or a message that mentions you.`,
+
+  wiki: `**Mode: wiki guide (/search ai).** The user searched the BDFD wiki with a question. Act as a guide to the wiki, not a code debugger: explain what the wiki says, accurately and in plain language.
+
+**Grounding**
+- Base every claim on <wiki_context> and <relevant_functions>. Nothing outside them counts as documented — not memory, not other bot makers, not BDJS.
+- If they don't answer the question, call search_wiki before giving up. Use wiki wording ("slash command options", "$textSplit") rather than the user's phrasing. Try at least two different queries.
+- If the wiki still doesn't cover it, say so in one sentence and name the closest topic it does cover. Never fill gaps with guesses.
+
+**Shape the answer to the question**
+- *What does $function do / how do I use it:* one-line purpose, the syntax with each argument explained (from relevant_functions), one minimal example, then any gotcha the docs mention (limits, required permissions, escaping).
+- *How do I do X / how does feature Y work:* a short explanation, then numbered steps if there is a process, then one minimal example if code helps.
+- *Which function does X:* name the matching functions (confirmed with check_bdscript_functions) with a one-line purpose each, and say when to pick which.
+- *Concept questions (variables, triggers, callbacks, limits):* explain the idea first, code only if it makes it clearer.
+
+**Style**
+- Lead with the direct answer in the first sentence. Aim for under 250 words.
+- Examples demonstrate the documented feature — the smallest code that shows it, not a full command or bot.
+- You may refer to a page by name ("see the Variables guide"); links are added for you.
+- This is a single answer with no follow-up in the same thread, so make it self-contained and don't end with questions.
+- If the user pasted their own code to fix, answer what the wiki says about the functions involved and suggest /ai for debugging the whole command.`
+};
+
+export interface RagQueryOptions {
+  /** Which mode prompt goes on top of the base prompt (default `assistant`). */
+  mode?: RagMode;
+}
+
+export interface RagAnswer {
+  answer: string;
+  /** Formatted "Related wiki pages" block to show after the answer; empty if no page could be linked. */
+  sources: string;
+}
+
+/** Retrieved context plus the mode's full system prompt; the system message is rebuilt from it as chunks grow. */
+interface RagContext {
+  systemPrompt: string;
+  wikiChunks: Set<string>;
+  apiFunctionChunks: Set<string>;
+  apiCallbackChunks: Set<string>;
+}
 
 export class RagService {
   private openai: OpenAI | null = null;
@@ -198,16 +243,12 @@ export class RagService {
     return this.functionIndex;
   }
 
-  private buildSystemContent(
-    wikiChunks: Set<string>,
-    apiFunctionChunks: Set<string>,
-    apiCallbackChunks: Set<string>
-  ): string {
+  private buildSystemContent({ systemPrompt, wikiChunks, apiFunctionChunks, apiCallbackChunks }: RagContext): string {
     const callbacksSection = apiCallbackChunks.size
       ? `\n\n<relevant_callbacks>\nCallbacks below are **command triggers only** — never put them in reply code.\n${formatWikiChunks(apiCallbackChunks)}\n</relevant_callbacks>`
       : '';
 
-    return `${SYSTEM_PROMPT}\n\n<bdfd_basics>\n${BDFD_BASICS}\n</bdfd_basics>\n\n<relevant_functions>\n${formatWikiChunks(apiFunctionChunks)}\n</relevant_functions>${callbacksSection}\n\n<wiki_context>\n${formatWikiChunks(wikiChunks)}\n</wiki_context>`;
+    return `${systemPrompt}\n\n<bdfd_basics>\n${BDFD_BASICS}\n</bdfd_basics>\n\n<relevant_functions>\n${formatWikiChunks(apiFunctionChunks)}\n</relevant_functions>${callbacksSection}\n\n<wiki_context>\n${formatWikiChunks(wikiChunks)}\n</wiki_context>`;
   }
 
   private async runTool(name: string, argsJson: string, wikiChunks: Set<string>): Promise<string> {
@@ -272,11 +313,8 @@ export class RagService {
    */
   private async completeWithTools(
     messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-    wikiChunks: Set<string>,
-    apiFunctionChunks: Set<string>,
-    apiCallbackChunks: Set<string>
+    context: RagContext
   ): Promise<string> {
-    const context = { wikiChunks, apiFunctionChunks, apiCallbackChunks };
     let answer = await this.runToolLoop(messages, context, MAX_TOOL_ROUNDS);
 
     for (let attempt = 0; attempt <= RagService.MAX_VALIDATION_RETRIES; attempt++) {
@@ -324,7 +362,7 @@ export class RagService {
   /** Let the model call tools for up to `maxRounds`, then return its markdown answer. */
   private async runToolLoop(
     messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-    context: { wikiChunks: Set<string>; apiFunctionChunks: Set<string>; apiCallbackChunks: Set<string> },
+    context: RagContext,
     maxRounds: number
   ): Promise<string> {
     if (!this.openai) {
@@ -367,7 +405,7 @@ export class RagService {
 
       messages[0] = {
         role: 'system',
-        content: this.buildSystemContent(context.wikiChunks, context.apiFunctionChunks, context.apiCallbackChunks)
+        content: this.buildSystemContent(context)
       };
     }
 
@@ -388,7 +426,7 @@ export class RagService {
     return final.choices[0]?.message?.content?.trim() || 'I could not generate a response.';
   }
 
-  async query(userMessage: string, history: ChatTurn[], options: RagQueryOptions = {}): Promise<string> {
+  async query(userMessage: string, history: ChatTurn[], options: RagQueryOptions = {}): Promise<RagAnswer> {
     if (!this.ready || !this.openai || !this.collection) {
       throw new Error('RAG service not ready');
     }
@@ -417,16 +455,15 @@ export class RagService {
     for (const doc of namedDocs.functions) apiFunctionChunks.add(doc);
     for (const doc of namedDocs.callbacks) apiCallbackChunks.add(doc);
 
+    const context: RagContext = {
+      systemPrompt: `${BASE_PROMPT}\n\n${MODE_PROMPTS[options.mode ?? 'assistant']}`,
+      wikiChunks,
+      apiFunctionChunks,
+      apiCallbackChunks
+    };
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-      {
-        role: 'system',
-        content: this.buildSystemContent(wikiChunks, apiFunctionChunks, apiCallbackChunks)
-      }
+      { role: 'system', content: this.buildSystemContent(context) }
     ];
-
-    if (options.wikiQuestion) {
-      messages.push({ role: 'system', content: WIKI_QUESTION_PROMPT });
-    }
 
     if (externalContext) {
       messages.push({
@@ -464,7 +501,7 @@ export class RagService {
 
     messages.push({ role: 'user', content: userMessage });
 
-    const answer = await this.completeWithTools(messages, wikiChunks, apiFunctionChunks, apiCallbackChunks);
-    return options.wikiQuestion ? answer + this.formatWikiSources(wikiChunks) : answer;
+    const answer = await this.completeWithTools(messages, context);
+    return { answer, sources: this.formatWikiSources(wikiChunks) };
   }
 }
