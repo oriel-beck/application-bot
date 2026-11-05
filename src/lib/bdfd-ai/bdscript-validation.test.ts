@@ -3,6 +3,7 @@ import type { BdfdApiArgument } from './bdfd-api.js';
 import type { BdscriptFunctionIndex, BdscriptFunctionRecord } from './bdscript-function-index.js';
 import {
   extractBdscriptFunctions,
+  findArgTypeIssues,
   findArityIssues,
   findArityIssuesInSnippets,
   findCallbacksMisusedInSnippets,
@@ -288,6 +289,83 @@ describe('lintBdscript', () => {
     expect(diagnostics.map((d) => [d.kind, d.name, d.column])).toEqual([
       ['arity', 'var', 1],
       ['unknown-function', 'fooBar', 6]
+    ]);
+  });
+});
+
+describe('findArgTypeIssues', () => {
+  const typed = (name: string, type: string, extra: Partial<BdfdApiArgument> = {}): BdfdApiArgument => ({
+    name,
+    type,
+    required: true,
+    ...extra
+  });
+  const index = indexFrom({
+    isMentioned: rec({ variants: [[typed('User ID', 'Snowflake')]] }),
+    mentioned: rec({
+      variants: [[typed('Mention number', 'HowMany'), typed('Return author', 'Bool', { required: false })]]
+    }),
+    argsCheck: rec({ variants: [[typed('Argument count', 'HowMany'), typed('Error message', 'String')]] }),
+    if: rec({ variants: [[typed('Condition', 'String')]] }),
+    authorID: rec(),
+    removeContains: rec({ variants: [[typed('Word', 'String', { repeatable: true }), typed('Amount', 'Integer')]] }),
+    roleGrant: rec({
+      variants: [[typed('user ID', 'Snowflake'), typed('+/-Role ID', 'Snowflake', { repeatable: true })]]
+    }),
+    modifyChannel: rec({ variants: [[typed('Channel ID', 'Snowflake'), typed('Position', 'Integer')]] }),
+    getUserVar: rec({ variants: [[typed('Name', 'String'), typed('User ID', 'String | Snowflake')]] })
+  });
+
+  it('flags a comparison inside an ID argument', () => {
+    const [issue] = findArgTypeIssues('$if[$isMentioned[$mentioned[1] == 1242972493447299174]]', index);
+    expect(issue).toMatchObject({
+      name: 'isMentioned',
+      argName: 'User ID',
+      value: '$mentioned[1] == 1242972493447299174'
+    });
+    expect(issue!.message).toContain('comparison');
+  });
+
+  it('flags literals that do not fit the type', () => {
+    expect(findArgTypeIssues('$isMentioned[@user] $mentioned[first;maybe]', index).map((i) => i.argName)).toEqual([
+      'User ID',
+      'Mention number',
+      'Return author'
+    ]);
+  });
+
+  it('accepts valid values, single calls and conditions', () => {
+    expect(
+      findArgTypeIssues(
+        '$if[$mentioned[1]==1242972493447299174] $isMentioned[$authorID] $mentioned[1;no] $argsCheck[>1;Ping someone]',
+        index
+      )
+    ).toEqual([]);
+  });
+
+  it('skips union types and `!unchanged`', () => {
+    expect(findArgTypeIssues('$getUserVar[money;@user] $modifyChannel[123456789012345678;!unchanged]', index)).toEqual(
+      []
+    );
+  });
+
+  it('lines arguments after a repeatable one up from the end', () => {
+    expect(findArgTypeIssues('$removeContains[discord.gg/;https://discord.com/invite;5]', index)).toEqual([]);
+    expect(findArgTypeIssues('$removeContains[a;b;lots]', index)).toEqual([
+      expect.objectContaining({ argName: 'Amount', value: 'lots' })
+    ]);
+  });
+
+  it("allows `$roleGrant`'s +/- role prefix", () => {
+    expect(findArgTypeIssues('$roleGrant[$authorID;+123456789012345678;-$mentionedRoles[1]]', index)).toEqual([]);
+    expect(findArgTypeIssues('$roleGrant[$authorID;+admin]', index)).toEqual([
+      expect.objectContaining({ argName: '+/-Role ID', value: '+admin' })
+    ]);
+  });
+
+  it('is reported by lintBdscript with a position', () => {
+    expect(lintBdscript('hi\n$isMentioned[$authorID > 5]', index)).toEqual([
+      expect.objectContaining({ kind: 'arg-type', name: 'isMentioned', line: 2, column: 1 })
     ]);
   });
 });

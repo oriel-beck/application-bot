@@ -11,10 +11,13 @@ import {
 } from './bdscript-function-index.js';
 import {
   BdscriptValidationError,
+  type RejectedAttempt,
   buildRepairPrompt,
   extractBdscriptFunctions,
+  findArgTypeIssues,
   findArityIssues,
   findEarlyClosedCalls,
+  formatArgTypeIssue,
   flattenBdscriptCalls,
   parseBdscript
 } from './bdscript-validation.js';
@@ -56,12 +59,12 @@ You receive:
 - **<relevant_callbacks>** — official BDFD API callbacks when retrieved; these are **command triggers only**, never reply-code functions.
 - **<wiki_context>** — wiki guides and examples.
 - **<bdfd_basics>** — always-applied BDFD rules.
-- **<user_code_analysis>** — when present, an automated argument-count check of $functions already in the user's message. It only checks arg count, not correctness — verify against relevant_functions, don't take it as the final word.
+- **<user_code_analysis>** — when present, an automated check of $functions already in the user's message: argument counts, bracket escaping and argument types (an ID argument holding a comparison, text where a number belongs). It doesn't check logic — verify against relevant_functions, don't take it as the final word.
 
 You also have tools:
 - **search_wiki** — fetch more wiki excerpts when context is incomplete.
 - **check_bdscript_functions** — verify $function / callback names exist and whether each is a function or callback.
-- **check_bdscript_code** — check whole code blocks: unknown functions, argument counts, unescaped \`]\`, unclosed brackets, callbacks in reply code.
+- **check_bdscript_code** — check whole code blocks: unknown functions, argument counts and types, unescaped \`]\`, unclosed brackets, callbacks in reply code.
 
 **Hard rule:** Only mention BDScript $functions that appear in relevant_functions, wiki_context, or bdfd_basics, or that check_bdscript_functions confirms exist as **functions**.
 **Hard rule:** Callbacks from relevant_callbacks / check results are **triggers only**. When showing a callback command, label **Trigger** (callback) and **Reply code** (BDScript functions only). Never put callbacks inside reply-code fences.
@@ -85,6 +88,8 @@ export type RagMode = 'assistant' | 'wiki';
 const MODE_PROMPTS: Record<RagMode, string> = {
   assistant: `**Mode: assistant (/ai, mentions and replies).** Help the user write and debug BDScript commands.
 - When the user shares code, find the actual problem, explain it in a sentence or two, and show the corrected code.
+- When they ask whether code will work or why it misbehaves, answer that question first. Walk through the code for each case they care about and say which branch runs — in an \`$if\`/\`$elseif\` chain the first matching condition wins, so a later branch never runs if an earlier condition also matches its case; put the more specific check first.
+- check_bdscript_code only proves the syntax is valid, not that the logic is right. The user never sees your tool calls or their results: never give "it passed the check" as your answer or mention the tool — explain what was wrong in the code they sent.
 - When they ask how to build something, give code they can paste, with a short note on how it works.
 - Be concise and practical.
 - If the user says their code is too large to paste, tell them to send a pastebin raw link or a .txt file URL in a reply to you or a message that mentions you.`,
@@ -316,6 +321,7 @@ export class RagService {
     context: RagContext
   ): Promise<string> {
     let answer = await this.runToolLoop(messages, context, MAX_TOOL_ROUNDS);
+    const attempts: RejectedAttempt[] = [];
 
     for (let attempt = 0; attempt <= RagService.MAX_VALIDATION_RETRIES; attempt++) {
       // Deterministically escape placeholder brackets (`[@user]` → `[@user\]`) *before* validating,
@@ -331,16 +337,18 @@ export class RagService {
       }
 
       const { invalidNames, misusedCallbacks, arityIssues, earlyClosed } = problems;
+      attempts.push({ answer, problems });
       console.warn(
         `[bdfd-ai] Validation failed (attempt ${attempt + 1}/${RagService.MAX_VALIDATION_RETRIES + 1}): ` +
           `invalid=[${invalidNames.map((n) => `$${n}`).join(', ')}] ` +
           `misusedCallbacks=[${misusedCallbacks.map((n) => `$${n}`).join(', ')}] ` +
           `arityIssues=[${arityIssues.map((i) => `$${i.name}(${i.argCount})`).join(', ')}] ` +
-          `earlyClosed=[${earlyClosed.map((n) => `$${n}`).join(', ')}]`
+          `earlyClosed=[${earlyClosed.map((n) => `$${n}`).join(', ')}]\n` +
+          `Rejected answer:\n${answer}`
       );
 
       if (attempt === RagService.MAX_VALIDATION_RETRIES) {
-        throw new BdscriptValidationError(invalidNames, misusedCallbacks, arityIssues, earlyClosed);
+        throw new BdscriptValidationError(invalidNames, misusedCallbacks, arityIssues, earlyClosed, attempts);
       }
 
       messages.push(
@@ -441,6 +449,7 @@ export class RagService {
     const userCalls = flattenBdscriptCalls(parseBdscript(userMessage));
     const userArityIssues = findArityIssues(userCalls, this.functionIndex);
     const userEarlyClosed = findEarlyClosedCalls(userCalls);
+    const userArgTypeIssues = findArgTypeIssues(userMessage, this.functionIndex);
 
     const [wikiResults, apiHits, namedDocs] = await Promise.all([
       searchWikiDocuments(this.collection, this.openai, userMessage, INITIAL_TOP_K),
@@ -472,13 +481,13 @@ export class RagService {
       });
     }
 
-    if (userArityIssues.length || userEarlyClosed.length) {
+    if (userArityIssues.length || userEarlyClosed.length || userArgTypeIssues.length) {
       messages.push({
         role: 'system',
         content:
           '<user_code_analysis>\n' +
           "Automated check of the $functions already used in the user's own message below — verify " +
-          'against relevant_functions before relying on this, it only checks argument count and bracket escaping:\n' +
+          'against relevant_functions before relying on this, it only checks argument counts, types and bracket escaping:\n' +
           [
             ...userArityIssues.map(
               (issue) =>
@@ -489,7 +498,8 @@ export class RagService {
               (name) =>
                 `- $${name}[...] is closed early by an unescaped \`]\` in literal text like \`[@user]\` — ` +
                 'every literal `]` inside an argument must be escaped as `\\]`'
-            )
+            ),
+            ...userArgTypeIssues.map((issue) => `- ${formatArgTypeIssue(issue)}`)
           ].join('\n') +
           '\n</user_code_analysis>'
       });

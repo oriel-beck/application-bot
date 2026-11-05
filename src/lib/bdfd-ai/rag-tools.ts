@@ -48,7 +48,7 @@ export const WIKI_AGENT_TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     function: {
       name: 'check_bdscript_code',
       description:
-        'Check BDScript code before showing it to the user. Reports unknown functions (with suggestions), wrong argument counts, literal `]` that close a function early, unclosed brackets, and callbacks used in reply code — each with its line and column. It does not run the code. Call it with every code block you plan to include, fix what it reports, and check again until it finds no problems.',
+        'Check BDScript code before showing it to the user. Reports unknown functions (with suggestions), wrong argument counts, arguments of the wrong type (e.g. a comparison or placeholder text where an ID belongs), literal `]` that close a function early, unclosed brackets, and callbacks used in reply code — each with its line and column. It does not run the code. Call it with every code block you plan to include, fix what it reports, and check again until it finds no problems.',
       parameters: {
         type: 'object',
         properties: {

@@ -1,5 +1,6 @@
 import type { BdfdApiArgument } from './bdfd-api.js';
 import type { BdscriptFunctionIndex } from './bdscript-function-index.js';
+import type { AnswerProblems } from './code-check.js';
 import { bdscriptFunctionNames, normalizeBdscriptFunctionName } from './bdscript-function-index.js';
 
 const BDSCRIPT_FUNCTION_PATTERN = /\$([A-Za-z][A-Za-z0-9]*)/g;
@@ -14,13 +15,21 @@ const HALLUCINATION_ALIASES: Record<string, string> = {
   len: 'charCount'
 };
 
+/** One answer the backstop rejected, with what it found. */
+export interface RejectedAttempt {
+  answer: string;
+  problems: AnswerProblems;
+}
+
 /** Thrown when a response still fails validation after all repair attempts. */
 export class BdscriptValidationError extends Error {
   constructor(
     public readonly invalidNames: string[],
     public readonly misusedCallbacks: string[],
     public readonly arityIssues: ArityIssue[] = [],
-    public readonly earlyClosed: string[] = []
+    public readonly earlyClosed: string[] = [],
+    /** Every rejected answer, oldest first — for diagnosing why no answer was sent. */
+    public readonly attempts: RejectedAttempt[] = []
   ) {
     super(
       `BDScript validation failed after retries: invalid=[${invalidNames.join(', ')}] misusedCallbacks=[${misusedCallbacks.join(', ')}] arityIssues=[${arityIssues.map((i) => `$${i.name}(${i.argCount})`).join(', ')}] earlyClosed=[${earlyClosed.join(', ')}]`
@@ -332,9 +341,138 @@ export function findEarlyClosedCallsInSnippets(snippets: string[]): string[] {
   ];
 }
 
+// --- Argument type validation ---------------------------------------------------------------
+//
+// Arity alone lets `$isMentioned[$mentioned[1] == 123]` through: one argument, right count, but a
+// User ID can't hold a comparison. For the API's single-value types we can check the shape of the
+// argument without running anything: a literal must look like that type, and a function call can't
+// be mixed with extra text. Union types (`Snowflake | String`) and free-form types are skipped.
+
+/** Literal shape per single-value API type. `HowMany` allows `$argsCheck[>1;...]`-style bounds. */
+const LITERAL_SHAPES: Record<string, { pattern: RegExp; expected: string }> = {
+  Snowflake: { pattern: /^\d{15,21}$/, expected: 'an ID (a snowflake like `123456789012345678`)' },
+  Integer: { pattern: /^-?\d+$/, expected: 'a whole number' },
+  HowMany: { pattern: /^[<>]?\d+$/, expected: 'a count (a number, optionally with `>` or `<`)' },
+  Bool: { pattern: /^(?:yes|no|true|false)$/i, expected: '`yes`/`no` (or `true`/`false`)' }
+};
+
+const COMPARISON = /==|!=|>=|<=|[<>]/;
+
+export interface ArgTypeIssue {
+  name: string;
+  argName: string;
+  /** The argument as written, with nested calls re-rendered. */
+  value: string;
+  message: string;
+}
+
+function renderNodes(nodes: BdscriptNode[]): string {
+  return nodes
+    .map((node) =>
+      node.type === 'text'
+        ? node.value
+        : `$${node.name}${node.hasBrackets ? `[${node.args.map(renderNodes).join(';')}]` : ''}`
+    )
+    .join('');
+}
+
+/** `$modifyChannel[...;!unchanged;...]` keeps a field as it is, whatever its type. */
+const UNCHANGED = '!unchanged';
+
+/** Why `nodes` can't be a value of `schema`'s type, or null when it can (or the type isn't checkable). */
+function argTypeProblem(schema: BdfdApiArgument, nodes: BdscriptNode[]): string | null {
+  const shape = LITERAL_SHAPES[schema.type.trim()];
+  if (!shape) return null;
+
+  let text = nodes
+    .filter((n) => n.type === 'text')
+    .map((n) => n.value)
+    .join('')
+    .trim();
+  const hasCall = nodes.some((n) => n.type === 'call');
+
+  // Prefixes the type allows: `>`/`<` on a count, `+`/`-` on `$roleGrant`'s `+/-Role ID`.
+  const prefix = schema.type === 'HowMany' ? /^[<>]/ : schema.name.startsWith('+/-') ? /^[+-]/ : null;
+  if (prefix) text = text.replace(prefix, '').trim();
+
+  if (!hasCall) {
+    // Empty arguments are governed by required/empty flags, which arity already covers.
+    if (!text || text === UNCHANGED || shape.pattern.test(text)) return null;
+    return `expects ${shape.expected}`;
+  }
+
+  if (!text) return null;
+
+  return COMPARISON.test(text)
+    ? 'can only hold a single value, not a comparison — comparisons only work in condition arguments like `$if`, `$elseif` or `$onlyIf`'
+    : `mixes a function call with extra text; it expects a single value: ${shape.expected}`;
+}
+
+/**
+ * The schema for argument `i` of a call with `argCount` arguments. Arguments up to a repeatable one
+ * line up from the start, the ones after it from the end (`$removeContains[Word;...;Amount]`).
+ */
+function schemaAt(variant: BdfdApiArgument[], i: number, argCount: number): BdfdApiArgument | undefined {
+  const repeatable = variant.findIndex((arg) => arg.repeatable);
+  if (repeatable === -1 || i < repeatable) return variant[i];
+  const fromEnd = variant.length - (argCount - i);
+  return fromEnd > repeatable ? variant[fromEnd] : variant[repeatable];
+}
+
+/**
+ * Type problems in one call's arguments. Only overloads that fit the call's argument count are
+ * considered, and an argument is flagged only when it fails under every one of them.
+ */
+function argTypeIssuesFor(node: BdscriptCallNode, index: BdscriptFunctionIndex): ArgTypeIssue[] {
+  const argCount = countArgs(node);
+  const fitting = (index.get(node.name)?.variants ?? []).filter((variant) => {
+    const { min, max } = describeVariant(variant);
+    return argCount >= min && argCount <= max;
+  });
+  if (!fitting.length || argCount === 0) return [];
+
+  const issues: ArgTypeIssue[] = [];
+  node.args.forEach((arg, i) => {
+    let first: { schema: BdfdApiArgument; message: string } | null = null;
+    for (const variant of fitting) {
+      const schema = schemaAt(variant!, i, argCount);
+      const message = schema && argTypeProblem(schema, arg);
+      if (!schema || !message) return;
+      first ??= { schema, message };
+    }
+    if (first) {
+      issues.push({
+        name: node.name,
+        argName: first.schema.name,
+        value: renderNodes(arg).trim(),
+        message: first.message
+      });
+    }
+  });
+  return issues;
+}
+
+/** Argument type problems in every call of a snippet, nested calls included. */
+export function findArgTypeIssues(code: string, index: BdscriptFunctionIndex): ArgTypeIssue[] {
+  const issues: ArgTypeIssue[] = [];
+  const visit = (list: BdscriptNode[]) => {
+    for (const node of list) {
+      if (node.type !== 'call') continue;
+      issues.push(...argTypeIssuesFor(node, index));
+      for (const arg of node.args) visit(arg);
+    }
+  };
+  visit(parseBdscript(code));
+  return issues;
+}
+
+export function formatArgTypeIssue(issue: ArgTypeIssue): string {
+  return `\`$${issue.name}\`'s ${issue.argName} argument \`${issue.value}\` ${issue.message}`;
+}
+
 // --- User-facing lint ---------------------------------------------------------------------------
 
-export type BdscriptDiagnosticKind = 'unknown-function' | 'arity' | 'closed-early' | 'unclosed';
+export type BdscriptDiagnosticKind = 'unknown-function' | 'arity' | 'closed-early' | 'unclosed' | 'arg-type';
 
 export interface BdscriptDiagnostic {
   kind: BdscriptDiagnosticKind;
@@ -383,6 +521,10 @@ export function lintBdscript(code: string, index: BdscriptFunctionIndex): Bdscri
             `\`$${node.name}\` got ${arity.argCount} argument(s); expected ${arity.expected.join(' or ')}. ` +
               'A literal `;` inside an argument must be escaped as `\\;`.'
           );
+        } else {
+          for (const issue of argTypeIssuesFor(node, index)) {
+            report(node, 'arg-type', formatArgTypeIssue(issue));
+          }
         }
       }
 

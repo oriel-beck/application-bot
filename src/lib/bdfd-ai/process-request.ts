@@ -149,10 +149,23 @@ export async function processAiRequest(options: ProcessAiRequestOptions): Promis
       await container.aiRate.incrementUsage(channelId);
     }
   } catch (err) {
-    console.error('[bdfd-ai] query failed:', err);
+    const userId = source.type === 'message' ? source.message.author.id : source.interaction.user.id;
+    const isValidation = err instanceof BdscriptValidationError;
+    console.error(`[bdfd-ai] query failed (channel ${channelId}, user ${userId}, mode ${mode ?? 'assistant'}):`, err);
+    console.error(`[bdfd-ai] question was:\n${userText}`);
     animation.stop();
-    const embed = err instanceof BdscriptValidationError ? buildValidationFailedEmbed() : buildUnavailableEmbed();
+    const embed = isValidation ? buildValidationFailedEmbed() : buildUnavailableEmbed();
     await thinkingSurface.edit({ embeds: [embed] }).catch(() => null);
+    await container.aiConversation
+      .recordFailure({
+        channelId,
+        userId,
+        question: userText,
+        reason: isValidation ? 'validation' : 'error',
+        error: err instanceof Error ? (err.stack ?? err.message) : String(err),
+        attempts: isValidation ? err.attempts : undefined
+      })
+      .catch((dbErr: unknown) => console.error('[bdfd-ai] failed to record AI failure:', dbErr));
   } finally {
     if (!skipChannelTracking) {
       await container.aiRate.clearThinking(channelId);
