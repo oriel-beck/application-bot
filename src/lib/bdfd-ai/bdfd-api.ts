@@ -17,7 +17,6 @@ export const BDFD_API_CALLBACK_LIST_URL = `${BDFD_API_BASE}/callback_list`;
 
 const API_FUNCTION_FILE_PREFIX = 'api/bdfd/';
 const API_CALLBACK_FILE_PREFIX = 'api/bdfd/callback/';
-const WIKI_CALLBACK_PREFIX = 'src/callbacks/';
 const MAX_CHUNK_CHARS = 3200;
 
 export interface BdfdApiArgument {
@@ -29,6 +28,8 @@ export interface BdfdApiArgument {
   vacantable?: boolean;
   optional?: boolean;
   enumData?: string[];
+  /** The argument can repeat any number of times (`$sum[number;...]`). */
+  repeatable?: boolean;
 }
 
 export interface BdfdApiFunction {
@@ -122,8 +123,18 @@ function formatArguments(args: BdfdApiArgument[] | null): string {
     .join('\n');
 }
 
-function wikiCallbackPath(name: string): string {
-  return `${WIKI_CALLBACK_PREFIX}${name}.md`;
+/**
+ * Published wiki page (`src/...md`) for a function/callback name, or `undefined` when the wiki
+ * has none — many API functions (e.g. newer components) have no page, so a URL must never be
+ * guessed from the name.
+ */
+export type WikiPageResolver = (name: string) => string | undefined;
+
+const noWikiPages: WikiPageResolver = () => undefined;
+
+function wikiLine(name: string, wikiPageFor: WikiPageResolver): string {
+  const page = wikiPageFor(name);
+  return page ? `\n\n**Wiki:** ${wikiUrlFromPath(page)}` : '';
 }
 
 function formatBdfdApiCallbackVariant(callback: BdfdApiCallback): string {
@@ -152,12 +163,16 @@ function formatBdfdApiCallbackVariant(callback: BdfdApiCallback): string {
   return lines.join('\n').trim();
 }
 
-export function formatBdfdApiCallbackDoc(callback: BdfdApiCallback, name: string): string {
+export function formatBdfdApiCallbackDoc(
+  callback: BdfdApiCallback,
+  name: string,
+  wikiPageFor: WikiPageResolver = noWikiPages
+): string {
   return (
     `## BDFD API callback: $${name}\n\n` +
     '_Official BDFD public API callback definition. Callbacks are used in the **command trigger** field, not in reply code._\n\n' +
-    `${formatBdfdApiCallbackVariant(callback)}\n\n` +
-    `**Wiki:** ${wikiUrlFromPath(wikiCallbackPath(name))}`
+    formatBdfdApiCallbackVariant(callback) +
+    wikiLine(name, wikiPageFor)
   )
     .trim()
     .slice(0, MAX_CHUNK_CHARS);
@@ -193,12 +208,16 @@ function formatBdfdApiFunctionVariant(func: BdfdApiFunction): string {
   return lines.join('\n').trim();
 }
 
-export function formatBdfdApiFunctionDoc(func: BdfdApiFunction, name: string): string {
+export function formatBdfdApiFunctionDoc(
+  func: BdfdApiFunction,
+  name: string,
+  wikiPageFor: WikiPageResolver = noWikiPages
+): string {
   return (
     `## BDFD API: $${name}\n\n` +
     '_Official BDFD public API definition. Prefer wiki excerpts for examples when both are available._\n\n' +
-    `${formatBdfdApiFunctionVariant(func)}\n\n` +
-    `**Wiki:** ${wikiUrlFromPath(`src/bdscript/${name}.md`)}`
+    formatBdfdApiFunctionVariant(func) +
+    wikiLine(name, wikiPageFor)
   )
     .trim()
     .slice(0, MAX_CHUNK_CHARS);
@@ -234,7 +253,11 @@ function groupCallbacksByName(callbacks: BdfdApiCallback[]): Map<string, BdfdApi
   return byName;
 }
 
-function formatBdfdApiFunctionDocMerged(variants: BdfdApiFunction[], name: string): string {
+function formatBdfdApiFunctionDocMerged(
+  variants: BdfdApiFunction[],
+  name: string,
+  wikiPageFor: WikiPageResolver
+): string {
   const variantBlocks = variants.map((func, i) => {
     const label = variants.length > 1 ? `### Variant ${i + 1}\n\n` : '';
     return `${label}${formatBdfdApiFunctionVariant(func)}`;
@@ -243,25 +266,34 @@ function formatBdfdApiFunctionDocMerged(variants: BdfdApiFunction[], name: strin
   return (
     `## BDFD API: $${name}\n\n` +
     '_Official BDFD public API definition. Multiple syntax variants are listed when the API defines overloads._\n\n' +
-    `${variantBlocks.join('\n\n---\n\n')}\n\n` +
-    `**Wiki:** ${wikiUrlFromPath(`src/bdscript/${name}.md`)}`
+    variantBlocks.join('\n\n---\n\n') +
+    wikiLine(name, wikiPageFor)
   )
     .trim()
     .slice(0, MAX_CHUNK_CHARS);
 }
 
-export function bdfdApiFunctionsToChunks(functions: BdfdApiFunction[]): BdfdApiWikiChunk[] {
+/** The name's wiki page, or `''` (Chroma metadata can't hold `undefined`) when it has none. */
+function apiChunkUrl(name: string, wikiPageFor: WikiPageResolver): string {
+  const page = wikiPageFor(name);
+  return page ? wikiUrlFromPath(page) : '';
+}
+
+export function bdfdApiFunctionsToChunks(
+  functions: BdfdApiFunction[],
+  wikiPageFor: WikiPageResolver = noWikiPages
+): BdfdApiWikiChunk[] {
   const chunks: BdfdApiWikiChunk[] = [];
 
   for (const [name, variants] of groupFunctionsByName(functions)) {
     const file = `${API_FUNCTION_FILE_PREFIX}${name}.md`;
     chunks.push({
       id: `${file}#api`,
-      document: formatBdfdApiFunctionDocMerged(variants, name),
+      document: formatBdfdApiFunctionDocMerged(variants, name, wikiPageFor),
       metadata: {
         file,
         heading: variants.map((v) => v.tag).join(' · '),
-        url: 'https://wiki.botdesignerdiscord.com/resources/api.html',
+        url: apiChunkUrl(name, wikiPageFor),
         source: 'bdfd-api',
         kind: 'function'
       }
@@ -271,7 +303,11 @@ export function bdfdApiFunctionsToChunks(functions: BdfdApiFunction[]): BdfdApiW
   return chunks;
 }
 
-function formatBdfdApiCallbackDocMerged(variants: BdfdApiCallback[], name: string): string {
+function formatBdfdApiCallbackDocMerged(
+  variants: BdfdApiCallback[],
+  name: string,
+  wikiPageFor: WikiPageResolver
+): string {
   const variantBlocks = variants.map((cb, i) => {
     const label = variants.length > 1 ? `### Variant ${i + 1}\n\n` : '';
     return `${label}${formatBdfdApiCallbackVariant(cb)}`;
@@ -280,25 +316,28 @@ function formatBdfdApiCallbackDocMerged(variants: BdfdApiCallback[], name: strin
   return (
     `## BDFD API callback: $${name}\n\n` +
     '_Official BDFD public API callback definition. Callbacks are used in the **command trigger** field, not in reply code. Multiple syntax variants are listed when the API defines overloads._\n\n' +
-    `${variantBlocks.join('\n\n---\n\n')}\n\n` +
-    `**Wiki:** ${wikiUrlFromPath(wikiCallbackPath(name))}`
+    variantBlocks.join('\n\n---\n\n') +
+    wikiLine(name, wikiPageFor)
   )
     .trim()
     .slice(0, MAX_CHUNK_CHARS);
 }
 
-export function bdfdApiCallbacksToChunks(callbacks: BdfdApiCallback[]): BdfdApiWikiChunk[] {
+export function bdfdApiCallbacksToChunks(
+  callbacks: BdfdApiCallback[],
+  wikiPageFor: WikiPageResolver = noWikiPages
+): BdfdApiWikiChunk[] {
   const chunks: BdfdApiWikiChunk[] = [];
 
   for (const [name, variants] of groupCallbacksByName(callbacks)) {
     const file = `${API_CALLBACK_FILE_PREFIX}${name}.md`;
     chunks.push({
       id: `${file}#api`,
-      document: formatBdfdApiCallbackDocMerged(variants, name),
+      document: formatBdfdApiCallbackDocMerged(variants, name, wikiPageFor),
       metadata: {
         file,
         heading: variants.map((v) => v.name).join(' · '),
-        url: 'https://wiki.botdesignerdiscord.com/resources/api.html',
+        url: apiChunkUrl(name, wikiPageFor),
         source: 'bdfd-api',
         kind: 'callback'
       }
@@ -325,8 +364,9 @@ export function registerBdscriptFunctionsFromApi(functions: BdfdApiFunction[], i
     }
 
     const file = `${API_FUNCTION_FILE_PREFIX}${name}`;
+    // No wiki page registered this name (wiki entries win above), so there's no URL to give.
     index.set(name, {
-      url: wikiUrlFromPath(`src/bdscript/${name}.md`),
+      url: '',
       file,
       kind: inferBdscriptKind(file),
       variants: argVariants
@@ -351,7 +391,7 @@ export function registerBdscriptCallbacksFromApi(callbacks: BdfdApiCallback[], i
 
     const file = `${API_CALLBACK_FILE_PREFIX}${name}`;
     index.set(name, {
-      url: wikiUrlFromPath(wikiCallbackPath(name)),
+      url: '',
       file,
       kind: inferBdscriptKind(file),
       variants: argVariants

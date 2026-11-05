@@ -14,6 +14,7 @@ import {
   THINKING_STATUSES
 } from './response-utils.js';
 import { BdscriptValidationError } from './bdscript-validation.js';
+import type { RagMode } from './rag.service.js';
 
 export type AiRequestSource =
   | { type: 'message'; message: Message<true> }
@@ -28,6 +29,8 @@ export interface ProcessAiRequestOptions {
   ignoreAiEnabled?: boolean;
   /** When true, skips channel usage limits, thinking lock, and conversation persistence (`/ai`). */
   skipChannelTracking?: boolean;
+  /** Mode prompt on top of the base prompt (default `assistant`; `/search ai` uses `wiki`). */
+  mode?: RagMode;
 }
 
 type EditableMessage = {
@@ -71,7 +74,7 @@ async function createThinkingSurface(source: AiRequestSource): Promise<EditableM
 }
 
 export async function processAiRequest(options: ProcessAiRequestOptions): Promise<void> {
-  const { container, channelId, userText, source, ignoreAiEnabled, skipChannelTracking } = options;
+  const { container, channelId, userText, source, ignoreAiEnabled, skipChannelTracking, mode } = options;
 
   const settings = await container.settings.get(container.config.guild).catch(() => null);
   if (!ignoreAiEnabled && !settings?.at(0)?.aiEnabled) {
@@ -133,22 +136,36 @@ export async function processAiRequest(options: ProcessAiRequestOptions): Promis
 
   try {
     const history = skipChannelTracking ? [] : await container.aiConversation.getHistory(channelId);
-    const response = await container.rag.query(userText, history);
+    const { answer, sources } = await container.rag.query(userText, history, { mode });
 
     animation.stop();
 
-    await thinkingSurface.edit(formatAiPayload(response));
+    // Sources are shown but kept out of conversation history.
+    await thinkingSurface.edit(formatAiPayload(answer + sources));
 
     if (!skipChannelTracking) {
-      await container.aiConversation.addExchange(channelId, userText, response);
+      await container.aiConversation.addExchange(channelId, userText, answer);
       await container.aiConversation.trimChannel(channelId);
       await container.aiRate.incrementUsage(channelId);
     }
   } catch (err) {
-    console.error('[bdfd-ai] query failed:', err);
+    const userId = source.type === 'message' ? source.message.author.id : source.interaction.user.id;
+    const isValidation = err instanceof BdscriptValidationError;
+    console.error(`[bdfd-ai] query failed (channel ${channelId}, user ${userId}, mode ${mode ?? 'assistant'}):`, err);
+    console.error(`[bdfd-ai] question was:\n${userText}`);
     animation.stop();
-    const embed = err instanceof BdscriptValidationError ? buildValidationFailedEmbed() : buildUnavailableEmbed();
+    const embed = isValidation ? buildValidationFailedEmbed() : buildUnavailableEmbed();
     await thinkingSurface.edit({ embeds: [embed] }).catch(() => null);
+    await container.aiConversation
+      .recordFailure({
+        channelId,
+        userId,
+        question: userText,
+        reason: isValidation ? 'validation' : 'error',
+        error: err instanceof Error ? (err.stack ?? err.message) : String(err),
+        attempts: isValidation ? err.attempts : undefined
+      })
+      .catch((dbErr: unknown) => console.error('[bdfd-ai] failed to record AI failure:', dbErr));
   } finally {
     if (!skipChannelTracking) {
       await container.aiRate.clearThinking(channelId);

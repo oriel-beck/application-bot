@@ -81,3 +81,25 @@ export const AiConversationCustomIDs = Object.freeze({
     delete: 'ai:list:del'
   }
 });
+
+/** `/check-code` BDScript checker. */
+export const CheckCodeCustomIDs = Object.freeze({
+  modals: {
+    code: 'chk:mdl:code'
+  },
+  inputs: {
+    code: 'code'
+  }
+});
+
+/** `/simulate` BDScript simulator. Rendered simulated components use `sim:out:*` and are always disabled. */
+export const SimulateCustomIDs = Object.freeze({
+  modals: {
+    code: 'sim:mdl:code'
+  },
+  inputs: {
+    code: 'code',
+    args: 'args'
+  },
+  output: 'sim:out'
+});

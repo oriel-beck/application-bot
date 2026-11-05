@@ -1,9 +1,21 @@
 import { BaseManager } from '@lib/managers/base.manager.js';
 import { asc, count, desc, eq, lt, max } from 'drizzle-orm';
-import { aiConversationTurnsTable } from '../../../schema.js';
+import { aiConversationTurnsTable, aiFailedRequestsTable } from '../../../schema.js';
 import type { ChatTurn } from '@lib/bdfd-ai/types.js';
+import type { RejectedAttempt } from '@lib/bdfd-ai/bdscript-validation.js';
 
 const DEFAULT_HISTORY_LIMIT = 20;
+/** Failed requests older than this are pruned whenever a new one is recorded. */
+const FAILURE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+
+export interface AiFailure {
+  channelId: string;
+  userId: string;
+  question: string;
+  reason: 'validation' | 'error';
+  error: string;
+  attempts?: RejectedAttempt[];
+}
 
 export interface AiConversationChannelSummary {
   channelId: string;
@@ -112,5 +124,20 @@ export default class AiConversationManager extends BaseManager {
     for (const id of toDelete) {
       await this.drizzle.delete(aiConversationTurnsTable).where(eq(aiConversationTurnsTable.id, id));
     }
+  }
+
+  /** Persist a request that got no answer, so it can be looked up after the container's logs are gone. */
+  public async recordFailure(failure: AiFailure) {
+    await this.drizzle
+      .delete(aiFailedRequestsTable)
+      .where(lt(aiFailedRequestsTable.createdAt, new Date(Date.now() - FAILURE_RETENTION_MS)));
+    await this.drizzle.insert(aiFailedRequestsTable).values({
+      channel: BigInt(failure.channelId),
+      user: BigInt(failure.userId),
+      question: failure.question,
+      reason: failure.reason,
+      error: failure.error,
+      attempts: failure.attempts ?? null
+    });
   }
 }

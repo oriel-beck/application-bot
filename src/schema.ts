@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { bigint, pgEnum, varchar, boolean, pgTable, timestamp, uuid, text } from 'drizzle-orm/pg-core';
+import { bigint, pgEnum, varchar, boolean, pgTable, timestamp, uuid, text, jsonb } from 'drizzle-orm/pg-core';
 
 export const stateEnum = pgEnum('state', ['pending', 'denied', 'accepted', 'deleted', 'active']);
 
@@ -32,6 +32,21 @@ export const aiConversationTurnsTable = pgTable('ai_conversation_turns', {
   channel: bigint('channel', { mode: 'bigint' }).notNull(),
   role: aiTurnRoleEnum('role').notNull(),
   content: text('content').notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow()
+});
+
+export const aiFailureReasonEnum = pgEnum('ai_failure_reason', ['validation', 'error']);
+
+/** AI requests that got no answer — kept so they can be diagnosed after container logs are gone. */
+export const aiFailedRequestsTable = pgTable('ai_failed_requests', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  channel: bigint('channel', { mode: 'bigint' }).notNull(),
+  user: bigint('user', { mode: 'bigint' }).notNull(),
+  question: text('question').notNull(),
+  reason: aiFailureReasonEnum('reason').notNull(),
+  error: text('error').notNull(),
+  /** Rejected answers and what the backstop found in each (`validation` only). */
+  attempts: jsonb('attempts'),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow()
 });
 

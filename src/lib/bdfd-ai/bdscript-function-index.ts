@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Collection } from 'chromadb';
 import {
@@ -8,6 +8,7 @@ import {
   registerBdscriptCallbacksFromApi,
   registerBdscriptFunctionsFromApi
 } from './bdfd-api.js';
+import { WIKI_BASE_URL } from './wiki-ingest.js';
 
 export type BdscriptNameKind = 'function' | 'callback';
 
@@ -39,7 +40,7 @@ export function normalizeBdscriptFunctionName(name: string): string {
 
 export function wikiUrlFromPath(filePath: string): string {
   const wikiPath = filePath.replace(/^src\//, '').replace(/\.md$/, '.html');
-  return `https://wiki.botdesignerdiscord.com/${wikiPath}`;
+  return `${WIKI_BASE_URL}${wikiPath}`;
 }
 
 /** Infer function vs callback from wiki/API file path (callback paths checked first). */
@@ -103,7 +104,8 @@ export async function loadBdscriptFunctionIndex(cwd = process.cwd()): Promise<Bd
     const index: BdscriptFunctionIndex = new Map();
     for (const [name, rec] of Object.entries(data)) {
       index.set(name, {
-        url: rec.url,
+        // Rebuilt from `file` so a JSON written with an older base URL still links correctly.
+        url: rec.file.startsWith('src/') ? wikiUrlFromPath(rec.file) : rec.url,
         file: rec.file,
         kind: rec.kind ?? inferBdscriptKind(rec.file),
         variants: rec.variants
@@ -120,14 +122,34 @@ export function bdscriptFunctionNames(index: BdscriptFunctionIndex): Set<string>
   return new Set(index.keys());
 }
 
-/** Load index from disk; if empty, populate from BDFD public API lists. */
+/** Write the index to `json/` (same file the wiki ingest writes) so later startups skip the API. */
+export async function saveBdscriptFunctionIndex(index: BdscriptFunctionIndex, cwd = process.cwd()): Promise<void> {
+  const path = join(cwd, 'json', INDEX_FILENAME);
+  try {
+    await writeFile(path, `${JSON.stringify(bdscriptFunctionIndexToJson(index), null, 2)}\n`);
+    console.log(`[bdfd-ai] Cached function index to ${path}`);
+  } catch (err) {
+    console.warn(`[bdfd-ai] Could not cache function index to ${path}:`, err);
+  }
+}
+
+/**
+ * Load index from disk, then fill it from the BDFD public API lists when it's empty — or stale:
+ * a JSON written before argument schemas were tracked has names but no `variants`, which would
+ * silently turn off every arity check. The API data merges into what's on disk (wiki-sourced
+ * `url`/`file` are kept, `variants` backfilled, missing names added) and is cached back.
+ */
 export async function ensureFunctionIndex(cwd = process.cwd()): Promise<BdscriptFunctionIndex> {
   const index = await loadBdscriptFunctionIndex(cwd);
-  if (index.size > 0) {
+  if (index.size > 0 && [...index.values()].some((rec) => rec.variants)) {
     return index;
   }
 
-  console.warn('[bdfd-ai] Function index empty — fetching BDFD public API function_list and callback_list');
+  console.warn(
+    index.size === 0
+      ? '[bdfd-ai] Function index empty — fetching BDFD public API function_list and callback_list'
+      : '[bdfd-ai] Function index has no argument schemas (pre-arity JSON) — backfilling from BDFD public API'
+  );
 
   try {
     const [functions, callbacks] = await Promise.all([fetchBdfdFunctionList(), fetchBdfdCallbackList()]);
@@ -138,6 +160,7 @@ export async function ensureFunctionIndex(cwd = process.cwd()): Promise<Bdscript
       console.error('[bdfd-ai] Function index still empty after API fetch');
     } else {
       console.log(`[bdfd-ai] Built function index from API (${index.size} names)`);
+      await saveBdscriptFunctionIndex(index, cwd);
     }
   } catch (err) {
     console.error('[bdfd-ai] Failed to fetch BDFD API for function index:', err);
@@ -204,10 +227,11 @@ export async function checkBdscriptFunctions(
             exists = true;
             file = candidate;
             kind = inferBdscriptKind(candidate);
+            // API-only names have no wiki page to link.
             url =
               candidate.startsWith(BDSCRIPT_FILE_PREFIX) || candidate.startsWith(WIKI_CALLBACK_PREFIX)
                 ? wikiUrlFromPath(candidate)
-                : 'https://wiki.botdesignerdiscord.com/resources/api.html';
+                : undefined;
             break;
           }
         } catch {

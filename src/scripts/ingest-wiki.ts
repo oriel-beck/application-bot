@@ -5,8 +5,8 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import OpenAI from 'openai';
-import { ChromaClient } from 'chromadb';
 import { createHash } from 'crypto';
+import { createChromaClient } from '../lib/bdfd-ai/chroma-client.js';
 import { ingestDiscordChannels } from '../lib/bdfd-ai/discord-ingest.js';
 import {
   bdfdApiCallbacksToChunks,
@@ -14,112 +14,27 @@ import {
   fetchBdfdCallbackList,
   fetchBdfdFunctionList,
   registerBdscriptCallbacksFromApi,
-  registerBdscriptFunctionsFromApi
+  registerBdscriptFunctionsFromApi,
+  type WikiPageResolver
 } from '../lib/bdfd-ai/bdfd-api.js';
 import {
   bdscriptFunctionIndexToJson,
   registerBdscriptFunctionsFromMarkdown,
   type BdscriptFunctionIndex
 } from '../lib/bdfd-ai/bdscript-function-index.js';
-import { isWikiPathIncluded } from '../lib/bdfd-ai/wiki-ingest.js';
+import { isWikiPathIncluded, parseSummaryPaths } from '../lib/bdfd-ai/wiki-ingest.js';
 import { normalizeWikiMarkdownForRag } from '../lib/bdfd-ai/wiki-markdown.js';
+import { chunkMarkdown, type WikiChunk } from '../lib/bdfd-ai/wiki-chunking.js';
 
 const WIKI_REPO = 'NilPointer-Software/bdfd-wiki';
+/** Deploys to the nightly wiki — see `WIKI_BASE_URL`. */
 const WIKI_BRANCH = 'dev';
 const COLLECTION_NAME = 'bdfd-wiki';
 const EMBEDDING_MODEL = 'text-embedding-3-small';
-const MAX_CHUNK_CHARS = 3200;
-
-interface WikiChunk {
-  id: string;
-  document: string;
-  metadata: { file: string; heading: string; url: string; source: 'wiki' | 'bdfd-api' | 'discord' };
-}
 
 interface IngestConfig {
   guild?: string;
   channels?: Record<string, string>;
-}
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 80);
-}
-
-/**
- * Splits on H2/H3 headings; each chunk's heading/document is prefixed with a breadcrumb
- * (page title, plus the parent H2 for an H3 split) so a short section title like
- * "Retrieving value from options" embeds with its full topic context instead of in isolation —
- * otherwise it competes poorly against a query embedding a long, unrelated code snippet.
- */
-function chunkMarkdown(filePath: string, content: string): WikiChunk[] {
-  const chunks: WikiChunk[] = [];
-  const lines = content.split('\n');
-  const pageTitle = /^#\s+(.+)$/m.exec(content)?.[1]?.trim();
-  /** Repeated H2/H3 titles (e.g. CHANGELOG months) share a slug — suffix so Chroma IDs stay unique. */
-  const slugCounts = new Map<string, number>();
-
-  let currentH2: string | undefined;
-  let currentHeading = 'Introduction';
-  let currentLevel = 2;
-  let body: string[] = [];
-
-  const buildBreadcrumb = (heading: string, level: number): string => {
-    const raw = [pageTitle, level === 3 ? currentH2 : undefined, heading];
-    const parts: string[] = [];
-    for (const part of raw) {
-      if (part && parts[parts.length - 1] !== part) parts.push(part);
-    }
-    return parts.join(' > ');
-  };
-
-  const uniqueChunkId = (headingSlug: string): string => {
-    const base = `${filePath}#${headingSlug}`;
-    const n = slugCounts.get(base) ?? 0;
-    slugCounts.set(base, n + 1);
-    return n === 0 ? base : `${base}-${n}`;
-  };
-
-  const flush = () => {
-    const text = body.join('\n').trim();
-    if (!text && currentHeading === 'Introduction') return;
-    const breadcrumb = buildBreadcrumb(currentHeading, currentLevel);
-    const doc = `## ${breadcrumb}\n\n${text}`.trim();
-    if (!doc) return;
-
-    const id = uniqueChunkId(slugify(currentHeading));
-    const wikiPath = filePath.replace(/^src\//, '').replace(/\.md$/, '.html');
-    chunks.push({
-      id,
-      document: doc.slice(0, MAX_CHUNK_CHARS),
-      metadata: {
-        file: filePath,
-        heading: breadcrumb,
-        url: `https://wiki.botdesignerdiscord.com/${wikiPath}`,
-        source: 'wiki'
-      }
-    });
-    body = [];
-  };
-
-  for (const line of lines) {
-    const headingMatch = /^(#{2,3})\s+(.+)$/.exec(line);
-    if (headingMatch) {
-      flush();
-      const level = headingMatch[1]!.length;
-      currentHeading = headingMatch[2]!.trim();
-      if (level === 2) currentH2 = currentHeading;
-      currentLevel = level;
-      continue;
-    }
-    body.push(line);
-  }
-  flush();
-
-  return chunks;
 }
 
 async function listMarkdownPaths(): Promise<string[]> {
@@ -129,10 +44,11 @@ async function listMarkdownPaths(): Promise<string[]> {
   if (!res.ok) throw new Error(`GitHub tree fetch failed: ${res.status}`);
 
   const data = (await res.json()) as { tree: { path: string; type: string }[] };
+  // Only pages linked from SUMMARY.md are built into the live wiki — anything else would be
+  // linked to a URL that 404s.
+  const published = new Set(parseSummaryPaths(await fetchMarkdown('src/SUMMARY.md')));
   return data.tree
-    .filter(
-      (t) => t.type === 'blob' && t.path.endsWith('.md') && t.path.startsWith('src/') && isWikiPathIncluded(t.path)
-    )
+    .filter((t) => t.type === 'blob' && published.has(t.path) && isWikiPathIncluded(t.path))
     .map((t) => t.path);
 }
 
@@ -167,7 +83,7 @@ async function main() {
 
   const chromaUrl = process.env.CHROMA_URL ?? 'http://localhost:8000';
   const openai = new OpenAI({ apiKey });
-  const chroma = new ChromaClient({ path: chromaUrl });
+  const chroma = createChromaClient(chromaUrl);
 
   try {
     await chroma.deleteCollection({ name: COLLECTION_NAME });
@@ -175,9 +91,12 @@ async function main() {
   } catch {
     /* collection may not exist on first run */
   }
-  const collection = await chroma.createCollection({ name: COLLECTION_NAME });
+  // Explicit `null` (not `undefined`) skips chromadb's attempt to lazily resolve a default
+  // embedding function from the optional @chroma-core/default-embed package (not installed) —
+  // we always supply our own precomputed embeddings on upsert, so it's never needed.
+  const collection = await chroma.createCollection({ name: COLLECTION_NAME, embeddingFunction: null });
 
-  console.log('Listing wiki markdown files (BDScript/docs only; src/javascript/ excluded)...');
+  console.log(`Listing published wiki pages on ${WIKI_BRANCH} (BDScript/docs only; src/javascript/ excluded)...`);
   const paths = await listMarkdownPaths();
   console.log(`Found ${paths.length} markdown files`);
 
@@ -193,17 +112,23 @@ async function main() {
   }
   console.log(`Prepared ${allChunks.length} wiki chunks`);
 
+  // Names registered from a published wiki page carry its `src/` path; API-only names have none.
+  const wikiPageFor: WikiPageResolver = (name) => {
+    const file = functionIndex.get(name)?.file;
+    return file?.startsWith('src/') ? file : undefined;
+  };
+
   console.log('Fetching BDFD public API function_list...');
   const apiFunctions = await fetchBdfdFunctionList();
   const apiAdded = registerBdscriptFunctionsFromApi(apiFunctions, functionIndex);
-  const apiChunks = bdfdApiFunctionsToChunks(apiFunctions);
+  const apiChunks = bdfdApiFunctionsToChunks(apiFunctions, wikiPageFor);
   allChunks.push(...apiChunks);
   console.log(`Added ${apiChunks.length} function API chunks (${apiAdded} new names in function index)`);
 
   console.log('Fetching BDFD public API callback_list...');
   const apiCallbacks = await fetchBdfdCallbackList();
   const callbackAdded = registerBdscriptCallbacksFromApi(apiCallbacks, functionIndex);
-  const callbackChunks = bdfdApiCallbacksToChunks(apiCallbacks);
+  const callbackChunks = bdfdApiCallbacksToChunks(apiCallbacks, wikiPageFor);
   allChunks.push(...callbackChunks);
   console.log(`Added ${callbackChunks.length} callback API chunks (${callbackAdded} new names in function index)`);
 

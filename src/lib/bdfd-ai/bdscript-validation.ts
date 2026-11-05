@@ -1,5 +1,6 @@
 import type { BdfdApiArgument } from './bdfd-api.js';
 import type { BdscriptFunctionIndex } from './bdscript-function-index.js';
+import type { AnswerProblems } from './code-check.js';
 import { bdscriptFunctionNames, normalizeBdscriptFunctionName } from './bdscript-function-index.js';
 
 const BDSCRIPT_FUNCTION_PATTERN = /\$([A-Za-z][A-Za-z0-9]*)/g;
@@ -14,15 +15,24 @@ const HALLUCINATION_ALIASES: Record<string, string> = {
   len: 'charCount'
 };
 
+/** One answer the backstop rejected, with what it found. */
+export interface RejectedAttempt {
+  answer: string;
+  problems: AnswerProblems;
+}
+
 /** Thrown when a response still fails validation after all repair attempts. */
 export class BdscriptValidationError extends Error {
   constructor(
     public readonly invalidNames: string[],
     public readonly misusedCallbacks: string[],
-    public readonly arityIssues: ArityIssue[] = []
+    public readonly arityIssues: ArityIssue[] = [],
+    public readonly earlyClosed: string[] = [],
+    /** Every rejected answer, oldest first — for diagnosing why no answer was sent. */
+    public readonly attempts: RejectedAttempt[] = []
   ) {
     super(
-      `BDScript validation failed after retries: invalid=[${invalidNames.join(', ')}] misusedCallbacks=[${misusedCallbacks.join(', ')}] arityIssues=[${arityIssues.map((i) => `$${i.name}(${i.argCount})`).join(', ')}]`
+      `BDScript validation failed after retries: invalid=[${invalidNames.join(', ')}] misusedCallbacks=[${misusedCallbacks.join(', ')}] arityIssues=[${arityIssues.map((i) => `$${i.name}(${i.argCount})`).join(', ')}] earlyClosed=[${earlyClosed.join(', ')}]`
     );
     this.name = 'BdscriptValidationError';
   }
@@ -94,6 +104,18 @@ export interface BdscriptCallNode {
   hasBrackets: boolean;
   /** Each element is one `;`-separated argument, itself a sequence of text/nested-call nodes. */
   args: BdscriptNode[][];
+  /**
+   * True when an argument opened a literal `[` (e.g. `[@user]`) that was still unmatched by an
+   * escaped `\]` when the call's closing `]` arrived — i.e. the call was closed early by what
+   * was meant as literal text. `$argsCheck[2;Use [@user] [amount]]` closes right after `@user`.
+   */
+  closedEarly: boolean;
+  /** True when the code ran out before this call's closing `]` (e.g. `$var[a;b`). */
+  unclosed: boolean;
+  /** Offset of the call's `$` in the parsed code, for line/column diagnostics. */
+  start: number;
+  /** Offset just past the call (after its closing `]`, or its name when bare). */
+  end: number;
 }
 
 const CALL_NAME = /^\$([A-Za-z][A-Za-z0-9]*)/;
@@ -105,13 +127,14 @@ function parseTextRun(
   start: number,
   end: number,
   terminators: ReadonlySet<string>
-): { nodes: BdscriptNode[]; stop: number } {
+): { nodes: BdscriptNode[]; stop: number; openLiteral: number } {
   const nodes: BdscriptNode[] = [];
   let buf = '';
   let i = start;
-  // Depth of literal (non-call) `[...]` we're inside, e.g. an unescaped `[@user]` placeholder —
-  // its own `]` must not be mistaken for the enclosing call's terminator.
-  let bareDepth = 0;
+  // Literal (non-call) `[` seen in this run and not yet matched by an escaped `\]`. BDFD has no
+  // notion of literal bracket nesting — an unescaped `]` always closes the innermost call — so
+  // this only tracks whether the call is about to be closed early, it never defers the close.
+  let openLiteral = 0;
 
   const flush = () => {
     if (buf) {
@@ -124,12 +147,13 @@ function parseTextRun(
     const ch = code[i]!;
 
     if (ch === '\\' && i + 1 < end && (code[i + 1] === ';' || code[i + 1] === ']')) {
+      if (code[i + 1] === ']' && openLiteral > 0) openLiteral--;
       buf += code[i + 1];
       i += 2;
       continue;
     }
 
-    if (bareDepth === 0 && terminators.has(ch)) {
+    if (terminators.has(ch)) {
       break;
     }
 
@@ -141,39 +165,49 @@ function parseTextRun(
         const afterName = i + match[0].length;
         if (code[afterName] === '[') {
           const call = parseArgs(code, afterName + 1, end);
-          nodes.push({ type: 'call', name, hasBrackets: true, args: call.args });
+          nodes.push({
+            type: 'call',
+            name,
+            hasBrackets: true,
+            args: call.args,
+            closedEarly: call.closedEarly,
+            unclosed: call.unclosed,
+            start: i,
+            end: call.end
+          });
           i = call.end;
         } else {
-          nodes.push({ type: 'call', name, hasBrackets: false, args: [] });
+          nodes.push({
+            type: 'call',
+            name,
+            hasBrackets: false,
+            args: [],
+            closedEarly: false,
+            unclosed: false,
+            start: i,
+            end: afterName
+          });
           i = afterName;
         }
         continue;
       }
     }
 
-    if (ch === '[') {
-      bareDepth++;
-      buf += ch;
-      i++;
-      continue;
-    }
-
-    if (ch === ']' && bareDepth > 0) {
-      bareDepth--;
-      buf += ch;
-      i++;
-      continue;
-    }
+    if (ch === '[') openLiteral++;
 
     buf += ch;
     i++;
   }
 
   flush();
-  return { nodes, stop: i };
+  return { nodes, stop: i, openLiteral };
 }
 
-function parseArgs(code: string, start: number, end: number): { args: BdscriptNode[][]; end: number } {
+function parseArgs(
+  code: string,
+  start: number,
+  end: number
+): { args: BdscriptNode[][]; end: number; closedEarly: boolean; unclosed: boolean } {
   const args: BdscriptNode[][] = [];
   let i = start;
 
@@ -182,12 +216,14 @@ function parseArgs(code: string, start: number, end: number): { args: BdscriptNo
     args.push(run.nodes);
     i = run.stop;
 
-    if (i >= end) return { args, end: i }; // unterminated — missing `]`, stop where we ran out
+    if (i >= end) return { args, end: i, closedEarly: false, unclosed: true }; // missing `]`, stop where we ran out
     if (code[i] === ';') {
       i++;
       continue;
     }
-    return { args, end: i + 1 }; // code[i] === ']' — consume it
+    // code[i] === ']' — consume it. An argument still holding an unmatched literal `[` means
+    // this `]` was meant as literal text and should have been escaped as `\]`.
+    return { args, end: i + 1, closedEarly: run.openLiteral > 0, unclosed: false };
   }
 }
 
@@ -200,6 +236,7 @@ export interface FlatBdscriptCall {
   name: string;
   hasBrackets: boolean;
   argCount: number;
+  closedEarly: boolean;
 }
 
 function countArgs(node: BdscriptCallNode): number {
@@ -216,7 +253,12 @@ export function flattenBdscriptCalls(nodes: BdscriptNode[]): FlatBdscriptCall[] 
   const visit = (list: BdscriptNode[]) => {
     for (const node of list) {
       if (node.type !== 'call') continue;
-      calls.push({ name: node.name, hasBrackets: node.hasBrackets, argCount: countArgs(node) });
+      calls.push({
+        name: node.name,
+        hasBrackets: node.hasBrackets,
+        argCount: countArgs(node),
+        closedEarly: node.closedEarly
+      });
       for (const arg of node.args) visit(arg);
     }
   };
@@ -238,12 +280,18 @@ function describeVariant(variant: BdfdApiArgument[] | null): { min: number; max:
   }
 
   const min = variant.filter((arg) => arg.required).length;
-  const max = variant.length;
-  const names = variant.map((arg) => arg.name).join(', ');
+  // A repeatable argument (`$sum[number;...]`) lifts the upper bound entirely.
+  const max = variant.some((arg) => arg.repeatable) ? Infinity : variant.length;
+  const names = variant.map((arg) => (arg.repeatable ? `${arg.name}...` : arg.name)).join(', ');
   return {
     min,
     max,
-    label: min === max ? `${max} argument(s) (${names})` : `${min}-${max} argument(s) (${names})`
+    label:
+      max === Infinity
+        ? `at least ${min} argument(s) (${names})`
+        : min === max
+          ? `${max} argument(s) (${names})`
+          : `${min}-${max} argument(s) (${names})`
   };
 }
 
@@ -252,20 +300,16 @@ function describeVariant(variant: BdfdApiArgument[] | null): { min: number; max:
  * Skips names with no `variants` schema (wiki-only entries) rather than guessing.
  */
 export function findArityIssues(calls: FlatBdscriptCall[], index: BdscriptFunctionIndex): ArityIssue[] {
-  const issues: ArityIssue[] = [];
+  return calls.flatMap((call) => arityIssueFor(call.name, call.argCount, index) ?? []);
+}
 
-  for (const call of calls) {
-    const variants = index.get(call.name)?.variants;
-    if (!variants?.length) continue;
+function arityIssueFor(name: string, argCount: number, index: BdscriptFunctionIndex): ArityIssue | null {
+  const variants = index.get(name)?.variants;
+  if (!variants?.length) return null;
 
-    const ranges = variants.map(describeVariant);
-    const fits = ranges.some((r) => call.argCount >= r.min && call.argCount <= r.max);
-    if (!fits) {
-      issues.push({ name: call.name, argCount: call.argCount, expected: ranges.map((r) => r.label) });
-    }
-  }
-
-  return issues;
+  const ranges = variants.map(describeVariant);
+  const fits = ranges.some((r) => argCount >= r.min && argCount <= r.max);
+  return fits ? null : { name, argCount, expected: ranges.map((r) => r.label) };
 }
 
 /** Same as findArityIssues, but scoped to a reply's code snippets (for checking a model's reply code). */
@@ -285,7 +329,227 @@ export function findArityIssuesInSnippets(snippets: string[], index: BdscriptFun
   return issues;
 }
 
-// --- Deterministic escaping repair (existing) ------------------------------------------------
+/** Names of calls closed early by an unescaped `]` meant as literal text (see `closedEarly`). */
+export function findEarlyClosedCalls(calls: FlatBdscriptCall[]): string[] {
+  return [...new Set(calls.filter((call) => call.closedEarly).map((call) => call.name))];
+}
+
+/** Same as findEarlyClosedCalls, but scoped to a reply's code snippets. */
+export function findEarlyClosedCallsInSnippets(snippets: string[]): string[] {
+  return [
+    ...new Set(snippets.flatMap((snippet) => findEarlyClosedCalls(flattenBdscriptCalls(parseBdscript(snippet)))))
+  ];
+}
+
+// --- Argument type validation ---------------------------------------------------------------
+//
+// Arity alone lets `$isMentioned[$mentioned[1] == 123]` through: one argument, right count, but a
+// User ID can't hold a comparison. For the API's single-value types we can check the shape of the
+// argument without running anything: a literal must look like that type, and a function call can't
+// be mixed with extra text. Union types (`Snowflake | String`) and free-form types are skipped.
+
+/** Literal shape per single-value API type. `HowMany` allows `$argsCheck[>1;...]`-style bounds. */
+const LITERAL_SHAPES: Record<string, { pattern: RegExp; expected: string }> = {
+  Snowflake: { pattern: /^\d{15,21}$/, expected: 'an ID (a snowflake like `123456789012345678`)' },
+  Integer: { pattern: /^-?\d+$/, expected: 'a whole number' },
+  HowMany: { pattern: /^[<>]?\d+$/, expected: 'a count (a number, optionally with `>` or `<`)' },
+  Bool: { pattern: /^(?:yes|no|true|false)$/i, expected: '`yes`/`no` (or `true`/`false`)' }
+};
+
+const COMPARISON = /==|!=|>=|<=|[<>]/;
+
+export interface ArgTypeIssue {
+  name: string;
+  argName: string;
+  /** The argument as written, with nested calls re-rendered. */
+  value: string;
+  message: string;
+}
+
+function renderNodes(nodes: BdscriptNode[]): string {
+  return nodes
+    .map((node) =>
+      node.type === 'text'
+        ? node.value
+        : `$${node.name}${node.hasBrackets ? `[${node.args.map(renderNodes).join(';')}]` : ''}`
+    )
+    .join('');
+}
+
+/** `$modifyChannel[...;!unchanged;...]` keeps a field as it is, whatever its type. */
+const UNCHANGED = '!unchanged';
+
+/** Why `nodes` can't be a value of `schema`'s type, or null when it can (or the type isn't checkable). */
+function argTypeProblem(schema: BdfdApiArgument, nodes: BdscriptNode[]): string | null {
+  const shape = LITERAL_SHAPES[schema.type.trim()];
+  if (!shape) return null;
+
+  let text = nodes
+    .filter((n) => n.type === 'text')
+    .map((n) => n.value)
+    .join('')
+    .trim();
+  const hasCall = nodes.some((n) => n.type === 'call');
+
+  // Prefixes the type allows: `>`/`<` on a count, `+`/`-` on `$roleGrant`'s `+/-Role ID`.
+  const prefix = schema.type === 'HowMany' ? /^[<>]/ : schema.name.startsWith('+/-') ? /^[+-]/ : null;
+  if (prefix) text = text.replace(prefix, '').trim();
+
+  if (!hasCall) {
+    // Empty arguments are governed by required/empty flags, which arity already covers.
+    if (!text || text === UNCHANGED || shape.pattern.test(text)) return null;
+    return `expects ${shape.expected}`;
+  }
+
+  if (!text) return null;
+
+  return COMPARISON.test(text)
+    ? 'can only hold a single value, not a comparison — comparisons only work in condition arguments like `$if`, `$elseif` or `$onlyIf`'
+    : `mixes a function call with extra text; it expects a single value: ${shape.expected}`;
+}
+
+/**
+ * The schema for argument `i` of a call with `argCount` arguments. Arguments up to a repeatable one
+ * line up from the start, the ones after it from the end (`$removeContains[Word;...;Amount]`).
+ */
+function schemaAt(variant: BdfdApiArgument[], i: number, argCount: number): BdfdApiArgument | undefined {
+  const repeatable = variant.findIndex((arg) => arg.repeatable);
+  if (repeatable === -1 || i < repeatable) return variant[i];
+  const fromEnd = variant.length - (argCount - i);
+  return fromEnd > repeatable ? variant[fromEnd] : variant[repeatable];
+}
+
+/**
+ * Type problems in one call's arguments. Only overloads that fit the call's argument count are
+ * considered, and an argument is flagged only when it fails under every one of them.
+ */
+function argTypeIssuesFor(node: BdscriptCallNode, index: BdscriptFunctionIndex): ArgTypeIssue[] {
+  const argCount = countArgs(node);
+  const fitting = (index.get(node.name)?.variants ?? []).filter((variant) => {
+    const { min, max } = describeVariant(variant);
+    return argCount >= min && argCount <= max;
+  });
+  if (!fitting.length || argCount === 0) return [];
+
+  const issues: ArgTypeIssue[] = [];
+  node.args.forEach((arg, i) => {
+    let first: { schema: BdfdApiArgument; message: string } | null = null;
+    for (const variant of fitting) {
+      const schema = schemaAt(variant!, i, argCount);
+      const message = schema && argTypeProblem(schema, arg);
+      if (!schema || !message) return;
+      first ??= { schema, message };
+    }
+    if (first) {
+      issues.push({
+        name: node.name,
+        argName: first.schema.name,
+        value: renderNodes(arg).trim(),
+        message: first.message
+      });
+    }
+  });
+  return issues;
+}
+
+/** Argument type problems in every call of a snippet, nested calls included. */
+export function findArgTypeIssues(code: string, index: BdscriptFunctionIndex): ArgTypeIssue[] {
+  const issues: ArgTypeIssue[] = [];
+  const visit = (list: BdscriptNode[]) => {
+    for (const node of list) {
+      if (node.type !== 'call') continue;
+      issues.push(...argTypeIssuesFor(node, index));
+      for (const arg of node.args) visit(arg);
+    }
+  };
+  visit(parseBdscript(code));
+  return issues;
+}
+
+export function formatArgTypeIssue(issue: ArgTypeIssue): string {
+  return `\`$${issue.name}\`'s ${issue.argName} argument \`${issue.value}\` ${issue.message}`;
+}
+
+// --- User-facing lint ---------------------------------------------------------------------------
+
+export type BdscriptDiagnosticKind = 'unknown-function' | 'arity' | 'closed-early' | 'unclosed' | 'arg-type';
+
+export interface BdscriptDiagnostic {
+  kind: BdscriptDiagnosticKind;
+  name: string;
+  /** 1-based position of the call's `$`. */
+  line: number;
+  column: number;
+  message: string;
+}
+
+export function lineColumnAt(code: string, offset: number): { line: number; column: number } {
+  const before = code.slice(0, offset);
+  const lastNewline = before.lastIndexOf('\n');
+  return { line: before.split('\n').length, column: offset - lastNewline };
+}
+
+/**
+ * Run every parser-level check over a user's BDScript code and report each problem with its
+ * position — the same checks the AI pipeline uses, but per call instead of deduped by name.
+ */
+export function lintBdscript(code: string, index: BdscriptFunctionIndex): BdscriptDiagnostic[] {
+  const diagnostics: BdscriptDiagnostic[] = [];
+  const known = bdscriptFunctionNames(index);
+
+  const report = (node: BdscriptCallNode, kind: BdscriptDiagnosticKind, message: string) => {
+    diagnostics.push({ kind, name: node.name, ...lineColumnAt(code, node.start), message });
+  };
+
+  const visit = (list: BdscriptNode[]) => {
+    for (const node of list) {
+      if (node.type !== 'call') continue;
+
+      if (!known.has(node.name)) {
+        const alt = suggestFunctionAlternatives([node.name], index).get(node.name)?.[0];
+        report(
+          node,
+          'unknown-function',
+          `\`$${node.name}\` is not a BDScript function${alt ? ` — did you mean \`$${alt}\`?` : ''}`
+        );
+      } else {
+        const arity = arityIssueFor(node.name, countArgs(node), index);
+        if (arity) {
+          report(
+            node,
+            'arity',
+            `\`$${node.name}\` got ${arity.argCount} argument(s); expected ${arity.expected.join(' or ')}. ` +
+              'A literal `;` inside an argument must be escaped as `\\;`.'
+          );
+        } else {
+          for (const issue of argTypeIssuesFor(node, index)) {
+            report(node, 'arg-type', formatArgTypeIssue(issue));
+          }
+        }
+      }
+
+      if (node.closedEarly) {
+        report(
+          node,
+          'closed-early',
+          `\`$${node.name}[...]\` is closed early by an unescaped \`]\` in literal text like \`[@user]\` — ` +
+            'escape it as `\\]`.'
+        );
+      }
+
+      if (node.unclosed) {
+        report(node, 'unclosed', `\`$${node.name}[\` is never closed — add the missing \`]\`.`);
+      }
+
+      for (const arg of node.args) visit(arg);
+    }
+  };
+
+  visit(parseBdscript(code));
+  return diagnostics.sort((a, b) => a.line - b.line || a.column - b.column);
+}
+
+// --- Deterministic escaping repair (existing)------------------------------------------------
 
 /**
  * Escape literal `]` in placeholder-like `[word]` / `[@user]` inside `$function[...]` args.
@@ -370,20 +634,44 @@ export function repairBdscriptCode(code: string): string {
   return out;
 }
 
-function scoreNameSimilarity(a: string, b: string): number {
-  const left = a.toLowerCase();
-  const right = b.toLowerCase();
-  if (left === right) return 100;
-  if (right.includes(left) || left.includes(right)) return 80;
+/**
+ * Optimal-string-alignment edit distance (Levenshtein + adjacent transpositions), so the
+ * common `$lenght` / `$mesage` typos are one edit away from the real name.
+ */
+export function editDistance(a: string, b: string): number {
+  const rows = Array.from({ length: a.length + 1 }, (_, i) => [i, ...new Array<number>(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) rows[0]![j] = j;
 
-  let matches = 0;
-  const shorter = left.length <= right.length ? left : right;
-  const longer = left.length <= right.length ? right : left;
-  for (const char of shorter) {
-    if (longer.includes(char)) matches++;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      let best = Math.min(rows[i - 1]![j]! + 1, rows[i]![j - 1]! + 1, rows[i - 1]![j - 1]! + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        best = Math.min(best, rows[i - 2]![j - 2]! + 1);
+      }
+      rows[i]![j] = best;
+    }
   }
 
-  return Math.round((matches / longer.length) * 60);
+  return rows[a.length]![b.length]!;
+}
+
+/** Lower is closer; `null` when `candidate` isn't a plausible fix for `typed`. */
+function nameDistance(typed: string, candidate: string): number | null {
+  const left = typed.toLowerCase();
+  const right = candidate.toLowerCase();
+  if (left === right) return 0;
+
+  const distance = editDistance(left, right);
+  // Roughly one typo per three characters, but always allow one.
+  if (distance <= Math.max(1, Math.floor(left.length / 3))) return distance;
+
+  // One name containing the other (`$avatar` → `$userAvatar`), ranked behind every typo match.
+  const shorter = left.length <= right.length ? left : right;
+  const longer = shorter === left ? right : left;
+  if (shorter.length >= 4 && longer.includes(shorter)) return 100 + longer.length - shorter.length;
+
+  return null;
 }
 
 export function suggestFunctionAlternatives(
@@ -402,9 +690,9 @@ export function suggestFunctionAlternatives(
     }
 
     const ranked = known
-      .map((name) => ({ name, score: scoreNameSimilarity(normalized, name) }))
-      .filter((entry) => entry.score >= 40)
-      .sort((a, b) => b.score - a.score)
+      .map((name) => ({ name, distance: nameDistance(normalized, name) }))
+      .filter((entry): entry is { name: string; distance: number } => entry.distance !== null)
+      .sort((a, b) => a.distance - b.distance || a.name.localeCompare(b.name))
       .slice(0, 3)
       .map((entry) => entry.name);
 
@@ -420,7 +708,8 @@ export function buildRepairPrompt(
   invalidNames: string[],
   index: BdscriptFunctionIndex,
   misusedCallbacks: string[] = [],
-  arityIssues: ArityIssue[] = []
+  arityIssues: ArityIssue[] = [],
+  earlyClosed: string[] = []
 ): string {
   const parts: string[] = [];
 
@@ -465,7 +754,20 @@ export function buildRepairPrompt(
           `- \`$${issue.name}\` was called with ${issue.argCount} argument(s); expected ${issue.expected.join(' or ')}`
       ),
       '',
-      'Rewrite the **full** answer using the correct argument count for each function, matching relevant_functions.'
+      'Rewrite the **full** answer using the correct argument count for each function, matching relevant_functions.',
+      'A literal `;` inside an argument must be escaped as `\\;` — an unescaped `;` (even a trailing one) starts a new argument.'
+    );
+  }
+
+  if (earlyClosed.length) {
+    if (parts.length) parts.push('');
+    parts.push(
+      'Your previous answer closed BDScript functions early with an unescaped `]`:',
+      ...earlyClosed.map(
+        (name) => `- \`$${name}[...]\` contains literal text like \`[...]\` whose \`]\` ends the function call`
+      ),
+      '',
+      'Rewrite the **full** answer escaping every literal `]` inside a function argument as `\\]`, e.g. `$argsCheck[2;Use [@user\\] [amount\\]]`.'
     );
   }
 
