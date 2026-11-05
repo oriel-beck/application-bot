@@ -33,7 +33,7 @@ export class BdfdAiTicketIntroListener extends Listener<typeof Events.MessageCre
       .setColor(Colors.Blurple)
       .setTitle('BDFD AI')
       .setDescription(
-        'Need quick help? Use **`/ai`**, **mention me**, or **reply to this message** (leave ping on).\n\nSend code in ` ``` ` blocks, or use a pastebin / `.txt` link if it is too large.'
+        'Need quick help? Use **`/ai`**, **mention me**, or **reply to this message**.\n\nSend code in ` ``` ` blocks, or use a pastebin / `.txt` link if it is too large.'
       );
 
     const sent = await message.channel.send({ embeds: [embed] }).catch(() => null);

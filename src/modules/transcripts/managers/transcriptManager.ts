@@ -3,10 +3,10 @@ import { container } from '@sapphire/framework';
 import { and, count, eq, lt, max, sql } from 'drizzle-orm';
 import { messagesTable, transcriptTable } from '../../../schema.js';
 
-/** Stored when Discord omits message text (no Message Content intent). */
+/** Stored when a message has no text (attachment, embed, or sticker only). */
 export const UNAVAILABLE_TRANSCRIPT_TEXT = '(content unavailable)';
 
-/** Text Discord actually delivered. Null when the message-content exception does not apply. */
+/** Trimmed message text. Null when the message has no text. */
 export function deliveredMessageText(content: string | null | undefined): string | null {
   if (!content?.trim()) return null;
   return content;

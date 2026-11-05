@@ -20,7 +20,7 @@ export class AiToggleCommand extends Command {
       .setTitle('BDFD AI')
       .setDescription(
         next
-          ? 'AI assistant is now **enabled**. Users can use `/ai`, mention the bot, or reply to the bot (with ping on) in support threads and tickets.'
+          ? 'AI assistant is now **enabled**. Users can use `/ai`, mention the bot, or reply to the bot in support threads and tickets.'
           : 'AI assistant is now **disabled**. Existing conversations are kept in the database.'
       );
 

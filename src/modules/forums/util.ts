@@ -69,7 +69,7 @@ export function generatePostHelpEmbed(appliedTags: string[]) {
   embed.addFields({
     name: 'AI assistant',
     value:
-      '` ● ` Use **`/ai`**, **mention this bot**, or reply to **this message** (leave ping on). Conversation history is saved for mentions and replies.'
+      '` ● ` Use **`/ai`**, **mention this bot**, or reply to **this message**. Conversation history is saved for mentions and replies.'
   });
   embed.setFooter({
     text: 'Do not try to hoist your post in any channel in the server, this is against our rules and you will receive a warning if you do so.'

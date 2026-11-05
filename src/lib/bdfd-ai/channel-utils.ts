@@ -43,8 +43,8 @@ export async function resolveChannelAuthorId(
 }
 
 /**
- * Ticket openers are another bot's message. Without the Message Content intent, that
- * message's embed text is empty, but user mentions on it are still present.
+ * Ticket openers are another bot's message. The author is the user mentioned in
+ * the opener embed, then the first non-bot user mention on that message.
  */
 function authorIdFromBotOpener(message: Message): string | null {
   const description = message.embeds.at(0)?.description;

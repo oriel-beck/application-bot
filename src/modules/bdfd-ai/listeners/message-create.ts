@@ -30,11 +30,12 @@ export class BdfdAiMessageCreateListener extends Listener<typeof Events.MessageC
 
     const userText = message.content?.trim();
     if (!userText) {
-      const hint =
-        message.attachments.size > 0
-          ? 'Send the question as text, or a pastebin / `.txt` link, or use `/ai`.'
-          : "I can't see that reply. Mention me, reply with ping on, or use `/ai`.";
-      await message.reply({ content: hint, allowedMentions: { parse: [], repliedUser: false } }).catch(() => null);
+      await message
+        .reply({
+          content: 'Send the question as text, or a pastebin / `.txt` link, or use `/ai`.',
+          allowedMentions: { parse: [], repliedUser: false }
+        })
+        .catch(() => null);
       return;
     }
 

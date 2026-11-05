@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Effective date:** August 11, 2026  
-**Last updated:** October 25, 2026  
+**Last updated:** November 5, 2026  
 **Application:** Application Bot (private Discord bot for the Bot Designer for Discord community)  
 **Operator:** Oriel Beck ([GitHub](https://github.com/oriel-beck/application-bot))  
 **Contact:** Discord user ID `311808747141857292`, or contact BDFD server staff who can reach the bot operator
@@ -38,11 +38,11 @@ We process data that Discord makes available to the Bot when you use it, and dat
 
 In configured **ticket** channels, while an owner has ticket transcripts enabled (`/transcript-toggle`, on by default), the Bot may store:
 
-- Message text when Discord includes it without the Message Content intent: messages the Bot sends, messages that mention the Bot, and replies to the Bot
-- A placeholder instead of text for other messages
+- Message text from messages in the ticket channel
+- A placeholder, `(content unavailable)`, when a message has no text (for example an attachment, embed, or sticker only)
 - Message ID, author user ID, channel ID, and timestamps
 
-This is used so staff/owners can review or export ticket history. The Bot cannot read the text of ordinary user or staff messages in the ticket.
+This is used so staff/owners can review or export ticket history.
 
 ### 2.4 Reports, blacklist, and moderation helpers
 
@@ -53,7 +53,7 @@ This is used so staff/owners can review or export ticket history. The Bot cannot
 
 When AI features are enabled by an owner:
 
-- Natural-language questions you send via `/ai`, by **mentioning the Bot**, or by **replying to the Bot** (with ping on, and not as a reply to a slash-command response) in supported support threads/tickets
+- Natural-language questions you send via `/ai`, by **mentioning the Bot**, or by **replying to the Bot** in supported support threads and tickets
 - Temporary conversation turns (user and assistant messages) for mention and reply context in a channel
 - Usage / rate-limit counters and related Redis keys
 
@@ -62,7 +62,7 @@ AI conversation history for a channel may be cleared when the ticket/thread is c
 ### 2.6 Utility / guide content
 
 - Tip text is stored when a staff member uses the **Index tip** context menu on a tip message. The Bot does not bulk-read the tips channel
-- Optional Discord guide/FAQ channel ingest does not receive message text without the Message Content intent, so those channels are skipped when their messages come back empty
+- Optional Discord guide/FAQ channel ingest reads message text, embeds, and attachments from the configured channels and indexes them for AI retrieval. A channel is skipped when every fetched message has none of those
 
 ### 2.7 Share-your-bot channel helpers
 
@@ -115,11 +115,9 @@ Their processing is governed by their own terms and privacy policies in addition
 
 ## 6. Message Content and privileged data
 
-The Bot does **not** request Discord’s **Message Content** privileged intent. It does **not** use Presence Intent. It does not require Server Members Intent for normal operation (individual member lookups may be performed on demand when deciding applications).
+The Bot requests Discord’s **Message Content** privileged intent so it can read message text in channels it can access. It does **not** use Presence Intent. It does not require Server Members Intent for normal operation (individual member lookups may be performed on demand when deciding applications).
 
-Message text is available only in the cases Discord still allows without that intent (messages the Bot sends, direct messages to the Bot, messages that mention the Bot, and replies to the Bot’s own messages when ping is left on), and when you use a command or context menu on a specific message (which includes that message’s content).
-
-We do not perform server-wide logging of all guild messages. Message content storage is limited to the feature scopes described above.
+Message content the Bot receives is stored only for the features described above: ticket transcripts, AI questions you send with `/ai`, a mention, or a reply, indexed tips, and optional guide/FAQ channel ingest. The Bot does not keep a server-wide log of every guild message.
 
 ---
 
